@@ -25,38 +25,41 @@ function enhanceIframeContent() {
                 /* MEJORAS PARA EL FORMULARIO DEL IFRAME */
                 body {
                     margin: 0 !important;
-                    padding: 20px !important;
+                    padding: 15px !important;
                     font-family: 'Segoe UI', Arial, sans-serif !important;
                     background: #f8f9fa !important;
-                    zoom: 1.1 !important;
+                    /* REMOVIDO: zoom: 1.1 !important; */
+                    box-sizing: border-box !important;
                 }
                 
                 /* Contenedor principal del formulario */
                 table, td, tr {
                     border-collapse: collapse !important;
+                    box-sizing: border-box !important;
                 }
                 
-                /* Mejorar inputs */
+                /* Mejorar inputs SIN afectar el tamaño */
                 input[type="text"], 
                 input[type="password"], 
                 select, 
                 textarea {
-                    padding: 8px 12px !important;
-                    border: 2px solid #e0e0e0 !important;
-                    border-radius: 6px !important;
-                    font-size: 14px !important;
+                    padding: 6px 10px !important;
+                    border: 1px solid #d0d7de !important;
+                    border-radius: 4px !important;
+                    font-size: 13px !important;
                     font-family: inherit !important;
-                    transition: all 0.3s ease !important;
+                    transition: all 0.2s ease !important;
                     background: white !important;
-                    min-width: 200px !important;
+                    box-sizing: border-box !important;
+                    /* REMOVIDO: min-width fijo para evitar problemas de layout */
                 }
                 
                 input[type="text"]:focus, 
                 input[type="password"]:focus, 
                 select:focus, 
                 textarea:focus {
-                    border-color: #4A90E2 !important;
-                    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1) !important;
+                    border-color: #0969da !important;
+                    box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.1) !important;
                     outline: none !important;
                 }
                 
@@ -64,71 +67,83 @@ function enhanceIframeContent() {
                 input[type="button"], 
                 input[type="submit"], 
                 button {
-                    background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
+                    background: linear-gradient(135deg, #0969da, #0550ae) !important;
                     color: white !important;
-                    border: none !important;
-                    padding: 10px 20px !important;
-                    border-radius: 6px !important;
-                    font-weight: 600 !important;
+                    border: 1px solid #0550ae !important;
+                    padding: 8px 16px !important;
+                    border-radius: 4px !important;
+                    font-weight: 500 !important;
                     cursor: pointer !important;
-                    transition: all 0.3s ease !important;
-                    font-size: 14px !important;
-                    margin: 5px !important;
+                    transition: all 0.2s ease !important;
+                    font-size: 13px !important;
+                    margin: 3px !important;
+                    box-sizing: border-box !important;
                 }
                 
                 input[type="button"]:hover, 
                 input[type="submit"]:hover, 
                 button:hover {
-                    background: linear-gradient(135deg, #357ABD, #2968A3) !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3) !important;
+                    background: linear-gradient(135deg, #0550ae, #033d8b) !important;
+                    transform: translateY(-1px) !important;
+                    box-shadow: 0 2px 8px rgba(9, 105, 218, 0.25) !important;
                 }
                 
                 /* Botón Regresar diferente */
                 input[value="Regresar"], 
                 input[value*="Regresa"] {
-                    background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+                    background: linear-gradient(135deg, #6e7681, #57606a) !important;
                 }
                 
-                /* Títulos y headers */
+                /* Títulos y headers más sutiles */
                 font[size="4"], 
                 font[size="3"] {
-                    font-size: 24px !important;
-                    font-weight: bold !important;
-                    color: #2c3e50 !important;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1) !important;
+                    font-size: 20px !important;
+                    font-weight: 600 !important;
+                    color: #24292f !important;
+                    text-shadow: none !important;
                 }
                 
-                /* Mejorar tablas */
+                /* Mejorar tablas SIN zoom */
                 table {
                     width: 100% !important;
-                    max-width: 900px !important;
-                    margin: 0 auto !important;
+                    max-width: none !important;
+                    margin: 10px auto !important;
                     background: white !important;
-                    border-radius: 10px !important;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
-                    overflow: hidden !important;
+                    border-radius: 6px !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+                    overflow: visible !important;
+                    box-sizing: border-box !important;
+                }
+                
+                /* Asegurar que las tablas con formularios se vean correctamente */
+                table[cellpadding], table[cellspacing] {
+                    margin: 5px auto !important;
+                    width: auto !important;
+                    min-width: 90% !important;
                 }
                 
                 td {
-                    padding: 12px !important;
-                    vertical-align: top !important;
+                    padding: 8px 12px !important;
+                    vertical-align: middle !important;
+                    box-sizing: border-box !important;
                 }
                 
                 /* Labels mejorados */
                 td:first-child {
-                    font-weight: 600 !important;
-                    color: #495057 !important;
+                    font-weight: 500 !important;
+                    color: #24292f !important;
                     white-space: nowrap !important;
-                    background: #f8f9fa !important;
-                    border-right: 2px solid #e9ecef !important;
+                    background: #f6f8fa !important;
+                    border-right: 1px solid #d0d7de !important;
+                    min-width: 120px !important;
                 }
                 
                 /* TextArea específico */
                 textarea {
-                    min-height: 120px !important;
+                    min-height: 100px !important;
                     resize: vertical !important;
                     font-family: inherit !important;
+                    line-height: 1.4 !important;
                 }
                 
                 /* Select mejorado */
@@ -137,23 +152,50 @@ function enhanceIframeContent() {
                     background-position: right 8px center !important;
                     background-repeat: no-repeat !important;
                     background-size: 16px 16px !important;
-                    padding-right: 40px !important;
+                    padding-right: 35px !important;
                     appearance: none !important;
                 }
                 
-                /* Números en campos */
+                /* Campos numéricos */
                 input[type="text"][name*="numero"], 
                 input[type="text"][value*="0"] {
                     text-align: center !important;
-                    font-weight: bold !important;
-                    background: #f1f3f4 !important;
+                    font-weight: 500 !important;
+                    background: #f6f8fa !important;
                 }
                 
-                /* Responsive */
+                /* Asegurar que todo sea visible */
+                * {
+                    box-sizing: border-box !important;
+                }
+                
+                /* Arreglar posicionamiento absoluto que pueda existir */
+                [style*="position: absolute"] {
+                    position: static !important;
+                }
+                
+                /* Centrar contenido de formularios */
+                center {
+                    display: block !important;
+                    text-align: center !important;
+                    margin: 10px auto !important;
+                }
+                
+                /* Asegurar que los divs contenedores se vean */
+                div {
+                    position: relative !important;
+                }
+                
+                /* Formularios específicos */
+                form {
+                    margin: 10px auto !important;
+                    max-width: 95% !important;
+                }
+                
+                /* Responsive mejorado */
                 @media (max-width: 768px) {
                     body {
-                        padding: 10px !important;
-                        zoom: 1 !important;
+                        padding: 8px !important;
                     }
                     
                     table {
@@ -161,8 +203,12 @@ function enhanceIframeContent() {
                     }
                     
                     input, select, textarea {
-                        min-width: 150px !important;
                         font-size: 12px !important;
+                        padding: 4px 8px !important;
+                    }
+                    
+                    td {
+                        padding: 6px 8px !important;
                     }
                 }
             `;
@@ -170,7 +216,7 @@ function enhanceIframeContent() {
             // Insertar el CSS en el iframe
             iframeDoc.head.appendChild(style);
             
-            console.log('✅ Estilos aplicados al iframe');
+            console.log('✅ Estilos mejorados aplicados al iframe');
             
         } catch (error) {
             console.log('No se pudo acceder al contenido del iframe (posible CORS)');
@@ -385,9 +431,10 @@ function injectModernInterface() {
                 height: 100%;
                 border: none;
                 border-radius: 8px;
-                transform: scale(1.2);
+                /* Sin escalado para evitar problemas */
+                transform: none;
                 transform-origin: top left;
-                overflow: hidden;
+                overflow: auto;
             }
             
             .modern-patch {
@@ -442,7 +489,7 @@ function injectModernInterface() {
                 <div class="modern-logo">CODIM</div>
                 <div class="modern-user-info">👤 Damian Reyes Hernandez</div>
             </div>
-            <div class="modern-date" id="modernCurrentDate">24 de Mayo de 2025</div>
+            <div class="modern-date" id="modernCurrentDate">25 de Mayo de 2025</div>
         </div>
 
         <!-- Navegación -->
@@ -523,7 +570,7 @@ function injectModernInterface() {
 
         <!-- Patch signature -->
         <div class="modern-patch" data-action="showPatch">
-            ⚡ Patch by DemianRey v2.0
+            ⚡ Patch by DemianRey v2.1
         </div>
     `;
     
@@ -557,28 +604,28 @@ function injectModernInterface() {
     }
 
     function modernLoadOriginalPage(page) {
-    console.log('Cargando página:', page);
-    
-    const titleElement = document.getElementById('modernContentTitle');
-    const subtitleElement = document.getElementById('modernContentSubtitle');
-    const frameElement = document.getElementById('modernContentFrame');
-    
-    if (titleElement) titleElement.textContent = 'Cargando...';
-    if (subtitleElement) subtitleElement.textContent = 'Por favor espera...';
-    if (frameElement) {
-        frameElement.src = page;
+        console.log('Cargando página:', page);
         
-        // Mejorar el contenido cuando se cargue
-        frameElement.addEventListener('load', function() {
-            enhanceIframeContent();
-        });
+        const titleElement = document.getElementById('modernContentTitle');
+        const subtitleElement = document.getElementById('modernContentSubtitle');
+        const frameElement = document.getElementById('modernContentFrame');
+        
+        if (titleElement) titleElement.textContent = 'Cargando...';
+        if (subtitleElement) subtitleElement.textContent = 'Por favor espera...';
+        if (frameElement) {
+            frameElement.src = page;
+            
+            // Mejorar el contenido cuando se cargue
+            frameElement.addEventListener('load', function() {
+                enhanceIframeContent();
+            });
+        }
+        
+        setTimeout(() => {
+            if (titleElement) titleElement.textContent = 'Página Cargada';
+            if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original';
+        }, 1000);
     }
-    
-    setTimeout(() => {
-        if (titleElement) titleElement.textContent = 'Página Cargada';
-        if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original';
-    }, 1000);
-}
 
     function modernShowIP() {
         alert('🌐 Información de IP\n\nUsuario: dreyes\nIP: 13.36.3.129\nEstado: Conectado\nUbicación: Red Interna Telmex');
@@ -602,7 +649,7 @@ function injectModernInterface() {
     }
 
     function modernShowPatch() {
-        alert('⚡ CODIM CNS Fix v2.0\n\n✅ Interfaz completamente modernizada\n✅ VBScript convertido a JavaScript\n✅ Responsive design\n✅ Navegación mejorada\n✅ Todas las funciones originales\n\n🔧 Patch by DemianRey\n📅 Mayo 2025');
+        alert('⚡ CODIM CNS Fix v2.1\n\n✅ Interfaz completamente modernizada\n✅ VBScript convertido a JavaScript\n✅ Responsive design\n✅ Navegación mejorada\n✅ Formularios arreglados\n✅ Layout responsive\n\n🔧 Patch by DemianRey\n📅 Mayo 2025');
     }
 
     function modernUpdateDate() {
