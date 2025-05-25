@@ -195,146 +195,93 @@
     }
     
     // ===============================
-    // IDENTIFICAR ELEMENTOS PROBLEMÁTICOS
+    // LIMPIEZA MÍNIMA Y ESPECÍFICA
     // ===============================
-    function identifyProblematicElements() {
-        console.log('🔍 Analizando elementos que podrían causar el recuadro gris...');
+    function cleanOnlyProblematicFondo() {
+        // SOLO limpiar si detectamos el formulario específico problemático
+        const isProblematicForm = document.querySelector('form[name="envia_datos"]') && 
+                                 document.querySelector('textarea[name="obsdslam"]');
         
-        // Buscar todos los elementos con altura significativa
-        const allElements = document.querySelectorAll('*');
-        const problematicElements = [];
-        
-        allElements.forEach((element, index) => {
-            const computedStyle = window.getComputedStyle(element);
-            const height = parseInt(computedStyle.height);
-            const backgroundColor = computedStyle.backgroundColor;
-            const border = computedStyle.border;
-            
-            // Identificar elementos sospechosos
-            if (height > 80 || backgroundColor !== 'rgba(0, 0, 0, 0)' || border !== '0px none rgb(0, 0, 0)') {
-                const info = {
-                    tag: element.tagName,
-                    id: element.id || 'sin-id',
-                    class: element.className || 'sin-clase',
-                    height: height + 'px',
-                    backgroundColor: backgroundColor,
-                    border: border,
-                    text: element.textContent?.substring(0, 50) || 'sin-texto',
-                    isEmpty: element.children.length === 0 && element.textContent.trim() === ''
-                };
-                
-                problematicElements.push(info);
-            }
-        });
-        
-        console.log('📋 Elementos encontrados:', problematicElements);
-        
-        // Buscar específicamente elementos que podrían ser el recuadro gris
-        const grayElements = [];
-        allElements.forEach(element => {
-            const style = window.getComputedStyle(element);
-            const bg = style.backgroundColor;
-            
-            // Buscar elementos con fondo gris o similar
-            if (bg.includes('rgb(240, 240, 240)') || 
-                bg.includes('rgb(245, 245, 245)') || 
-                bg.includes('rgb(248, 248, 248)') ||
-                bg.includes('lightgray') ||
-                bg.includes('gray')) {
-                grayElements.push({
-                    element: element,
-                    tag: element.tagName,
-                    id: element.id,
-                    class: element.className,
-                    backgroundColor: bg,
-                    height: style.height,
-                    width: style.width
-                });
-            }
-        });
-        
-        if (grayElements.length > 0) {
-            console.log('🔍 Elementos GRISES encontrados:', grayElements);
-            
-            // Intentar ocultar elementos grises vacíos grandes
-            grayElements.forEach(item => {
-                const element = item.element;
-                const height = parseInt(item.height);
-                
-                if (height > 100 && element.children.length === 0 && element.textContent.trim() === '') {
-                    console.log('🚫 Ocultando elemento gris vacío:', item);
-                    element.style.display = 'none !important';
-                }
-            });
+        if (!isProblematicForm) {
+            // No es el formulario problemático, no tocar nada
+            return;
         }
         
-        return { problematicElements, grayElements };
-    }
-    
-    // ===============================
-    // LIMPIAR ELEMENTOS VACÍOS PROBLEMÁTICOS
-    // ===============================
-    function cleanEmptyElements() {
-        // Buscar y ocultar elementos vacíos que puedan estar causando el espacio en blanco
-        const emptyElements = [];
+        console.log('📝 Formulario problemático detectado, aplicando limpieza mínima...');
         
-        // BUSCAR FONDO.BMP PROBLEMÁTICO SOLO SI ESTÁ CAUSANDO PROBLEMAS
+        // Buscar TODAS las imágenes fondo.bmp en este formulario problemático
         const fondoImages = document.querySelectorAll('img[src*="fondo.bmp"]');
-        fondoImages.forEach(img => {
-            // Solo ocultar si la imagen tiene características problemáticas
-            const width = img.getAttribute('width') || img.clientWidth;
-            const height = img.getAttribute('height') || img.clientHeight;
-            const hasTitle = img.getAttribute('title') || img.getAttribute('alt');
+        let cleaned = 0;
+        
+        fondoImages.forEach((img, index) => {
+            const rect = img.getBoundingClientRect();
+            const style = window.getComputedStyle(img);
             
-            // Ocultar solo si es una imagen pequeña (1x1) o sin alt/title (probablemente decorativa problemática)
-            if ((width == 1 || height == 1) || (!hasTitle && (width < 50 && height < 50))) {
-                img.style.display = 'none';
-                emptyElements.push('imagen fondo.bmp problemática');
-            }
-        });
-        
-        // Buscar elementos con background fondo.bmp solo si están vacíos
-        const elementsWithBackground = document.querySelectorAll('[style*="fondo.bmp"]');
-        elementsWithBackground.forEach(element => {
-            // Solo remover background si el elemento está vacío
-            if (element.children.length === 0 && element.textContent.trim() === '') {
-                element.style.backgroundImage = 'none';
-                element.style.minHeight = '0';
-                emptyElements.push('background fondo.bmp vacío');
-            }
-        });
-        
-        // Buscar iframes vacíos o sin contenido
-        const iframes = document.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-            if (!iframe.src || iframe.src === '' || iframe.src === 'about:blank') {
-                iframe.style.display = 'none';
-                emptyElements.push('iframe vacío');
-            }
-        });
-        
-        // Buscar divs vacíos grandes PERO sin atributos importantes
-        const divs = document.querySelectorAll('div');
-        divs.forEach(div => {
-            const computedStyle = window.getComputedStyle(div);
-            const height = parseInt(computedStyle.height);
-            const hasBackground = computedStyle.backgroundImage !== 'none';
-            const hasImportantAttrs = div.id || div.className || div.onclick || hasBackground;
+            console.log(`🔍 Analizando imagen fondo.bmp #${index}:`, {
+                width: rect.width,
+                height: rect.height,
+                position: style.position,
+                top: rect.top,
+                left: rect.left,
+                zIndex: style.zIndex,
+                visible: rect.width > 0 && rect.height > 0,
+                display: style.display,
+                visibility: style.visibility
+            });
             
-            // Solo ocultar divs grandes vacíos SIN atributos importantes
-            if (height > 80 && div.children.length === 0 && div.textContent.trim() === '' && !hasImportantAttrs) {
-                div.style.display = 'none';
-                emptyElements.push('div vacío grande sin atributos');
+            // Criterios MUY amplios para eliminar cualquier imagen fondo.bmp problemática
+            const isProblematic = (
+                // Cualquier imagen visible mayor a 50x50 (muy permisivo)
+                rect.width > 50 && rect.height > 50 &&
+                (
+                    // Es medianamente grande (más permisivo que antes)
+                    (rect.width > 100 || rect.height > 100) ||
+                    // O está posicionada de alguna manera específica
+                    (style.position !== 'static') ||
+                    // O tiene algún z-index
+                    (parseInt(style.zIndex) !== 0 && style.zIndex !== 'auto') ||
+                    // O simplemente es una imagen en este formulario (más agresivo)
+                    true  // TEMPORAL: eliminar TODAS las imágenes fondo.bmp en este formulario
+                )
+            );
+            
+            if (isProblematic) {
+                console.log(`🚫 Imagen fondo.bmp problemática #${index} ocultada - Criterio: ancho=${rect.width}, alto=${rect.height}, pos=${style.position}`);
+                
+                // Método más agresivo para ocultar la imagen
+                img.remove();  // Eliminar completamente del DOM
+                cleaned++;
+                
+                console.log(`🗑️ Imagen fondo.bmp #${index} eliminada completamente del DOM`);
+            } else {
+                console.log(`✅ Imagen fondo.bmp #${index} conservada`);
             }
         });
         
-        if (emptyElements.length > 0) {
-            console.log('🧹 Elementos problemáticos ocultados:', emptyElements);
+        // También buscar elementos con background fondo.bmp problemáticos
+        const elementsWithBgFondo = document.querySelectorAll('[style*="fondo.bmp"]');
+        elementsWithBgFondo.forEach((element, index) => {
+            const rect = element.getBoundingClientRect();
+            const isEmpty = element.children.length === 0 && element.textContent.trim() === '';
+            
+            if (isEmpty && (rect.width > 200 || rect.height > 100)) {
+                console.log(`🧹 Background fondo.bmp problemático #${index} eliminado`);
+                element.style.backgroundImage = 'none !important';
+                element.style.background = 'transparent !important';
+                element.style.display = 'none !important';
+                cleaned++;
+            }
+        });
+        
+        if (cleaned > 0) {
+            console.log(`✅ ${cleaned} elemento(s) fondo.bmp problemático(s) limpiado(s)`);
+        } else {
+            console.log('ℹ️ No se encontraron elementos fondo.bmp problemáticos');
         }
     }
     
     // ===============================
-    // APLICAR ESTILOS MÍNIMOS
+    // APLICAR ESTILOS MÍNIMOS (SIN CAMBIOS)
     // ===============================
     function applyMinimalStyles() {
         // Solo aplicar si no existe ya
@@ -367,172 +314,153 @@
         if (isFormPage) {
             // ESTILOS PARA FORMULARIOS - MANTENER LAYOUT ORIGINAL CON MEJOR ESTILO
             style.textContent = `
-                /* ESTILOS PARA FORMULARIOS - CONSERVADOR PERO ELEGANTE */
+                /* FORZAR OCULTACIÓN DE FONDO.BMP PROBLEMÁTICO EN FORMULARIOS */
+                form[name="envia_datos"] img[src*="fondo.bmp"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    position: absolute !important;
+                    left: -9999px !important;
+                    top: -9999px !important;
+                    z-index: -9999 !important;
+                }
+                
+                /* ESTILOS BASE PARA EL BODY */
                 body {
                     font-family: 'Segoe UI', Arial, sans-serif !important;
                     margin: 0 !important;
                     padding: 20px !important;
                     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-                    text-align: center !important;
                     min-height: 100vh !important;
                 }
                 
-                /* OCULTAR IMAGEN DE FONDO PROBLEMÁTICA SOLO EN FORMULARIOS */
-                img[src*="fondo.bmp"][width="1"],
-                img[src*="fondo.bmp"][height="1"],
-                img[src*="fondo.bmp"]:not([alt]):not([title]) {
-                    display: none !important;
-                    visibility: hidden !important;
-                }
-                
-                /* Ocultar elementos con fondo.bmp como background solo si están vacíos */
-                div:empty[style*="fondo.bmp"],
-                td:empty[style*="fondo.bmp"] {
-                    background-image: none !important;
-                    background: transparent !important;
-                    height: auto !important;
-                    min-height: 0 !important;
-                }
-                
-                /* OCULTAR ELEMENTOS VACÍOS PROBLEMÁTICOS */
-                iframe:empty,
-                div:empty:not([style*="background"]),
-                td:empty:not([style*="background"]),
-                table:empty {
-                    display: none !important;
-                }
-                
-                /* Centrar todo */
-                body > * {
-                    margin-left: auto !important;
-                    margin-right: auto !important;
-                    text-align: left !important;
-                }
-                
-                /* Contenedor principal centrado */
-                center {
+                /* CONTENEDOR PRINCIPAL - REEMPLAZAR FONDO.BMP */
+                center, body > center {
                     display: block !important;
-                    text-align: center !important;
-                    margin: 25px auto !important;
-                }
-                
-                /* Formulario centrado con mejor estilo */
-                form {
-                    max-width: 800px !important;
-                    margin: 25px auto !important;
+                    max-width: 900px !important;
+                    margin: 20px auto !important;
                     background: white !important;
-                    border-radius: 10px !important;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-                    padding: 25px !important;
-                    text-align: center !important;
+                    border-radius: 12px !important;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+                    padding: 30px !important;
                     border: 1px solid #e9ecef !important;
+                    text-align: center !important;
                 }
                 
-                /* Títulos del formulario */
-                font[size="4"], font[size="3"], h1, h2, h3,
-                form > center, form center {
-                    text-align: center !important;
-                    margin: 0 0 20px 0 !important;
+                /* TÍTULO PRINCIPAL */
+                center font, center b, center strong, 
+                body > center font, body > center b, body > center strong {
+                    display: block !important;
                     color: #2c3e50 !important;
                     font-weight: 600 !important;
-                    font-size: 20px !important;
+                    font-size: 22px !important;
+                    margin-bottom: 25px !important;
+                    text-decoration: underline !important;
+                    text-decoration-color: #4A90E2 !important;
+                    text-underline-offset: 8px !important;
                 }
                 
-                /* Tablas manteniendo distribución original */
+                /* FORMULARIO */
+                form {
+                    margin: 20px auto !important;
+                    text-align: center !important;
+                }
+                
+                /* TABLA DEL FORMULARIO */
                 table {
-                    margin: 15px auto !important;
-                    border-collapse: collapse !important;
+                    margin: 20px auto !important;
+                    border-collapse: separate !important;
+                    border-spacing: 0 !important;
                     background: white !important;
-                    border-radius: 6px !important;
+                    border-radius: 8px !important;
                     overflow: hidden !important;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
                     border: 1px solid #e9ecef !important;
+                    width: auto !important;
+                    max-width: 100% !important;
                 }
                 
-                /* Celdas manteniendo tamaño original */
+                /* CELDAS */
                 td {
-                    padding: 8px 15px !important;
+                    padding: 12px 18px !important;
                     vertical-align: middle !important;
-                    border: 1px solid #e9ecef !important;
+                    border-bottom: 1px solid #f0f0f0 !important;
                 }
                 
-                /* Labels (primera columna) con mejor estilo */
+                /* PRIMERA COLUMNA (LABELS) */
                 td:first-child {
                     background: #f8f9fa !important;
-                    font-weight: 500 !important;
+                    font-weight: 600 !important;
                     color: #495057 !important;
                     white-space: nowrap !important;
                     text-align: right !important;
-                    padding-right: 12px !important;
+                    padding-right: 15px !important;
+                    border-right: 1px solid #e9ecef !important;
+                    min-width: 140px !important;
                 }
                 
-                /* Inputs mejorados pero con tamaño original */
+                /* SEGUNDA COLUMNA (INPUTS) */
+                td:nth-child(2) {
+                    background: white !important;
+                    text-align: left !important;
+                    padding-left: 15px !important;
+                }
+                
+                /* INPUTS MEJORADOS */
                 input[type="text"], select, textarea {
-                    padding: 6px 10px !important;
-                    border: 1px solid #ced4da !important;
-                    border-radius: 4px !important;
+                    padding: 8px 12px !important;
+                    border: 2px solid #e9ecef !important;
+                    border-radius: 6px !important;
                     font-size: 14px !important;
                     background: white !important;
-                    transition: all 0.2s ease !important;
+                    transition: all 0.3s ease !important;
                     font-family: inherit !important;
+                    min-width: 200px !important;
                 }
                 
                 input[type="text"]:focus, select:focus, textarea:focus {
                     border-color: #4A90E2 !important;
-                    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1) !important;
+                    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1) !important;
                     outline: none !important;
+                    transform: scale(1.02) !important;
                 }
                 
-                /* Inputs numéricos */
-                input[type="text"][value="0"],
-                input[name*="quejas"],
-                input[name*="pendientes"],
-                input[name*="reincidencia"] {
-                    text-align: center !important;
-                    font-weight: 600 !important;
-                    background: #f0f8ff !important;
-                    color: #1a73e8 !important;
-                    width: 60px !important;
-                }
-                
-                /* Select mejorado */
-                select {
-                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234A90E2' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
-                    background-position: right 8px center !important;
-                    background-repeat: no-repeat !important;
-                    background-size: 12px 12px !important;
-                    padding-right: 30px !important;
-                    appearance: none !important;
-                    cursor: pointer !important;
-                }
-                
-                /* Textarea manteniendo tamaño */
+                /* TEXTAREA ESPECÍFICO */
                 textarea {
-                    width: 350px !important;
-                    height: 80px !important;
+                    width: 400px !important;
+                    height: 100px !important;
                     resize: vertical !important;
                     line-height: 1.4 !important;
                 }
                 
-                /* Campos específicos */
-                input[name*="pisa"], 
-                input[name*="clase"] {
-                    background: #e8f4fd !important;
+                /* SELECT ESPECÍFICO */
+                select {
+                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234A90E2' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+                    background-position: right 12px center !important;
+                    background-repeat: no-repeat !important;
+                    background-size: 14px 14px !important;
+                    padding-right: 40px !important;
+                    appearance: none !important;
+                    cursor: pointer !important;
+                    min-width: 250px !important;
+                }
+                
+                /* INPUTS NUMÉRICOS */
+                input[name*="quejas"], input[name*="pendientes"], input[name*="reincidencia"] {
+                    text-align: center !important;
+                    font-weight: 600 !important;
+                    background: #f0f8ff !important;
+                    color: #1a73e8 !important;
+                    width: 80px !important;
+                    min-width: 80px !important;
                     border-color: #4A90E2 !important;
-                    font-weight: 500 !important;
-                    width: 180px !important;
                 }
                 
-                /* Campos de texto normales */
-                input[type="text"]:not([name*="quejas"]):not([name*="pendientes"]):not([name*="reincidencia"]):not([value="0"]) {
-                    width: 150px !important;
-                }
-                
-                /* Botones mejorados */
+                /* BOTONES */
                 input[type="button"], input[type="submit"] {
-                    padding: 10px 20px !important;
-                    margin: 15px 8px 5px 8px !important;
-                    border-radius: 6px !important;
+                    padding: 12px 25px !important;
+                    margin: 20px 10px !important;
+                    border-radius: 8px !important;
                     cursor: pointer !important;
                     font-weight: 600 !important;
                     font-size: 14px !important;
@@ -540,42 +468,45 @@
                     color: white !important;
                     border: none !important;
                     transition: all 0.3s ease !important;
-                    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3) !important;
+                    box-shadow: 0 3px 12px rgba(74, 144, 226, 0.3) !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.5px !important;
                 }
                 
                 input[type="button"]:hover, input[type="submit"]:hover {
                     background: linear-gradient(135deg, #357ABD, #2968A3) !important;
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4) !important;
                 }
                 
-                /* Botón regresar */
+                /* BOTÓN REGRESAR */
                 input[value*="Regresa"], input[value="Regresar"] {
                     background: linear-gradient(135deg, #6c757d, #5a6268) !important;
-                    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3) !important;
+                    box-shadow: 0 3px 12px rgba(108, 117, 125, 0.3) !important;
                 }
                 
-                input[value*="Regresa"]:hover, input[value="Regresar"]:hover {
-                    background: linear-gradient(135deg, #5a6268, #495057) !important;
-                    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4) !important;
-                }
-                
-                /* Contenedor de botones centrado */
+                /* CONTENEDOR DE BOTONES */
                 td[colspan] {
                     text-align: center !important;
-                    padding: 15px !important;
+                    padding: 25px !important;
                     background: #f8f9fa !important;
+                    border-top: 2px solid #e9ecef !important;
                 }
                 
-                /* Animación sutil */
-                form {
-                    animation: fadeInForm 0.5s ease-out !important;
+                /* ÚLTIMA FILA SIN BORDE */
+                tr:last-child td {
+                    border-bottom: none !important;
+                }
+                
+                /* ANIMACIÓN */
+                center, body > center {
+                    animation: fadeInForm 0.6s ease-out !important;
                 }
                 
                 @keyframes fadeInForm {
                     from {
                         opacity: 0;
-                        transform: translateY(20px);
+                        transform: translateY(30px);
                     }
                     to {
                         opacity: 1;
@@ -583,24 +514,11 @@
                     }
                 }
                 
-                /* Hover en filas */
-                tr:hover td {
-                    background: #f1f3f5 !important;
-                }
-                
-                tr:hover td:first-child {
-                    background: #e9ecef !important;
-                }
-                
-                /* Responsive */
+                /* RESPONSIVE */
                 @media (max-width: 768px) {
-                    body {
-                        padding: 10px !important;
-                    }
-                    
-                    form {
-                        margin: 15px auto !important;
-                        padding: 15px !important;
+                    center, body > center {
+                        margin: 15px !important;
+                        padding: 20px !important;
                     }
                     
                     table {
@@ -608,21 +526,19 @@
                     }
                     
                     td {
-                        padding: 6px 10px !important;
+                        padding: 10px 12px !important;
                     }
                     
-                    input[type="text"], select, textarea {
+                    input, select, textarea {
                         font-size: 13px !important;
-                        width: auto !important;
-                        max-width: 140px !important;
+                        min-width: 150px !important;
                     }
                     
                     textarea {
-                        width: 250px !important;
-                        height: 60px !important;
+                        width: 300px !important;
+                        height: 80px !important;
                     }
-                }
-            `;
+                }`;
         } else {
             // ESTILOS PARA LISTAS - Más completos
             style.textContent = `
@@ -773,25 +689,36 @@
     // INICIALIZACIÓN
     // ===============================
     function initializePatch() {
-        // Primero identificar elementos problemáticos
-        identifyProblematicElements();
+        console.log('🚀 Iniciando parche CODIM CNS...');
         
-        cleanEmptyElements();
+        // 1. APLICAR ESTILOS (sin cambios)
         applyMinimalStyles();
-        addPatchSignature();
         
+        // 2. ARREGLAR BOTONES (sin cambios)
         const fixed = fixAllButtons();
         if (fixed > 0) {
-            console.log('CODIM Fix: ' + fixed + ' boton(es) arreglado(s) en página interna');
+            console.log('✅ CODIM Fix: ' + fixed + ' boton(es) arreglado(s) en página interna');
         }
         
-        // Limpiar elementos vacíos después de un pequeño delay
-        setTimeout(() => {
-            cleanEmptyElements();
-            identifyProblematicElements();
-        }, 500);
+        // 3. LIMPIEZA MÍNIMA inmediatamente
+        cleanOnlyProblematicFondo();
         
-        console.log('CODIM CNS página interna funcional - Patch by DemianRey');
+        // 4. AGREGAR SIGNATURE
+        addPatchSignature();
+        
+        // 5. LIMPIEZA ADICIONAL después de que todo cargue
+        setTimeout(() => {
+            cleanOnlyProblematicFondo();
+            console.log('🔄 Segunda limpieza específica completada');
+        }, 200);
+        
+        // 6. LIMPIEZA FINAL después de animaciones
+        setTimeout(() => {
+            cleanOnlyProblematicFondo();
+            console.log('🔄 Limpieza final completada');
+        }, 1000);
+        
+        console.log('✅ CODIM CNS página interna funcional - Patch by DemianRey');
     }
     
     // Aplicar inmediatamente
@@ -801,17 +728,25 @@
         initializePatch();
     }
     
-    // Observer para nuevos elementos
+    // Observer para nuevos elementos (solo botones)
     const observer = new MutationObserver(function(mutations) {
         let needsFix = false;
+        let needsCleanup = false;
         
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length > 0) {
                 mutation.addedNodes.forEach(function(node) {
                     if (node.nodeType === 1) {
+                        // Verificar si se agregaron botones
                         if (node.tagName === 'INPUT' || 
                             (node.querySelector && node.querySelector('input[type="button"]'))) {
                             needsFix = true;
+                        }
+                        
+                        // Solo limpiar si aparece fondo.bmp en el formulario problemático
+                        if (node.tagName === 'IMG' && node.src && node.src.includes('fondo.bmp') &&
+                            document.querySelector('form[name="envia_datos"]')) {
+                            needsCleanup = true;
                         }
                     }
                 });
@@ -822,9 +757,13 @@
             setTimeout(function() {
                 const fixed = fixAllButtons();
                 if (fixed > 0) {
-                    console.log('CODIM Fix: ' + fixed + ' boton(es) adicional(es) arreglado(s)');
+                    console.log('✅ CODIM Fix: ' + fixed + ' boton(es) adicional(es) arreglado(s)');
                 }
             }, 100);
+        }
+        
+        if (needsCleanup) {
+            setTimeout(cleanOnlyProblematicFondo, 200);
         }
     });
     
@@ -833,6 +772,6 @@
         subtree: true
     });
     
-    console.log('CODIM CNS Fix activo en página interna - Patch by DemianRey');
+    console.log('🎯 CODIM CNS Fix activo - Solo limpieza específica');
     
 })();

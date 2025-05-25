@@ -22,193 +22,286 @@ function enhanceIframeContent() {
             // Crear CSS personalizado para el iframe
             const style = iframeDoc.createElement('style');
             style.textContent = `
-                /* MEJORAS PARA EL FORMULARIO DEL IFRAME */
-                body {
+                /* FORZAR OCULTACIÓN DE FONDO.BMP EN FORMULARIOS PROBLEMÁTICOS */
+                form[name="envia_datos"] img[src*="fondo.bmp"],
+                img[src*="fondo.bmp"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    position: absolute !important;
+                    left: -9999px !important;
+                    top: -9999px !important;
+                    z-index: -9999 !important;
+                }
+                
+                /* RESETEAR ESTILOS BÁSICOS PARA EL IFRAME */
+                * {
+                    box-sizing: border-box !important;
+                }
+                
+                html, body {
                     margin: 0 !important;
-                    padding: 15px !important;
+                    padding: 0 !important;
                     font-family: 'Segoe UI', Arial, sans-serif !important;
+                    background: transparent !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+                
+                /* CONTENEDOR PRINCIPAL DEL IFRAME */
+                body {
+                    padding: 20px !important;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+                    min-height: 100vh !important;
+                }
+                
+                /* CONTENEDOR CENTER COMO REEMPLAZO DEL FONDO.BMP */
+                center, body > center {
+                    display: block !important;
+                    max-width: 800px !important;
+                    margin: 0 auto !important;
+                    background: white !important;
+                    border-radius: 12px !important;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+                    padding: 30px !important;
+                    border: 1px solid #e9ecef !important;
+                    text-align: center !important;
+                    position: relative !important;
+                    overflow: visible !important;
+                }
+                
+                /* TÍTULO PRINCIPAL */
+                center > font, center > b, center > strong,
+                center font[size], center b, center strong {
+                    display: block !important;
+                    color: #2c3e50 !important;
+                    font-weight: 600 !important;
+                    font-size: 20px !important;
+                    margin-bottom: 20px !important;
+                    text-decoration: underline !important;
+                    text-decoration-color: #4A90E2 !important;
+                    text-underline-offset: 6px !important;
+                }
+                
+                /* FORMULARIO */
+                form, form[name="envia_datos"] {
+                    margin: 20px auto !important;
+                    text-align: center !important;
+                    width: 100% !important;
+                    background: transparent !important;
+                    border: none !important;
+                    padding: 0 !important;
+                }
+                
+                /* TABLA PRINCIPAL DEL FORMULARIO */
+                table {
+                    margin: 15px auto !important;
+                    border-collapse: separate !important;
+                    border-spacing: 0 !important;
+                    background: white !important;
+                    border-radius: 8px !important;
+                    overflow: hidden !important;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
+                    border: 1px solid #e9ecef !important;
+                    width: 100% !important;
+                    max-width: 650px !important;
+                }
+                
+                /* CELDAS DE LA TABLA */
+                td {
+                    padding: 12px 16px !important;
+                    vertical-align: middle !important;
+                    border-bottom: 1px solid #f5f5f5 !important;
+                    font-size: 14px !important;
+                }
+                
+                /* PRIMERA COLUMNA - LABELS */
+                td:first-child {
                     background: #f8f9fa !important;
-                    /* REMOVIDO: zoom: 1.1 !important; */
-                    box-sizing: border-box !important;
+                    font-weight: 600 !important;
+                    color: #495057 !important;
+                    white-space: nowrap !important;
+                    text-align: right !important;
+                    padding-right: 15px !important;
+                    border-right: 1px solid #e9ecef !important;
+                    width: 150px !important;
+                    min-width: 150px !important;
                 }
                 
-                /* Contenedor principal del formulario */
-                table, td, tr {
-                    border-collapse: collapse !important;
-                    box-sizing: border-box !important;
+                /* SEGUNDA COLUMNA - INPUTS */
+                td:nth-child(2), td:last-child {
+                    background: white !important;
+                    text-align: left !important;
+                    padding-left: 15px !important;
                 }
                 
-                /* Mejorar inputs SIN afectar el tamaño */
+                /* INPUTS GENERALES */
                 input[type="text"], 
                 input[type="password"], 
                 select, 
                 textarea {
-                    padding: 6px 10px !important;
-                    border: 1px solid #d0d7de !important;
-                    border-radius: 4px !important;
-                    font-size: 13px !important;
+                    padding: 8px 12px !important;
+                    border: 2px solid #e9ecef !important;
+                    border-radius: 6px !important;
+                    font-size: 14px !important;
                     font-family: inherit !important;
-                    transition: all 0.2s ease !important;
+                    transition: all 0.3s ease !important;
                     background: white !important;
-                    box-sizing: border-box !important;
-                    /* REMOVIDO: min-width fijo para evitar problemas de layout */
+                    width: auto !important;
+                    min-width: 180px !important;
                 }
                 
                 input[type="text"]:focus, 
                 input[type="password"]:focus, 
                 select:focus, 
                 textarea:focus {
-                    border-color: #0969da !important;
-                    box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.1) !important;
+                    border-color: #4A90E2 !important;
+                    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1) !important;
                     outline: none !important;
+                    transform: scale(1.02) !important;
                 }
                 
-                /* Mejorar botones */
+                /* SELECT ESPECÍFICO */
+                select {
+                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234A90E2' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+                    background-position: right 12px center !important;
+                    background-repeat: no-repeat !important;
+                    background-size: 14px 14px !important;
+                    padding-right: 35px !important;
+                    appearance: none !important;
+                    cursor: pointer !important;
+                    min-width: 220px !important;
+                }
+                
+                /* TEXTAREA ESPECÍFICO */
+                textarea {
+                    width: 350px !important;
+                    height: 90px !important;
+                    resize: vertical !important;
+                    line-height: 1.4 !important;
+                    font-family: 'Segoe UI', Arial, sans-serif !important;
+                }
+                
+                /* INPUTS NUMÉRICOS PEQUEÑOS */
+                input[name*="quejas"], 
+                input[name*="pendientes"], 
+                input[name*="reincidencia"],
+                input[type="text"][value="0"] {
+                    text-align: center !important;
+                    font-weight: 600 !important;
+                    background: #f0f8ff !important;
+                    color: #1a73e8 !important;
+                    width: 70px !important;
+                    min-width: 70px !important;
+                    border-color: #4A90E2 !important;
+                }
+                
+                /* BOTONES */
                 input[type="button"], 
                 input[type="submit"], 
                 button {
-                    background: linear-gradient(135deg, #0969da, #0550ae) !important;
-                    color: white !important;
-                    border: 1px solid #0550ae !important;
-                    padding: 8px 16px !important;
-                    border-radius: 4px !important;
-                    font-weight: 500 !important;
+                    padding: 10px 20px !important;
+                    margin: 15px 8px !important;
+                    border-radius: 6px !important;
                     cursor: pointer !important;
-                    transition: all 0.2s ease !important;
+                    font-weight: 600 !important;
                     font-size: 13px !important;
-                    margin: 3px !important;
-                    box-sizing: border-box !important;
+                    background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
+                    color: white !important;
+                    border: none !important;
+                    transition: all 0.3s ease !important;
+                    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3) !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.3px !important;
                 }
                 
                 input[type="button"]:hover, 
                 input[type="submit"]:hover, 
                 button:hover {
-                    background: linear-gradient(135deg, #0550ae, #033d8b) !important;
+                    background: linear-gradient(135deg, #357ABD, #2968A3) !important;
                     transform: translateY(-1px) !important;
-                    box-shadow: 0 2px 8px rgba(9, 105, 218, 0.25) !important;
+                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
                 }
                 
-                /* Botón Regresar diferente */
+                /* BOTÓN REGRESAR */
                 input[value="Regresar"], 
                 input[value*="Regresa"] {
                     background: linear-gradient(135deg, #6e7681, #57606a) !important;
+                    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3) !important;
                 }
                 
-                /* Títulos y headers más sutiles */
-                font[size="4"], 
-                font[size="3"] {
-                    font-size: 20px !important;
-                    font-weight: 600 !important;
-                    color: #24292f !important;
-                    text-shadow: none !important;
+                input[value="Regresar"]:hover, 
+                input[value*="Regresa"]:hover {
+                    background: linear-gradient(135deg, #57606a, #495057) !important;
                 }
                 
-                /* Mejorar tablas SIN zoom */
-                table {
-                    width: 100% !important;
-                    max-width: none !important;
-                    margin: 10px auto !important;
-                    background: white !important;
-                    border-radius: 6px !important;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-                    overflow: visible !important;
-                    box-sizing: border-box !important;
-                }
-                
-                /* Asegurar que las tablas con formularios se vean correctamente */
-                table[cellpadding], table[cellspacing] {
-                    margin: 5px auto !important;
-                    width: auto !important;
-                    min-width: 90% !important;
-                }
-                
-                td {
-                    padding: 8px 12px !important;
-                    vertical-align: middle !important;
-                    box-sizing: border-box !important;
-                }
-                
-                /* Labels mejorados */
-                td:first-child {
-                    font-weight: 500 !important;
-                    color: #24292f !important;
-                    white-space: nowrap !important;
-                    background: #f6f8fa !important;
-                    border-right: 1px solid #d0d7de !important;
-                    min-width: 120px !important;
-                }
-                
-                /* TextArea específico */
-                textarea {
-                    min-height: 100px !important;
-                    resize: vertical !important;
-                    font-family: inherit !important;
-                    line-height: 1.4 !important;
-                }
-                
-                /* Select mejorado */
-                select {
-                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
-                    background-position: right 8px center !important;
-                    background-repeat: no-repeat !important;
-                    background-size: 16px 16px !important;
-                    padding-right: 35px !important;
-                    appearance: none !important;
-                }
-                
-                /* Campos numéricos */
-                input[type="text"][name*="numero"], 
-                input[type="text"][value*="0"] {
+                /* CONTENEDOR DE BOTONES */
+                td[colspan] {
                     text-align: center !important;
-                    font-weight: 500 !important;
-                    background: #f6f8fa !important;
+                    padding: 20px !important;
+                    background: #f8f9fa !important;
+                    border-top: 2px solid #e9ecef !important;
+                    border-bottom: none !important;
                 }
                 
-                /* Asegurar que todo sea visible */
-                * {
-                    box-sizing: border-box !important;
+                /* ÚLTIMA FILA SIN BORDE INFERIOR */
+                tr:last-child td {
+                    border-bottom: none !important;
                 }
                 
-                /* Arreglar posicionamiento absoluto que pueda existir */
-                [style*="position: absolute"] {
-                    position: static !important;
+                /* ANIMACIÓN DE APARICIÓN */
+                center, body > center {
+                    animation: fadeInForm 0.5s ease-out !important;
                 }
                 
-                /* Centrar contenido de formularios */
-                center {
-                    display: block !important;
-                    text-align: center !important;
-                    margin: 10px auto !important;
+                @keyframes fadeInForm {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
                 }
                 
-                /* Asegurar que los divs contenedores se vean */
-                div {
-                    position: relative !important;
-                }
-                
-                /* Formularios específicos */
-                form {
-                    margin: 10px auto !important;
-                    max-width: 95% !important;
-                }
-                
-                /* Responsive mejorado */
+                /* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
                 @media (max-width: 768px) {
                     body {
-                        padding: 8px !important;
+                        padding: 15px !important;
+                    }
+                    
+                    center, body > center {
+                        padding: 20px !important;
+                        margin: 0 !important;
                     }
                     
                     table {
                         font-size: 12px !important;
+                        max-width: 100% !important;
+                    }
+                    
+                    td {
+                        padding: 8px 12px !important;
+                    }
+                    
+                    td:first-child {
+                        width: 120px !important;
+                        min-width: 120px !important;
                     }
                     
                     input, select, textarea {
                         font-size: 12px !important;
-                        padding: 4px 8px !important;
+                        min-width: 140px !important;
                     }
                     
-                    td {
-                        padding: 6px 8px !important;
+                    textarea {
+                        width: 280px !important;
+                        height: 70px !important;
+                    }
+                    
+                    select {
+                        min-width: 180px !important;
                     }
                 }
             `;
@@ -431,7 +524,6 @@ function injectModernInterface() {
                 height: 100%;
                 border: none;
                 border-radius: 8px;
-                /* Sin escalado para evitar problemas */
                 transform: none;
                 transform-origin: top left;
                 overflow: auto;
@@ -570,7 +662,7 @@ function injectModernInterface() {
 
         <!-- Patch signature -->
         <div class="modern-patch" data-action="showPatch">
-            ⚡ Patch by DemianRey v2.1
+            ⚡ Patch by DemianRey v2.4
         </div>
     `;
     
@@ -604,7 +696,7 @@ function injectModernInterface() {
     }
 
     function modernLoadOriginalPage(page) {
-        console.log('Cargando página:', page);
+        console.log('🔄 Cargando página:', page);
         
         const titleElement = document.getElementById('modernContentTitle');
         const subtitleElement = document.getElementById('modernContentSubtitle');
@@ -612,8 +704,12 @@ function injectModernInterface() {
         
         if (titleElement) titleElement.textContent = 'Cargando...';
         if (subtitleElement) subtitleElement.textContent = 'Por favor espera...';
+        
         if (frameElement) {
-            frameElement.src = page;
+            // CAMBIO MÍNIMO: Forzar recarga con timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const separator = page.includes('?') ? '&' : '?';
+            frameElement.src = page + separator + '_t=' + timestamp;
             
             // Mejorar el contenido cuando se cargue
             frameElement.addEventListener('load', function() {
@@ -649,7 +745,7 @@ function injectModernInterface() {
     }
 
     function modernShowPatch() {
-        alert('⚡ CODIM CNS Fix v2.1\n\n✅ Interfaz completamente modernizada\n✅ VBScript convertido a JavaScript\n✅ Responsive design\n✅ Navegación mejorada\n✅ Formularios arreglados\n✅ Layout responsive\n\n🔧 Patch by DemianRey\n📅 Mayo 2025');
+        alert('⚡ CODIM CNS Fix v2.4\n\n✅ Interfaz completamente modernizada\n✅ VBScript convertido a JavaScript\n✅ Responsive design\n✅ Navegación mejorada\n✅ Formularios arreglados\n✅ Fix específico para fondo.bmp\n✅ Layout responsive\n\n🔧 Patch by DemianRey\n📅 Mayo 2025\n\n🐛 Fix: Solo limpieza mínima y específica');
     }
 
     function modernUpdateDate() {
@@ -734,4 +830,4 @@ if (shouldReplaceWithModernInterface()) {
     (document.head || document.documentElement).appendChild(script);
 }
 
-console.log('✅ CODIM CNS Fix - Monitoreo activo');
+console.log('✅ CODIM CNS Fix - Solo cambios mínimos necesarios');
