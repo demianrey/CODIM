@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "CODIM CNS Fix - Patch by DemianRey",
-  "version": "1.2",
-  "description": "Arregla automáticamente los problemas de VBScript en CODIM CNS y mejora la interfaz",
+  "version": "3.0",
+  "description": "Moderniza completamente CODIM CNS con interfaz responsive y arreglos de VBScript",
   "permissions": [
     "activeTab",
     "scripting"
@@ -22,14 +22,15 @@
         "http://13.131.146.246/*"
       ],
       "js": ["content.js"],
-      "css": ["styles.css"],
       "run_at": "document_end",
       "all_frames": true
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["inject.js", "styles.css"],
+      "resources": [
+        "classic-patch.js"
+      ],
       "matches": ["http://13.131.146.246/*"]
     }
   ],
