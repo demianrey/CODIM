@@ -1,703 +1,501 @@
-// content.js - Script que se ejecuta automáticamente en todas las páginas de CODIM
+// content.js - Script principal que decide qué interfaz cargar
 console.log('🚀 CODIM CNS Fix - Extensión activada');
 
-// Detectar si estamos en la página principal y reemplazarla
-function shouldReplaceWithModernInterface() {
-    const currentPath = window.location.pathname;
-    const isMainPage = currentPath === '/' || currentPath === '/index.html' || currentPath === '/index.asp' || currentPath === '';
-    const hasOldInterface = document.querySelector('div[style*="position: absolute"]') && 
-                           document.querySelector('img[src*="menu.bmp"]');
-    
-    return isMainPage && hasOldInterface;
-}
+class CODIMContentScript {
+    constructor() {
+        this.isMainPage = this.checkIsMainPage();
+        this.hasOldInterface = this.checkHasOldInterface();
+    }
 
-function enhanceIframeContent() {
-    const iframe = document.getElementById('modernContentFrame');
-    if (!iframe) return;
-    
-    iframe.addEventListener('load', function() {
-        try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            
-            // Crear CSS personalizado para el iframe
-            const style = iframeDoc.createElement('style');
-            style.textContent = `
-                /* FORZAR OCULTACIÓN DE FONDO.BMP EN FORMULARIOS PROBLEMÁTICOS */
-                form[name="envia_datos"] img[src*="fondo.bmp"],
-                img[src*="fondo.bmp"] {
-                    display: none !important;
-                    visibility: hidden !important;
-                    opacity: 0 !important;
-                    position: absolute !important;
-                    left: -9999px !important;
-                    top: -9999px !important;
-                    z-index: -9999 !important;
-                }
-                
-                /* RESETEAR ESTILOS BÁSICOS PARA EL IFRAME */
-                * {
-                    box-sizing: border-box !important;
-                }
-                
-                html, body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    font-family: 'Segoe UI', Arial, sans-serif !important;
-                    background: transparent !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                }
-                
-                /* CONTENEDOR PRINCIPAL DEL IFRAME */
-                body {
-                    padding: 20px !important;
-                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-                    min-height: 100vh !important;
-                }
-                
-                /* CONTENEDOR CENTER COMO REEMPLAZO DEL FONDO.BMP */
-                center, body > center {
-                    display: block !important;
-                    max-width: 800px !important;
-                    margin: 0 auto !important;
-                    background: white !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-                    padding: 30px !important;
-                    border: 1px solid #e9ecef !important;
-                    text-align: center !important;
-                    position: relative !important;
-                    overflow: visible !important;
-                }
-                
-                /* TÍTULO PRINCIPAL */
-                center > font, center > b, center > strong,
-                center font[size], center b, center strong {
-                    display: block !important;
-                    color: #2c3e50 !important;
-                    font-weight: 600 !important;
-                    font-size: 20px !important;
-                    margin-bottom: 20px !important;
-                    text-decoration: underline !important;
-                    text-decoration-color: #4A90E2 !important;
-                    text-underline-offset: 6px !important;
-                }
-                
-                /* FORMULARIO */
-                form, form[name="envia_datos"] {
-                    margin: 20px auto !important;
-                    text-align: center !important;
-                    width: 100% !important;
-                    background: transparent !important;
-                    border: none !important;
-                    padding: 0 !important;
-                }
-                
-                /* TABLA PRINCIPAL DEL FORMULARIO */
-                table {
-                    margin: 15px auto !important;
-                    border-collapse: separate !important;
-                    border-spacing: 0 !important;
-                    background: white !important;
-                    border-radius: 8px !important;
-                    overflow: hidden !important;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
-                    border: 1px solid #e9ecef !important;
-                    width: 100% !important;
-                    max-width: 650px !important;
-                }
-                
-                /* CELDAS DE LA TABLA */
-                td {
-                    padding: 12px 16px !important;
-                    vertical-align: middle !important;
-                    border-bottom: 1px solid #f5f5f5 !important;
-                    font-size: 14px !important;
-                }
-                
-                /* PRIMERA COLUMNA - LABELS */
-                td:first-child {
-                    background: #f8f9fa !important;
-                    font-weight: 600 !important;
-                    color: #495057 !important;
-                    white-space: nowrap !important;
-                    text-align: right !important;
-                    padding-right: 15px !important;
-                    border-right: 1px solid #e9ecef !important;
-                    width: 150px !important;
-                    min-width: 150px !important;
-                }
-                
-                /* SEGUNDA COLUMNA - INPUTS */
-                td:nth-child(2), td:last-child {
-                    background: white !important;
-                    text-align: left !important;
-                    padding-left: 15px !important;
-                }
-                
-                /* INPUTS GENERALES */
-                input[type="text"], 
-                input[type="password"], 
-                select, 
-                textarea {
-                    padding: 8px 12px !important;
-                    border: 2px solid #e9ecef !important;
-                    border-radius: 6px !important;
-                    font-size: 14px !important;
-                    font-family: inherit !important;
-                    transition: all 0.3s ease !important;
-                    background: white !important;
-                    width: auto !important;
-                    min-width: 180px !important;
-                }
-                
-                input[type="text"]:focus, 
-                input[type="password"]:focus, 
-                select:focus, 
-                textarea:focus {
-                    border-color: #4A90E2 !important;
-                    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1) !important;
-                    outline: none !important;
-                    transform: scale(1.02) !important;
-                }
-                
-                /* SELECT ESPECÍFICO */
-                select {
-                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234A90E2' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
-                    background-position: right 12px center !important;
-                    background-repeat: no-repeat !important;
-                    background-size: 14px 14px !important;
-                    padding-right: 35px !important;
-                    appearance: none !important;
-                    cursor: pointer !important;
-                    min-width: 220px !important;
-                }
-                
-                /* TEXTAREA ESPECÍFICO */
-                textarea {
-                    width: 350px !important;
-                    height: 90px !important;
-                    resize: vertical !important;
-                    line-height: 1.4 !important;
-                    font-family: 'Segoe UI', Arial, sans-serif !important;
-                }
-                
-                /* INPUTS NUMÉRICOS PEQUEÑOS */
-                input[name*="quejas"], 
-                input[name*="pendientes"], 
-                input[name*="reincidencia"],
-                input[type="text"][value="0"] {
-                    text-align: center !important;
-                    font-weight: 600 !important;
-                    background: #f0f8ff !important;
-                    color: #1a73e8 !important;
-                    width: 70px !important;
-                    min-width: 70px !important;
-                    border-color: #4A90E2 !important;
-                }
-                
-                /* BOTONES */
-                input[type="button"], 
-                input[type="submit"], 
-                button {
-                    padding: 10px 20px !important;
-                    margin: 15px 8px !important;
-                    border-radius: 6px !important;
-                    cursor: pointer !important;
-                    font-weight: 600 !important;
-                    font-size: 13px !important;
-                    background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
-                    color: white !important;
-                    border: none !important;
-                    transition: all 0.3s ease !important;
-                    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3) !important;
-                    text-transform: uppercase !important;
-                    letter-spacing: 0.3px !important;
-                }
-                
-                input[type="button"]:hover, 
-                input[type="submit"]:hover, 
-                button:hover {
-                    background: linear-gradient(135deg, #357ABD, #2968A3) !important;
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
-                }
-                
-                /* BOTÓN REGRESAR */
-                input[value="Regresar"], 
-                input[value*="Regresa"] {
-                    background: linear-gradient(135deg, #6e7681, #57606a) !important;
-                    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3) !important;
-                }
-                
-                input[value="Regresar"]:hover, 
-                input[value*="Regresa"]:hover {
-                    background: linear-gradient(135deg, #57606a, #495057) !important;
-                }
-                
-                /* CONTENEDOR DE BOTONES */
-                td[colspan] {
-                    text-align: center !important;
-                    padding: 20px !important;
-                    background: #f8f9fa !important;
-                    border-top: 2px solid #e9ecef !important;
-                    border-bottom: none !important;
-                }
-                
-                /* ÚLTIMA FILA SIN BORDE INFERIOR */
-                tr:last-child td {
-                    border-bottom: none !important;
-                }
-                
-                /* ANIMACIÓN DE APARICIÓN */
-                center, body > center {
-                    animation: fadeInForm 0.5s ease-out !important;
-                }
-                
-                @keyframes fadeInForm {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                
-                /* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
-                @media (max-width: 768px) {
-                    body {
-                        padding: 15px !important;
-                    }
-                    
-                    center, body > center {
-                        padding: 20px !important;
-                        margin: 0 !important;
-                    }
-                    
-                    table {
-                        font-size: 12px !important;
-                        max-width: 100% !important;
-                    }
-                    
-                    td {
-                        padding: 8px 12px !important;
-                    }
-                    
-                    td:first-child {
-                        width: 120px !important;
-                        min-width: 120px !important;
-                    }
-                    
-                    input, select, textarea {
-                        font-size: 12px !important;
-                        min-width: 140px !important;
-                    }
-                    
-                    textarea {
-                        width: 280px !important;
-                        height: 70px !important;
-                    }
-                    
-                    select {
-                        min-width: 180px !important;
-                    }
-                }
-            `;
-            
-            // Insertar el CSS en el iframe
-            iframeDoc.head.appendChild(style);
-            
-            console.log('✅ Estilos mejorados aplicados al iframe');
-            
-        } catch (error) {
-            console.log('No se pudo acceder al contenido del iframe (posible CORS)');
-        }
-    });
-}
-
-// Función para inyectar la interfaz moderna
-function injectModernInterface() {
-    console.log('🎨 Reemplazando interfaz antigua con versión moderna...');
-    
-    // Crear un contenedor para la nueva interfaz
-    const modernContainer = document.createElement('div');
-    modernContainer.id = 'modern-codim-interface';
-    modernContainer.innerHTML = `
-        <!-- INTERFAZ MODERNA INYECTADA -->
-        <style>
-            #modern-codim-interface {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                z-index: 999999 !important;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-            }
-            
-            /* Ocultar interfaz antigua */
-            body > *:not(#modern-codim-interface) {
-                display: none !important;
-            }
-            
-            /* Estilos para la interfaz moderna */
-            .modern-header {
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-                padding: 1rem 2rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .modern-logo {
-                font-size: 2rem;
-                font-weight: bold;
-                color: #4A90E2;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            }
-            
-            .modern-user-info {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 25px;
-                font-weight: 500;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            }
-            
-            .modern-date {
-                background: #4A90E2;
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 15px;
-                font-size: 0.9rem;
-                font-weight: 500;
-            }
-            
-            .modern-nav {
-                background: rgba(255, 255, 255, 0.9);
-                backdrop-filter: blur(10px);
-                margin: 1rem 2rem;
-                border-radius: 15px;
-                padding: 1rem;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            }
-            
-            .modern-nav-tabs {
-                display: flex;
-                gap: 1rem;
-                margin-bottom: 1rem;
-                flex-wrap: wrap;
-            }
-            
-            .modern-nav-tab {
-                background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
-                border: none;
-                padding: 0.75rem 1.5rem;
-                border-radius: 10px;
-                cursor: pointer;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            }
-            
-            .modern-nav-tab:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-            }
-            
-            .modern-nav-tab.active {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                transform: translateY(-2px);
-            }
-            
-            .modern-submenu {
-                display: none;
-                flex-wrap: wrap;
-                gap: 0.75rem;
-                margin-top: 1rem;
-            }
-            
-            .modern-submenu.active {
-                display: flex;
-            }
-            
-            .modern-submenu-item {
-                background: rgba(255, 255, 255, 0.8);
-                border: 2px solid transparent;
-                padding: 0.6rem 1.2rem;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-weight: 500;
-                color: #333;
-                text-decoration: none;
-                display: inline-block;
-            }
-            
-            .modern-submenu-item:hover {
-                background: #4A90E2;
-                color: white;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-            }
-            
-            .modern-main {
-                display: flex;
-                gap: 1rem;
-                margin: 0 2rem 2rem 2rem;
-                height: calc(100vh - 300px);
-            }
-            
-            .modern-sidebar {
-                width: 200px;
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .modern-sidebar-card {
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
-                border-radius: 15px;
-                padding: 1.5rem;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                transition: all 0.3s ease;
-                cursor: pointer;
-                border: 2px solid transparent;
-                text-align: center;
-            }
-            
-            .modern-sidebar-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-                border-color: #4A90E2;
-            }
-            
-            .modern-sidebar-card h3 {
-                color: #4A90E2;
-                font-size: 0.9rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .modern-content {
-                flex: 1;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
-                border-radius: 15px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                overflow: hidden;
-            }
-            
-            .modern-content-header {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                padding: 0.75rem 1rem;
-                text-align: center;
-            }
-            
-            .modern-content-header h2 {
-                margin: 0;
-                font-size: 1.2rem;
-            }
-            
-            .modern-content-header p {
-                margin: 0.25rem 0 0 0;
-                font-size: 0.9rem;
-                opacity: 0.9;
-            }
-            
-            .modern-content-body {
-                padding: 0;
-                overflow-y: auto;
-                height: calc(100% - 70px);
-            }
-            
-            .modern-iframe {
-                width: 100%;
-                height: 100%;
-                border: none;
-                border-radius: 8px;
-                transform: none;
-                transform-origin: top left;
-                overflow: auto;
-            }
-            
-            .modern-patch {
-                position: fixed;
-                bottom: 1rem;
-                right: 1rem;
-                background: rgba(0, 0, 0, 0.8);
-                color: #4CAF50;
-                padding: 0.5rem 1rem;
-                border-radius: 8px;
-                font-size: 0.8rem;
-                font-weight: bold;
-                z-index: 1000000;
-                border: 1px solid #4CAF50;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-            
-            .modern-patch:hover {
-                background: rgba(76, 175, 80, 0.2);
-                color: white;
-                transform: scale(1.05);
-            }
-            
-            @media (max-width: 768px) {
-                .modern-header {
-                    flex-direction: column;
-                    gap: 1rem;
-                    padding: 1rem;
-                }
-                
-                .modern-main {
-                    flex-direction: column;
-                    margin: 0 1rem 1rem 1rem;
-                }
-                
-                .modern-sidebar {
-                    width: 100%;
-                    flex-direction: row;
-                    overflow-x: auto;
-                }
-                
-                .modern-nav-tabs {
-                    flex-wrap: wrap;
-                }
-            }
-        </style>
-        
-        <!-- Header -->
-        <div class="modern-header">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <div class="modern-logo">CODIM</div>
-                <div class="modern-user-info">👤 Damian Reyes Hernandez</div>
-            </div>
-            <div class="modern-date" id="modernCurrentDate">25 de Mayo de 2025</div>
-        </div>
-
-        <!-- Navegación -->
-        <div class="modern-nav">
-            <div class="modern-nav-tabs">
-                <button class="modern-nav-tab active" data-tab="incidentes">📋 Incidentes</button>
-                <button class="modern-nav-tab" data-tab="tecnicos">👨‍💻 Técnicos</button>
-                <button class="modern-nav-tab" data-tab="reportes">📊 Reportes</button>
-                <button class="modern-nav-tab" data-tab="turnos">🕐 Turnos</button>
-                <button class="modern-nav-tab" data-tab="config">⚙️ Config</button>
-            </div>
-
-            <div class="modern-submenu active" id="modern-submenu-incidentes">
-                <a href="#" class="modern-submenu-item" data-page="cns2_sup.asp">📝 Nuevo Reporte</a>
-                <a href="#" class="modern-submenu-item" data-page="resumen.asp?c=cns">⏳ Pendientes</a>
-                <a href="#" class="modern-submenu-item" data-page="rep_hist.asp">📚 Consultar Histórico</a>
-            </div>
-
-            <div class="modern-submenu" id="modern-submenu-tecnicos">
-                <a href="#" class="modern-submenu-item" data-page="opcion1.asp">🔧 Técnicos O.S.</a>
-                <a href="#" class="modern-submenu-item" data-page="opcion2.asp">📞 Tec. Quejas</a>
-                <a href="#" class="modern-submenu-item" data-page="opcion3.asp">▶️ Iniciar Turno</a>
-                <a href="#" class="modern-submenu-item" data-page="opcion4.asp">📅 Programar Turno</a>
-            </div>
-
-            <div class="modern-submenu" id="modern-submenu-reportes">
-                <a href="#" class="modern-submenu-item" data-page="rep_productividad.asp">📈 Productividad</a>
-                <a href="#" class="modern-submenu-item" data-page="resumen.asp">📋 Resumen</a>
-            </div>
-
-            <div class="modern-submenu" id="modern-submenu-turnos">
-                <a href="#" class="modern-submenu-item" data-page="pots1.asp">🔧 Turno OS</a>
-                <a href="#" class="modern-submenu-item" data-page="pots2.asp">📞 Turno Quejas</a>
-                <a href="#" class="modern-submenu-item" data-page="pots3.asp">📡 Turno Pots</a>
-                <a href="#" class="modern-submenu-item" data-page="pots4.asp">⏭️ Turno Futuro</a>
-            </div>
-
-            <div class="modern-submenu" id="modern-submenu-config">
-                <a href="#" class="modern-submenu-item" data-page="configura.asp">⚙️ Configuración</a>
-            </div>
-        </div>
-
-        <!-- Área principal -->
-        <div class="modern-main">
-            <div class="modern-sidebar">
-                <div class="modern-sidebar-card" data-action="showIP">
-                    <h3>🌐 Mi IP</h3>
-                    <div style="font-size: 0.8rem; color: #666;">
-                        <strong>dreyes</strong><br>
-                        13.36.3.129
-                    </div>
-                </div>
-
-                <div class="modern-sidebar-card" data-action="showLinks">
-                    <h3>🔗 Enlaces</h3>
-                    <div style="font-size: 0.8rem; color: #666;">Otras Páginas</div>
-                </div>
-
-                <div class="modern-sidebar-card">
-                    <h3>📊 Estado</h3>
-                    <div style="font-size: 0.8rem; color: #666;">
-                        <div style="color: #4CAF50; font-weight: bold;">🟢 Online</div>
-                        Sistema Activo
-                    </div>
-                </div>
-            </div>
-
-            <div class="modern-content">
-                <div class="modern-content-header">
-                    <h2 id="modernContentTitle">Bienvenido al Sistema CODIM CNS</h2>
-                    <p id="modernContentSubtitle">Selecciona una opción del menú para comenzar</p>
-                </div>
-                <div class="modern-content-body" id="modernContentBody">
-                    <iframe id="modernContentFrame" class="modern-iframe" src="primera.asp"></iframe>
-                </div>
-            </div>
-        </div>
-
-        <!-- Patch signature -->
-        <div class="modern-patch" data-action="showPatch">
-            ⚡ Patch by DemianRey v2.4
-        </div>
-    `;
-    
-    // Reemplazar el body completamente
-    document.body.innerHTML = '';
-    document.body.appendChild(modernContainer);
-    
-    // Definir funciones directamente en el contexto del content script
-    function modernSwitchTab(tabName) {
-        console.log('Cambiando a tab:', tabName);
-        
-        // Remover clase active de todos los tabs
-        const tabs = document.querySelectorAll('.modern-nav-tab');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        
-        // Remover clase active de todos los submenus
-        const submenus = document.querySelectorAll('.modern-submenu');
-        submenus.forEach(submenu => submenu.classList.remove('active'));
-        
-        // Activar el tab clickeado
-        const clickedTab = document.querySelector(`[data-tab="${tabName}"]`);
-        if (clickedTab) {
-            clickedTab.classList.add('active');
-        }
-        
-        // Activar el submenu correspondiente
-        const submenu = document.getElementById(`modern-submenu-${tabName}`);
-        if (submenu) {
-            submenu.classList.add('active');
+    init() {
+        if (this.shouldReplaceWithModernInterface()) {
+            this.loadModernInterface();
+        } else {
+            this.loadClassicPatch();
         }
     }
 
-    function modernLoadOriginalPage(page) {
-        console.log('🔄 Cargando página:', page);
+    checkIsMainPage() {
+        const currentPath = window.location.pathname;
+        return currentPath === '/' || 
+               currentPath === '/index.html' || 
+               currentPath === '/index.asp' || 
+               currentPath === '';
+    }
+
+    checkHasOldInterface() {
+        return document.querySelector('div[style*="position: absolute"]') && 
+               document.querySelector('img[src*="menu.bmp"]');
+    }
+
+    shouldReplaceWithModernInterface() {
+        return this.isMainPage && this.hasOldInterface;
+    }
+
+    loadModernInterface() {
+        console.log('🎨 Cargando interfaz moderna...');
         
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.injectModernInterface();
+            });
+        } else {
+            this.injectModernInterface();
+        }
+    }
+
+    loadClassicPatch() {
+        console.log('🔧 Cargando patch clásico...');
+        
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('classic-patch.js');
+        script.onload = function() {
+            this.remove();
+        };
+        (document.head || document.documentElement).appendChild(script);
+    }
+
+    injectModernInterface() {
+        console.log('🎨 Inyectando interfaz moderna...');
+        
+        // Crear contenedor principal
+        const container = this.createModernContainer();
+        
+        // Reemplazar body
+        document.body.innerHTML = '';
+        document.body.appendChild(container);
+        
+        // Configurar eventos
+        this.setupModernEventListeners(container);
+        
+        // Inicializar componentes
+        this.initializeModernComponents();
+        
+        console.log('✅ Interfaz moderna aplicada');
+    }
+
+    createModernContainer() {
+        const container = document.createElement('div');
+        container.id = 'modern-codim-interface';
+        container.innerHTML = this.getModernHTML();
+        return container;
+    }
+
+    getModernHTML() {
+        return `
+            ${this.getModernCSS()}
+            
+            <!-- Header -->
+            <div class="modern-header">
+                <div class="modern-header-left">
+                    <div class="modern-logo">CODIM</div>
+                    <div class="modern-user-info">👤 Damian Reyes Hernandez</div>
+                </div>
+                <div class="modern-date" id="modernCurrentDate"></div>
+            </div>
+
+            <!-- Navegación -->
+            <div class="modern-nav">
+                <div class="modern-nav-tabs">
+                    ${this.generateModernTabs()}
+                </div>
+                ${this.generateModernSubmenus()}
+            </div>
+
+            <!-- Área principal -->
+            <div class="modern-main">
+                <div class="modern-sidebar">
+                    ${this.generateModernSidebarCards()}
+                </div>
+
+                <div class="modern-content">
+                    <div class="modern-content-header">
+                        <h2 id="modernContentTitle">Bienvenido al Sistema CODIM CNS</h2>
+                        <p id="modernContentSubtitle">Selecciona una opción del menú para comenzar</p>
+                    </div>
+                    <div class="modern-content-body">
+                        <iframe id="modernContentFrame" class="modern-iframe" src="primera.asp"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patch signature -->
+            <div class="modern-patch" data-action="showPatch">
+                ⚡ Patch by DemianRey v3.0
+            </div>
+        `;
+    }
+
+    getModernCSS() {
+        return `
+            <style>
+                #modern-codim-interface {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    z-index: 999999 !important;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+                }
+                
+                /* Ocultar interfaz antigua */
+                body > *:not(#modern-codim-interface) {
+                    display: none !important;
+                }
+                
+                /* Header */
+                .modern-header {
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    padding: 1rem 2rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .modern-header-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+                
+                .modern-logo {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    color: #4A90E2;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                }
+                
+                .modern-user-info {
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 25px;
+                    font-weight: 500;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                }
+                
+                .modern-date {
+                    background: #4A90E2;
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 15px;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                }
+                
+                /* Navegación */
+                .modern-nav {
+                    background: rgba(255, 255, 255, 0.9);
+                    backdrop-filter: blur(10px);
+                    margin: 1rem 2rem;
+                    border-radius: 15px;
+                    padding: 1rem;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                }
+                
+                .modern-nav-tabs {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                    flex-wrap: wrap;
+                }
+                
+                .modern-nav-tab {
+                    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+                    border: none;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    font-size: 0.9rem;
+                }
+                
+                .modern-nav-tab:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                }
+                
+                .modern-nav-tab.active {
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    transform: translateY(-2px);
+                }
+                
+                .modern-submenu {
+                    display: none;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                    margin-top: 1rem;
+                }
+                
+                .modern-submenu.active {
+                    display: flex;
+                }
+                
+                .modern-submenu-item {
+                    background: rgba(255, 255, 255, 0.8);
+                    border: 2px solid transparent;
+                    padding: 0.6rem 1.2rem;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    font-weight: 500;
+                    color: #333;
+                    text-decoration: none;
+                    display: inline-block;
+                    font-size: 0.85rem;
+                }
+                
+                .modern-submenu-item:hover {
+                    background: #4A90E2;
+                    color: white;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+                }
+                
+                /* Área principal */
+                .modern-main {
+                    display: flex;
+                    gap: 1rem;
+                    margin: 0 2rem 2rem 2rem;
+                    height: calc(100vh - 300px);
+                }
+                
+                .modern-sidebar {
+                    width: 200px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+                
+                .modern-sidebar-card {
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    border-radius: 15px;
+                    padding: 1.5rem;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    border: 2px solid transparent;
+                    text-align: center;
+                }
+                
+                .modern-sidebar-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+                    border-color: #4A90E2;
+                }
+                
+                .modern-sidebar-card h3 {
+                    color: #4A90E2;
+                    font-size: 0.9rem;
+                    margin-bottom: 0.5rem;
+                }
+                
+                .sidebar-card-content {
+                    font-size: 0.8rem;
+                    color: #666;
+                }
+                
+                .modern-content {
+                    flex: 1;
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    border-radius: 15px;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                    overflow: hidden;
+                }
+                
+                .modern-content-header {
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    padding: 0.75rem 1rem;
+                    text-align: center;
+                }
+                
+                .modern-content-header h2 {
+                    margin: 0;
+                    font-size: 1.2rem;
+                }
+                
+                .modern-content-header p {
+                    margin: 0.25rem 0 0 0;
+                    font-size: 0.9rem;
+                    opacity: 0.9;
+                }
+                
+                .modern-content-body {
+                    padding: 0;
+                    overflow-y: auto;
+                    height: calc(100% - 70px);
+                }
+                
+                .modern-iframe {
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                    border-radius: 8px;
+                }
+                
+                .modern-patch {
+                    position: fixed;
+                    bottom: 1rem;
+                    right: 1rem;
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #4CAF50;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    font-size: 0.8rem;
+                    font-weight: bold;
+                    z-index: 1000000;
+                    border: 1px solid #4CAF50;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .modern-patch:hover {
+                    background: rgba(76, 175, 80, 0.2);
+                    color: white;
+                    transform: scale(1.05);
+                }
+                
+                /* Responsive */
+                @media (max-width: 768px) {
+                    .modern-header {
+                        flex-direction: column;
+                        gap: 1rem;
+                        padding: 1rem;
+                    }
+                    
+                    .modern-main {
+                        flex-direction: column;
+                        margin: 0 1rem 1rem 1rem;
+                    }
+                    
+                    .modern-sidebar {
+                        width: 100%;
+                        flex-direction: row;
+                        overflow-x: auto;
+                    }
+                    
+                    .modern-nav-tabs {
+                        flex-wrap: wrap;
+                    }
+                    
+                    .modern-nav-tab {
+                        font-size: 0.8rem;
+                        padding: 0.6rem 1.2rem;
+                    }
+                    
+                    .modern-submenu-item {
+                        font-size: 0.8rem;
+                        padding: 0.5rem 1rem;
+                    }
+                }
+            </style>
+        `;
+    }
+
+    generateModernTabs() {
+        const menuData = this.getMenuData();
+        return Object.entries(menuData).map(([key, menu], index) => 
+            `<button class="modern-nav-tab ${index === 0 ? 'active' : ''}" data-tab="${key}">
+                ${menu.icon} ${menu.title}
+            </button>`
+        ).join('');
+    }
+
+    generateModernSubmenus() {
+        const menuData = this.getMenuData();
+        return Object.entries(menuData).map(([key, menu], index) => 
+            `<div class="modern-submenu ${index === 0 ? 'active' : ''}" id="modern-submenu-${key}">
+                ${menu.items.map(item => 
+                    `<a href="#" class="modern-submenu-item" data-page="${item.page}">
+                        ${item.icon} ${item.title}
+                    </a>`
+                ).join('')}
+            </div>`
+        ).join('');
+    }
+
+    generateModernSidebarCards() {
+        const cards = [
+            {
+                icon: '🌐',
+                title: 'Mi IP',
+                content: '<strong>dreyes</strong><br>13.36.3.129',
+                action: 'showIP'
+            },
+            {
+                icon: '🔗',
+                title: 'Enlaces',
+                content: 'Otras Páginas',
+                action: 'showLinks'
+            },
+            {
+                icon: '📊',
+                title: 'Estado',
+                content: '<div style="color: #4CAF50; font-weight: bold;">🟢 Online</div>Sistema Activo',
+                action: null
+            }
+        ];
+
+        return cards.map(card => 
+            `<div class="modern-sidebar-card" ${card.action ? `data-action="${card.action}"` : ''}>
+                <h3>${card.icon} ${card.title}</h3>
+                <div class="sidebar-card-content">${card.content}</div>
+            </div>`
+        ).join('');
+    }
+
+    setupModernEventListeners(container) {
+        const self = this;
+        
+        container.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (e.target.classList.contains('modern-nav-tab')) {
+                self.modernSwitchTab(e.target.getAttribute('data-tab'));
+            }
+            
+            if (e.target.classList.contains('modern-submenu-item')) {
+                self.modernLoadPage(e.target.getAttribute('data-page'));
+            }
+            
+            const card = e.target.closest('.modern-sidebar-card');
+            if (card) {
+                const action = card.getAttribute('data-action');
+                if (action) self.handleModernSidebarAction(action);
+            }
+            
+            if (e.target.classList.contains('modern-patch')) {
+                self.showModernPatchInfo();
+            }
+        });
+    }
+
+    modernSwitchTab(tabName) {
+        // Remover active de todos los tabs
+        document.querySelectorAll('.modern-nav-tab').forEach(tab => 
+            tab.classList.remove('active'));
+        document.querySelectorAll('.modern-submenu').forEach(submenu => 
+            submenu.classList.remove('active'));
+        
+        // Activar tab seleccionado
+        const tab = document.querySelector(`[data-tab="${tabName}"]`);
+        const submenu = document.getElementById(`modern-submenu-${tabName}`);
+        
+        if (tab) tab.classList.add('active');
+        if (submenu) submenu.classList.add('active');
+    }
+
+    modernLoadPage(page) {
         const titleElement = document.getElementById('modernContentTitle');
         const subtitleElement = document.getElementById('modernContentSubtitle');
         const frameElement = document.getElementById('modernContentFrame');
@@ -706,28 +504,92 @@ function injectModernInterface() {
         if (subtitleElement) subtitleElement.textContent = 'Por favor espera...';
         
         if (frameElement) {
-            // CAMBIO MÍNIMO: Forzar recarga con timestamp para evitar cache
             const timestamp = new Date().getTime();
             const separator = page.includes('?') ? '&' : '?';
             frameElement.src = page + separator + '_t=' + timestamp;
             
-            // Mejorar el contenido cuando se cargue
-            frameElement.addEventListener('load', function() {
-                enhanceIframeContent();
+            frameElement.addEventListener('load', () => {
+                this.enhanceIframe(frameElement);
+                if (titleElement) titleElement.textContent = 'Página Cargada';
+                if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original';
             });
         }
+    }
+
+    enhanceIframe(iframe) {
+        if (!iframe) return;
         
-        setTimeout(() => {
-            if (titleElement) titleElement.textContent = 'Página Cargada';
-            if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original';
-        }, 1000);
+        iframe.addEventListener('load', () => {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (iframeDoc) {
+                    const style = iframeDoc.createElement('style');
+                    style.textContent = this.getIframeCSS();
+                    iframeDoc.head.appendChild(style);
+                    console.log('✅ Iframe mejorado');
+                }
+            } catch (error) {
+                console.log('⚠️ No se pudo acceder al iframe (CORS)');
+            }
+        });
     }
 
-    function modernShowIP() {
-        alert('🌐 Información de IP\n\nUsuario: dreyes\nIP: 13.36.3.129\nEstado: Conectado\nUbicación: Red Interna Telmex');
+    getIframeCSS() {
+        return `
+            img[src*="fondo.bmp"] { display: none !important; }
+            body { 
+                font-family: 'Segoe UI', Arial, sans-serif !important;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+                padding: 20px !important;
+            }
+            center { 
+                background: white !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+                padding: 30px !important;
+                max-width: 800px !important;
+                margin: 0 auto !important;
+            }
+            table {
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
+            }
+            input, select, textarea {
+                border: 2px solid #e9ecef !important;
+                border-radius: 6px !important;
+                padding: 8px 12px !important;
+                transition: all 0.3s ease !important;
+            }
+            input:focus, select:focus, textarea:focus {
+                border-color: #4A90E2 !important;
+                box-shadow: 0 0 0 3px rgba(74,144,226,0.1) !important;
+                outline: none !important;
+            }
+            input[type="button"], input[type="submit"] {
+                background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
+                color: white !important;
+                border: none !important;
+                padding: 10px 20px !important;
+                border-radius: 6px !important;
+                cursor: pointer !important;
+                font-weight: 600 !important;
+            }
+        `;
     }
 
-    function modernShowLinks() {
+    handleModernSidebarAction(action) {
+        switch (action) {
+            case 'showIP':
+                alert('🌐 Información de IP\n\nUsuario: dreyes\nIP: 13.36.3.129\nEstado: Conectado\nUbicación: Red Interna Telmex');
+                break;
+            case 'showLinks':
+                this.showModernLinks();
+                break;
+        }
+    }
+
+    showModernLinks() {
         const links = [
             'http://intranet/',
             'http://10.192.5.18/cobo',
@@ -744,11 +606,16 @@ function injectModernInterface() {
         }
     }
 
-    function modernShowPatch() {
-        alert('⚡ CODIM CNS Fix v2.4\n\n✅ Interfaz completamente modernizada\n✅ VBScript convertido a JavaScript\n✅ Responsive design\n✅ Navegación mejorada\n✅ Formularios arreglados\n✅ Fix específico para fondo.bmp\n✅ Layout responsive\n\n🔧 Patch by DemianRey\n📅 Mayo 2025\n\n🐛 Fix: Solo limpieza mínima y específica');
+    showModernPatchInfo() {
+        alert('⚡ CODIM CNS Fix v3.0\n\n✅ Interfaz completamente modernizada\n✅ Código refactorizado y optimizado\n✅ Arquitectura modular\n✅ VBScript convertido a JavaScript\n✅ Responsive design\n✅ Navegación mejorada\n\n🔧 Patch by DemianRey\n📅 Mayo 2025');
     }
 
-    function modernUpdateDate() {
+    initializeModernComponents() {
+        this.updateModernDate();
+        setInterval(() => this.updateModernDate(), 60000);
+    }
+
+    updateModernDate() {
         const now = new Date();
         const options = { 
             year: 'numeric', 
@@ -760,74 +627,59 @@ function injectModernInterface() {
             dateElement.textContent = now.toLocaleDateString('es-ES', options);
         }
     }
-    
-    // Configurar event listeners usando delegación de eventos
-    modernContainer.addEventListener('click', function(e) {
-        console.log('Click detectado en:', e.target);
-        
-        // Manejo de tabs
-        if (e.target.classList.contains('modern-nav-tab')) {
-            e.preventDefault();
-            const tabName = e.target.getAttribute('data-tab');
-            console.log('Tab clickeado:', tabName);
-            if (tabName) {
-                modernSwitchTab(tabName);
-            }
-        }
-        
-        // Manejo de items de submenu
-        if (e.target.classList.contains('modern-submenu-item')) {
-            e.preventDefault();
-            const page = e.target.getAttribute('data-page');
-            console.log('Submenu item clickeado:', page);
-            if (page) {
-                modernLoadOriginalPage(page);
-            }
-        }
-        
-        // Manejo de acciones de sidebar
-        if (e.target.closest('.modern-sidebar-card')) {
-            const card = e.target.closest('.modern-sidebar-card');
-            const action = card.getAttribute('data-action');
-            console.log('Sidebar card clickeada:', action);
-            
-            if (action === 'showIP') {
-                modernShowIP();
-            } else if (action === 'showLinks') {
-                modernShowLinks();
-            }
-        }
-        
-        // Manejo del patch
-        if (e.target.classList.contains('modern-patch')) {
-            modernShowPatch();
-        }
-    });
-    
-    // Inicializar fecha
-    modernUpdateDate();
-    setInterval(modernUpdateDate, 60000);
-    
-    console.log('✅ Interfaz moderna aplicada exitosamente');
-    console.log('✅ Event listeners configurados');
-}
 
-// Verificar si debemos reemplazar la interfaz
-if (shouldReplaceWithModernInterface()) {
-    // Esperar a que el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', injectModernInterface);
-    } else {
-        injectModernInterface();
+    getMenuData() {
+        return {
+            incidentes: {
+                title: 'Incidentes',
+                icon: '📋',
+                items: [
+                    { title: 'Nuevo Reporte', icon: '📝', page: 'cns2_sup.asp' },
+                    { title: 'Pendientes', icon: '⏳', page: 'resumen.asp?c=cns' },
+                    { title: 'Consultar Histórico', icon: '📚', page: 'rep_hist.asp' }
+                ]
+            },
+            tecnicos: {
+                title: 'Técnicos',
+                icon: '👨‍💻',
+                items: [
+                    { title: 'Técnicos O.S.', icon: '🔧', page: 'opcion1.asp' },
+                    { title: 'Tec. Quejas', icon: '📞', page: 'opcion2.asp' },
+                    { title: 'Iniciar Turno', icon: '▶️', page: 'opcion3.asp' },
+                    { title: 'Programar Turno', icon: '📅', page: 'opcion4.asp' }
+                ]
+            },
+            reportes: {
+                title: 'Reportes',
+                icon: '📊',
+                items: [
+                    { title: 'Productividad', icon: '📈', page: 'rep_productividad.asp' },
+                    { title: 'Resumen', icon: '📋', page: 'resumen.asp' }
+                ]
+            },
+            turnos: {
+                title: 'Turnos',
+                icon: '🕐',
+                items: [
+                    { title: 'Turno OS', icon: '🔧', page: 'pots1.asp' },
+                    { title: 'Turno Quejas', icon: '📞', page: 'pots2.asp' },
+                    { title: 'Turno Pots', icon: '📡', page: 'pots3.asp' },
+                    { title: 'Turno Futuro', icon: '⏭️', page: 'pots4.asp' }
+                ]
+            },
+            config: {
+                title: 'Config',
+                icon: '⚙️',
+                items: [
+                    { title: 'Configuración', icon: '⚙️', page: 'configura.asp' }
+                ]
+            }
+        };
     }
-} else {
-    // Si no es la página principal, inyectar el script normal
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('inject.js');
-    script.onload = function() {
-        this.remove();
-    };
-    (document.head || document.documentElement).appendChild(script);
 }
 
-console.log('✅ CODIM CNS Fix - Solo cambios mínimos necesarios');
+// Inicializar
+const codimFix = new CODIMContentScript();
+codimFix.init();
+
+console.log('✅ CODIM CNS Fix - Inicialización completada');
