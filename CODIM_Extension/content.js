@@ -1,5 +1,453 @@
 // content.js - Script principal ACTUALIZADO con Widget de Resumen
-console.log('🚀 CODIM CNS Fix - Extensión activada v3.5');
+console.log('🚀 CODIM CNS Fix - Extensión activada v3.6 con Buscador');
+
+class SimpleDSLAMSearch {
+    constructor() {
+        this.initialized = false;
+        this.observer = null;
+    }
+
+    init() {
+        if (this.initialized) return;
+        
+        console.log('🔍 Inicializando buscador simple de DSLAMs...');
+        this.setupObserver();
+        this.injectStyles();
+        this.initialized = true;
+    }
+
+    setupObserver() {
+        // Observer para detectar nuevas tablas después de envío de formularios
+        this.observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) {
+                            // Buscar tablas que contengan resultados de DSLAMs
+                            const tables = node.tagName === 'TABLE' ? [node] : 
+                                          (node.querySelector ? node.querySelectorAll('table') : []);
+                            
+                            tables.forEach(table => {
+                                if (this.isResultTable(table) && !table.dataset.searchAdded) {
+                                    console.log('📊 Tabla de resultados detectada, agregando buscador');
+                                    setTimeout(() => this.addSearchToTable(table), 500);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        this.observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // También revisar tablas existentes
+        this.checkExistingTables();
+    }
+
+    checkExistingTables() {
+        const existingTables = document.querySelectorAll('table');
+        existingTables.forEach(table => {
+            if (this.isResultTable(table) && !table.dataset.searchAdded) {
+                console.log('📊 Tabla de resultados existente encontrada');
+                this.addSearchToTable(table);
+            }
+        });
+    }
+
+    isEquipmentTable(table) {
+    if (!table || !table.querySelector) return false;
+
+    const tableText = table.textContent.toLowerCase();
+    const rows = table.querySelectorAll('tr');
+    
+    // ✅ TU SOLUCIÓN PERFECTA:
+    if (tableText.includes('existen reportes pendientes de solucion')) {
+        return false;
+    }
+    
+    // Verificar que contenga equipos
+    const hasEquipmentData = tableText.includes('dslam') || 
+                           tableText.includes('tecnologia') || 
+                           tableText.includes('supervision');
+    
+    return hasEquipmentData && rows.length >= 2 && tableText.length > 50;
+}
+
+    addSearchToTable(table) {
+        if (table.dataset.searchAdded) return;
+        
+        table.dataset.searchAdded = 'true';
+        
+        // Obtener filas de datos (excluyendo header)
+        const dataRows = Array.from(table.querySelectorAll('tr')).slice(1);
+        
+        if (dataRows.length === 0) {
+            console.log('⚠️ No se encontraron filas de datos');
+            return;
+        }
+
+        // Crear buscador
+        const searchContainer = this.createSearchBox(dataRows.length);
+        
+        // Insertar antes de la tabla
+        const parent = table.parentNode;
+        if (parent) {
+            parent.insertBefore(searchContainer, table);
+        }
+
+        // Configurar búsqueda
+        this.setupSearch(searchContainer, table, dataRows);
+        
+        // Mejorar estilos de la tabla
+        this.enhanceTableStyles(table);
+
+        console.log(`✅ Buscador agregado - ${dataRows.length} equipos disponibles`);
+    }
+
+    createSearchBox(totalRows) {
+        const container = document.createElement('div');
+        container.className = 'dslam-search-container';
+        
+        const uniqueId = 'search_' + Date.now();
+        
+        container.innerHTML = `
+            <div class="search-header">
+                <div class="search-title">
+                    <span class="search-icon">🔍</span>
+                    <span>Buscar DSLAM</span>
+                </div>
+                <div class="search-counter" id="counter_${uniqueId}">
+                    <span id="count_${uniqueId}">${totalRows}</span> equipos
+                </div>
+            </div>
+            <div class="search-input-group">
+                <input 
+                    type="text" 
+                    id="input_${uniqueId}" 
+                    class="search-input"
+                    placeholder="Nombre del DSLAM (ej: QRO-CORREGIDORA, COG1, ISAM...)"
+                    autocomplete="off"
+                >
+                <button type="button" class="search-clear" id="clear_${uniqueId}" title="Limpiar">
+                    ✕
+                </button>
+            </div>
+        `;
+
+        container.dataset.uniqueId = uniqueId;
+        return container;
+    }
+
+    setupSearch(container, table, dataRows) {
+        const uniqueId = container.dataset.uniqueId;
+        const searchInput = container.querySelector(`#input_${uniqueId}`);
+        const clearBtn = container.querySelector(`#clear_${uniqueId}`);
+        
+        // Event listeners
+        searchInput.addEventListener('input', (e) => {
+            this.performSearch(e.target.value.trim(), dataRows, uniqueId);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.clearSearch(searchInput, dataRows, uniqueId);
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            this.clearSearch(searchInput, dataRows, uniqueId);
+            searchInput.focus();
+        });
+
+        // Auto-focus
+        setTimeout(() => searchInput.focus(), 300);
+    }
+
+    performSearch(searchTerm, dataRows, uniqueId) {
+        console.log(`🔍 Buscando: "${searchTerm}"`);
+
+        const searchLower = searchTerm.toLowerCase();
+        let visibleCount = 0;
+
+        dataRows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            
+            // Buscar en todo el contenido de la fila
+            const matches = searchTerm === '' || rowText.includes(searchLower);
+
+            if (matches) {
+                row.style.display = '';
+                row.classList.remove('hidden-row');
+                row.classList.add('visible-row');
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+                row.classList.add('hidden-row');
+                row.classList.remove('visible-row');
+            }
+        });
+
+        this.updateCounter(visibleCount, searchTerm, uniqueId, dataRows.length);
+        console.log(`📊 ${visibleCount} de ${dataRows.length} equipos visibles`);
+    }
+
+    updateCounter(visibleCount, searchTerm, uniqueId, totalRows) {
+        const counter = document.querySelector(`#count_${uniqueId}`);
+        const counterContainer = document.querySelector(`#counter_${uniqueId}`);
+        
+        if (counter) {
+            counter.textContent = visibleCount;
+        }
+        
+        if (counterContainer) {
+            counterContainer.className = 'search-counter';
+            
+            if (visibleCount === 0 && searchTerm !== '') {
+                counterContainer.classList.add('no-results');
+            } else if (visibleCount < totalRows && searchTerm !== '') {
+                counterContainer.classList.add('filtered');
+            }
+        }
+    }
+
+    clearSearch(input, dataRows, uniqueId) {
+        input.value = '';
+        this.performSearch('', dataRows, uniqueId);
+    }
+
+    enhanceTableStyles(table) {
+        table.classList.add('enhanced-results-table');
+        
+        // Mejorar filas
+        const rows = table.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            if (index === 0) {
+                row.classList.add('table-header');
+            } else {
+                row.classList.add('table-data-row');
+            }
+        });
+    }
+
+    injectStyles() {
+        if (document.getElementById('simple-dslam-search-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'simple-dslam-search-styles';
+        style.textContent = `
+            .dslam-search-container {
+                background: linear-gradient(135deg, #ffffff, #f8fdff);
+                border: 2px solid #e3f2fd;
+                border-radius: 10px;
+                padding: 16px;
+                margin: 16px auto;
+                max-width: 600px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+                font-family: 'Segoe UI', Arial, sans-serif;
+                animation: slideInSearch 0.4s ease-out;
+            }
+
+            @keyframes slideInSearch {
+                from { opacity: 0; transform: translateY(-15px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .search-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+
+            .search-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 600;
+                font-size: 1rem;
+                color: #1565c0;
+            }
+
+            .search-icon {
+                font-size: 1.2rem;
+            }
+
+            .search-counter {
+                background: #2196f3;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+
+            .search-counter.filtered {
+                background: #ff9800;
+                animation: pulseCounter 0.8s ease-in-out;
+            }
+
+            .search-counter.no-results {
+                background: #f44336;
+                animation: shakeCounter 0.4s ease-in-out;
+            }
+
+            @keyframes pulseCounter {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.08); }
+                100% { transform: scale(1); }
+            }
+
+            @keyframes shakeCounter {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-2px); }
+                75% { transform: translateX(2px); }
+            }
+
+            .search-input-group {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .search-input {
+                flex: 1;
+                padding: 10px 14px;
+                border: 2px solid #e1e5e9;
+                border-radius: 20px;
+                font-size: 14px;
+                transition: all 0.3s ease;
+                background: white;
+                outline: none;
+            }
+
+            .search-input:focus {
+                border-color: #2196f3;
+                box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+                transform: scale(1.01);
+            }
+
+            .search-input::placeholder {
+                color: #9e9e9e;
+                font-style: italic;
+            }
+
+            .search-clear {
+                background: #f44336;
+                color: white;
+                border: none;
+                padding: 8px 10px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 12px;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+
+            .search-clear:hover {
+                background: #d32f2f;
+                transform: scale(1.1);
+            }
+
+            .enhanced-results-table {
+                border-collapse: separate;
+                border-spacing: 0;
+                width: 100%;
+                border-radius: 6px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                margin-top: 12px;
+            }
+
+            .enhanced-results-table .table-header {
+                background: linear-gradient(135deg, #2196f3, #1976d2);
+                color: white;
+            }
+
+            .enhanced-results-table .table-header td {
+                padding: 10px !important;
+                font-weight: 600 !important;
+                text-align: center !important;
+                font-size: 0.9rem !important;
+            }
+
+            .enhanced-results-table .table-data-row {
+                transition: all 0.25s ease;
+                background: white;
+            }
+
+            .enhanced-results-table .table-data-row:nth-child(even) {
+                background: #fafafa;
+            }
+
+            .enhanced-results-table .table-data-row:hover {
+                background: #e3f2fd !important;
+                transform: scale(1.005);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            }
+
+            .enhanced-results-table .table-data-row td {
+                padding: 8px !important;
+                border-bottom: 1px solid #e0e0e0 !important;
+                font-size: 0.9rem !important;
+            }
+
+            .enhanced-results-table .visible-row {
+                animation: fadeInRow 0.3s ease-out;
+            }
+
+            @keyframes fadeInRow {
+                from { opacity: 0; transform: translateX(-8px); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+
+            /* Responsive */
+            @media (max-width: 600px) {
+                .dslam-search-container {
+                    margin: 10px;
+                    padding: 12px;
+                }
+
+                .search-header {
+                    flex-direction: column;
+                    gap: 8px;
+                    text-align: center;
+                }
+
+                .search-input {
+                    font-size: 16px; /* Evita zoom en móviles */
+                }
+            }
+        `;
+        
+        document.head.appendChild(style);
+        console.log('✅ Estilos del buscador simple inyectados');
+    }
+
+    destroy() {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
+        
+        const searchContainers = document.querySelectorAll('.dslam-search-container');
+        searchContainers.forEach(container => container.remove());
+        
+        const styles = document.getElementById('simple-dslam-search-styles');
+        if (styles) styles.remove();
+        
+        this.initialized = false;
+        console.log('🗑️ Buscador simple limpiado');
+    }
+}
 
 // ===============================
 // CLASE WIDGET DE RESUMEN
@@ -7,9 +455,9 @@ console.log('🚀 CODIM CNS Fix - Extensión activada v3.5');
 class CODIMResumenWidget {
     constructor() {
         this.data = {
-            vencidos: 406,
+            vencidos: 0,
             enTiempo: 0,
-            total: 406,
+            total: 0,
             sinAtender: 0,
             atendidas: 0,
             noReconocidas: 0,
@@ -756,6 +1204,7 @@ class CODIMContentScript {
         this.hasOldInterface = this.checkHasOldInterface();
         this.userData = null;
         this.resumenWidget = null; // Instancia del widget de resumen
+		this.simpleDSLAMSearch = null;
     }
 
     init() {
@@ -767,6 +1216,51 @@ class CODIMContentScript {
         } else {
             this.loadClassicPatch();
         }
+	}
+
+    // ===============================
+    // FUNCIÓN CENTRALIZADA CAMBIA_MENU
+    // ===============================
+    createGlobalCambiaMenu() {
+        const self = this;
+        window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
+            console.log('🔄 Global cambia_menu centralizado:', arguments);
+            
+            if (seccion === 'consulta' && (folio || busca || param3)) {
+                const folioFinal = folio || busca || param3;
+                const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
+                console.log('📋 Navegando a consulta:', url);
+                
+                // En interfaz moderna, cargar en iframe
+                if (document.getElementById('modern-codim-interface')) {
+                    self.modernLoadPage(url);
+                } else {
+                    // En interfaz clásica, navegar directamente
+                    window.location.href = url;
+                }
+                return;
+            }
+            
+            // Para otros casos
+            if (document.getElementById('modern-codim-interface')) {
+                self.modernLoadPage(`${seccion}.asp?tipo=${tipo}&folio=${folio}&busca=${busca || ''}`);
+            }
+        };
+		
+		// Función cancelar global
+        window.cancelar = function() {
+            console.log('🔙 Cancelar global ejecutado');
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // En interfaz moderna, volver al resumen
+                if (document.getElementById('modern-codim-interface')) {
+                    self.showModernResumen();
+                } else {
+                    window.location.href = '/';
+                }
+            }
+        };
     }
 
     // ===============================
@@ -1138,7 +1632,7 @@ class CODIMContentScript {
 
             <!-- Patch signature -->
             <div class="modern-patch" data-action="showPatch">
-                ⚡ Patch by DemianRey v3.5
+                ⚡ Patch by DemianRey v3.6 + Buscador DSLAMs
             </div>
         `;
     }
@@ -1148,7 +1642,7 @@ class CODIMContentScript {
         const ipAddress = this.userData?.ipAddress || '192.168.1.1';
         
         // Obtener datos actuales del widget si existe
-        let vencidos = 406;  // Valor inicial
+        let vencidos = 0;  // Valor inicial
         let enTiempo = 0;    // Valor inicial
         
         if (this.resumenWidget && this.resumenWidget.data) {
@@ -1296,10 +1790,13 @@ Interfaz completamente renovada con funcionalidades mejoradas:
 ✅ VBScript convertido a JavaScript
 ✅ Extracción dinámica de datos de usuario
 ✅ Arquitectura modular optimizada
+🔍 NUEVO: Buscador inteligente de DSLAMs con autocompletado
+🔍 Filtrado en tiempo real por nombre de equipo  
+🔍 Sugerencias automáticas y contador de resultados
 
 🔧 Patch by DemianRey
 📅 Mayo 2025
-🚀 Versión 3.5`;
+🚀 Versión 3.6 - Con Buscador DSLAMs`;
 
         alert(welcomeInfo);
     }
@@ -1328,6 +1825,9 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 self.showModernPatchInfo();
             }
         });
+		
+		// Función centralizada
+		this.createGlobalCambiaMenu();
     }
 
     modernSwitchTab(tabName) {
@@ -1368,28 +1868,229 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 iframe.addEventListener('load', () => {
                     this.enhanceIframe(iframe);
                     if (titleElement) titleElement.textContent = 'Página Cargada';
-                    if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original';
+                    if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original - Buscador DSLAMs activo';
                 });
             }
         }
     }
 
     enhanceIframe(iframe) {
-        if (!iframe) return;
+    if (!iframe) return;
+    
+    iframe.addEventListener('load', () => {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (iframeDoc) {
+                const style = iframeDoc.createElement('style');
+                style.textContent = this.getIframeCSS();
+                iframeDoc.head.appendChild(style);
+                
+                // Inyectar funciones de compatibilidad en el iframe
+                const compatScript = iframeDoc.createElement('script');
+                compatScript.textContent = `
+                    // Funciones básicas para iframe
+                    if (typeof window.ventana === 'undefined') window.ventana = null;
+					
+					 // Función cancelar para botones Regresar
+                    window.cancelar = function() {
+                        console.log('🔙 Cancelar en iframe');
+                        if (window.history.length > 1) {
+                            window.history.back();
+                        } else {
+                            window.location.href = '/';
+                        }
+                    };
+                    
+                    window.cierra_opcion = function(tiempox, y, x, pagina, tarda) {
+                        if (window.ventana && window.ventana.style) {
+                            window.ventana.style.clip = "rect(0," + x + "," + y + ",0)";
+                        }
+                        if (pagina && pagina !== "") {
+                            setTimeout(function() {
+                                window.location.href = 'ver_rep.asp?folio=' + pagina;
+                            }, tarda || 100);
+                        }
+                    };
+                    
+                    window.muestra = function(folio, busca) {
+                        if (typeof window.parent.cambia_menu === 'function') {
+                            window.parent.cambia_menu('consulta', 'S', folio, '', '', '', busca);
+                        }
+                    };
+                    
+                    // Usar función centralizada del padre
+                    if (window.parent && window.parent.cambia_menu) {
+                        window.cambia_menu = window.parent.cambia_menu;
+                    }
+                `;
+                iframeDoc.head.appendChild(compatScript);
+                
+                // Activar buscador específico para iframe
+                setTimeout(() => {
+                    this.addIframeDSLAMSearch(iframeDoc);
+                }, 1000);
+                
+                console.log('✅ Iframe mejorado con buscador y funciones de compatibilidad');
+            }
+        } catch (error) {
+            console.log('⚠️ No se pudo acceder al iframe (CORS)');
+        }
+    });
+}
+
+	addIframeDSLAMSearch(iframeDoc) {
+    if (!iframeDoc) return;
+    
+    // Verificar si la página contiene texto específico de reportes pendientes (NO de equipos)
+    const bodyText = iframeDoc.body.textContent.toLowerCase();
+    const isReportPage = (
+        bodyText.includes('existen reportes pendientes de solucion')
+    );
+    
+    if (isReportPage) {
+        console.log('❌ Página de reportes pendientes detectada en iframe - NO agregar buscador');
+        return;
+    }
+    
+    // Buscar tablas específicas de equipos DSLAM
+    const tables = iframeDoc.querySelectorAll('table');
+    let targetTable = null;
+    
+    tables.forEach(table => {
+        const tableText = table.textContent.toLowerCase();
+        const rows = table.querySelectorAll('tr');
         
-        iframe.addEventListener('load', () => {
-            try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                if (iframeDoc) {
-                    const style = iframeDoc.createElement('style');
-                    style.textContent = this.getIframeCSS();
-                    iframeDoc.head.appendChild(style);
-                    console.log('✅ Iframe mejorado');
+        // EXCLUIR solo si contiene palabras específicas de reportes (NO de contadores)
+        const isTableWithReports = (
+            tableText.includes('folio') ||
+            tableText.includes('falla equipos fuera de gestion') ||
+            tableText.includes('capturar otro') ||
+            tableText.includes('cancelar')
+        );
+        
+        if (isTableWithReports) {
+            console.log('❌ Tabla de reportes en iframe detectada - NO agregar buscador');
+            return;
+        }
+        
+        // Verificar que sea una tabla de equipos DSLAM válida
+        const isEquipmentTable = (
+            (tableText.includes('dslam') || tableText.includes('tecnologia') || tableText.includes('supervision')) &&
+            rows.length >= 3
+        );
+        
+        // Verificar que tenga headers de equipos (incluir "pendientes" como contador)
+        const hasEquipmentHeaders = (
+            table.querySelector('td')?.textContent.includes('Dslam') ||
+            table.querySelector('td')?.textContent.includes('Tecnologia') ||
+            table.querySelector('td')?.textContent.includes('O.S.') ||
+            table.querySelector('td')?.textContent.includes('Quejas')
+        );
+        
+        if (isEquipmentTable && hasEquipmentHeaders && !table.dataset.searchAdded) {
+            targetTable = table;
+        }
+    });
+    
+    if (!targetTable) {
+        console.log('ℹ️ No se encontró tabla de equipos válida en iframe');
+        return;
+    }
+    
+    console.log('📊 Tabla de equipos REAL encontrada en iframe, agregando buscador específico');
+    
+    // Crear buscador específico para iframe
+    this.createIframeDSLAMSearchBox(targetTable, iframeDoc);
+}
+
+    createIframeDSLAMSearchBox(table, iframeDoc) {
+        if (table.dataset.searchAdded) return;
+        table.dataset.searchAdded = 'true';
+        
+        // Obtener filas de datos (excluyendo header)
+        const dataRows = Array.from(table.querySelectorAll('tr')).slice(1);
+        
+        if (dataRows.length === 0) {
+            console.log('⚠️ No se encontraron filas de datos en iframe');
+            return;
+        }
+        
+        // Crear contenedor del buscador
+        const searchContainer = iframeDoc.createElement('div');
+        searchContainer.className = 'iframe-dslam-search';
+        searchContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, #ffffff, #f8fdff); border: 2px solid #e3f2fd; border-radius: 10px; padding: 16px; margin: 16px auto; max-width: 600px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); font-family: 'Segoe UI', Arial, sans-serif;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1rem; color: #1565c0;">
+                        <span style="font-size: 1.2rem;">🔍</span>
+                        <span>Buscar DSLAM</span>
+                    </div>
+                    <div id="iframe-counter" style="background: #2196f3; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                        <span id="iframe-count">${dataRows.length}</span> equipos
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="iframe-search-input" placeholder="Nombre del DSLAM (ej: QRO-CORREGIDORA, COG1, ISAM...)" style="flex: 1; padding: 10px 14px; border: 2px solid #e1e5e9; border-radius: 20px; font-size: 14px; background: white; outline: none;">
+                    <button type="button" id="iframe-clear-btn" title="Limpiar" style="background: #f44336; color: white; border: none; padding: 8px 10px; border-radius: 50%; cursor: pointer; font-size: 12px; width: 32px; height: 32px;">✕</button>
+                </div>
+            </div>
+        `;
+        
+        // Insertar antes de la tabla
+        table.parentNode.insertBefore(searchContainer, table);
+        
+        // Configurar búsqueda
+        const searchInput = searchContainer.querySelector('#iframe-search-input');
+        const clearBtn = searchContainer.querySelector('#iframe-clear-btn');
+        const counter = searchContainer.querySelector('#iframe-count');
+        const counterContainer = searchContainer.querySelector('#iframe-counter');
+        
+        const performSearch = (searchTerm) => {
+            const searchLower = searchTerm.toLowerCase();
+            let visibleCount = 0;
+            
+            dataRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const matches = searchTerm === '' || rowText.includes(searchLower);
+                
+                if (matches) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
                 }
-            } catch (error) {
-                console.log('⚠️ No se pudo acceder al iframe (CORS)');
+            });
+            
+            counter.textContent = visibleCount;
+            
+            // Actualizar color del contador
+            counterContainer.style.background = visibleCount === 0 && searchTerm !== '' ? '#f44336' : 
+                                              visibleCount < dataRows.length && searchTerm !== '' ? '#ff9800' : '#2196f3';
+            
+            console.log(`📊 ${visibleCount} de ${dataRows.length} equipos visibles en iframe`);
+        };
+        
+        searchInput.addEventListener('input', (e) => {
+            performSearch(e.target.value.trim());
+        });
+        
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                performSearch('');
             }
         });
+        
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            performSearch('');
+            searchInput.focus();
+        });
+        
+        // Auto-focus
+        setTimeout(() => searchInput.focus(), 300);
+        
+        console.log(`✅ Buscador específico agregado al iframe - ${dataRows.length} equipos disponibles`);
     }
 
     getIframeCSS() {
@@ -1831,4 +2532,4 @@ Interfaz completamente renovada con funcionalidades mejoradas:
 const codimFix = new CODIMContentScript();
 codimFix.init();
 
-console.log('✅ CODIM CNS Fix v3.5 - Inicialización completada con Widget de Resumen cargado automáticamente');
+console.log('✅ CODIM CNS Fix v3.6 - Inicialización completada con Widget de Resumen + Buscador DSLAMs modular');

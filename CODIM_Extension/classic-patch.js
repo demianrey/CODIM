@@ -220,8 +220,61 @@
             window.msgbox = (message) => alert(message);
             
             // Función principal de validación
-            window.valida_datos = () => this.validaDatos();
-            window.vertexto = () => this.verTexto();
+			window.valida_datos = () => this.validaDatos();
+			window.vertexto = () => this.verTexto();
+
+			// Funciones para manejo de ventanas emergentes - GLOBALES
+			if (typeof window.ventana === 'undefined') {
+				window.ventana = null;
+			}
+
+			window.cierra_opcion = function(tiempox, y, x, pagina, tarda) {
+				if (window.ventana && window.ventana.style) {
+					window.ventana.style.clip = `rect(0,${x},${y},0)`;
+				}
+				if (pagina && pagina !== "") {
+					setTimeout(function() {
+						// Navegar en la misma ventana como IE
+						window.location.href = `ver_rep.asp?folio=${pagina}`;
+					}, tarda || 100);
+				}
+			};
+
+			window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
+				console.log('🔄 cambia_menu llamado:', arguments);
+				
+				// Si es una consulta de folio - navegar en la misma ventana
+				if (seccion === 'consulta' && (folio || busca || param3)) {
+					const folioFinal = folio || busca || param3;
+					const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
+					console.log('📋 Navegando a consulta:', url);
+					window.location.href = url;
+					return;
+				}
+				
+				// Para otros casos, usar el método original si existe
+				if (typeof window.top?.cambia_menu === 'function') {
+					window.top.cambia_menu.apply(window.top, arguments);
+				}
+			};
+			
+			// Función cancelar para botones "Regresar"
+			window.cancelar = function() {
+				console.log('🔙 Función cancelar ejecutada');
+				if (window.history.length > 1) {
+					window.history.back();
+				} else {
+					// Si no hay historial, ir a página principal
+					window.location.href = '/';
+				}
+			};
+
+			// Asegurar que las funciones estén en el ámbito global correcto
+			if (typeof window.top !== 'undefined') {
+				window.top.cierra_opcion = window.cierra_opcion;
+				window.top.cambia_menu = window.cambia_menu;
+				window.top.ventana = window.ventana;
+			}
             
             console.log('✅ Funciones VBScript reemplazadas por JavaScript');
         }
