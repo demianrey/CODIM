@@ -1,10 +1,414 @@
-// content.js - Script principal ACTUALIZADO con Widget de Resumen
-console.log('🚀 CODIM CNS Fix - Extensión activada v3.6 con Buscador');
+// content.js - MÓDULO 1: Estructura base + Sistema de comunicación + Testing
+console.log('🚀 CODIM CNS Fix - Extensión activada v3.7 - Módulo 1');
 
+// ===============================
+// VERIFICACIÓN DE CONTEXTO
+// ===============================
+if (window !== window.top) {
+    console.log('❌ En iframe, saltando inicialización principal...');
+} else {
+    console.log('✅ En frame principal - Inicializando extensión completa');
+
+    // ===============================
+    // SISTEMA DE COMUNICACIÓN ROBUSTO
+    // ===============================
+    class CommunicationSystem {
+        constructor() {
+            this.setupEventListeners();
+            console.log('📡 Sistema de comunicación inicializado');
+        }
+
+        setupEventListeners() {
+            // Handler para requests desde página
+            document.addEventListener('codim_request', async (event) => {
+                const { action, id } = event.detail;
+                console.log(`📨 Request recibido: ${action} (${id})`);
+                
+                try {
+                    const result = await chrome.runtime.sendMessage({ action });
+                    console.log(`📥 Response para ${action}:`, result);
+                    
+                    document.dispatchEvent(new CustomEvent('codim_response', {
+                        detail: { action, id, result, success: true }
+                    }));
+                    
+                } catch (error) {
+                    console.error(`❌ Error en ${action}:`, error);
+                    
+                    document.dispatchEvent(new CustomEvent('codim_response', {
+                        detail: { action, id, error: error.message, success: false }
+                    }));
+                }
+            });
+            
+            console.log('✅ Event listeners configurados');
+        }
+
+        // Método directo para comunicación interna
+        async sendMessage(action, data = null) {
+            try {
+                const message = data ? { action, data } : { action };
+                const response = await chrome.runtime.sendMessage(message);
+                console.log(`📡 Comunicación directa ${action}:`, response);
+                return response;
+            } catch (error) {
+                console.error(`❌ Error comunicación ${action}:`, error);
+                throw error;
+            }
+        }
+    }
+
+    // ===============================
+    // FUNCIONES DE TESTING GLOBALES
+    // ===============================
+    class TestingFunctions {
+        constructor(communicationSystem) {
+            this.comm = communicationSystem;
+            this.injectGlobalFunctions();
+        }
+
+        injectGlobalFunctions() {
+            // Múltiples métodos de inyección para máxima compatibilidad
+            this.injectViaEval();
+            this.injectViaBlob();
+            this.injectDirectly();
+            
+            console.log('🔧 Funciones de testing inyectadas con múltiples métodos');
+        }
+
+        injectViaEval() {
+            try {
+                window.eval(`
+                    console.log('📍 Inyectando funciones via eval...');
+                    
+                    // testMASNET
+                    window.testMASNET = async function() {
+                        console.log('🧪 Testing MASNET...');
+                        
+                        return new Promise((resolve, reject) => {
+                            const id = 'masnet_' + Date.now();
+                            
+                            const responseHandler = (event) => {
+                                if (event.detail.id === id) {
+                                    document.removeEventListener('codim_response', responseHandler);
+                                    
+                                    const result = event.detail.result;
+                                    console.log('%c✅ MASNET RESULT:', 'background: blue; color: white; padding: 5px; font-weight: bold;', result);
+                                    
+                                    if (result && result.success) {
+                                        console.log('🌐 URL:', result.workingURL || result.url);
+                                        console.log('📊 Status:', result.status);
+                                        console.log('📄 Content:', result.contentLength, 'chars');
+                                    } else if (result) {
+                                        console.log('🚫 Error:', result.error);
+                                    }
+                                    
+                                    resolve(result);
+                                }
+                            };
+                            
+                            document.addEventListener('codim_response', responseHandler);
+                            
+                            setTimeout(() => {
+                                document.removeEventListener('codim_response', responseHandler);
+                                reject(new Error('Timeout'));
+                            }, 15000);
+                            
+                            document.dispatchEvent(new CustomEvent('codim_request', {
+                                detail: { action: 'masnet_test', id: id }
+                            }));
+                        });
+                    };
+                    
+                    // testBackground
+                    window.testBackground = async function() {
+                        console.log('📡 Testing background...');
+                        
+                        return new Promise((resolve, reject) => {
+                            const id = 'bg_' + Date.now();
+                            
+                            const responseHandler = (event) => {
+                                if (event.detail.id === id) {
+                                    document.removeEventListener('codim_response', responseHandler);
+                                    console.log('✅ Background response:', event.detail.result);
+                                    resolve(event.detail.result);
+                                }
+                            };
+                            
+                            document.addEventListener('codim_response', responseHandler);
+                            setTimeout(() => {
+                                document.removeEventListener('codim_response', responseHandler);
+                                reject(new Error('Timeout'));
+                            }, 10000);
+                            
+                            document.dispatchEvent(new CustomEvent('codim_request', {
+                                detail: { action: 'ping', id: id }
+                            }));
+                        });
+                    };
+
+                    // testLogin
+                    window.testLogin = async function() {
+                        console.log('🔐 Testing MASNET login...');
+                        
+                        return new Promise((resolve, reject) => {
+                            const id = 'login_' + Date.now();
+                            
+                            const responseHandler = (event) => {
+                                if (event.detail.id === id) {
+                                    document.removeEventListener('codim_response', responseHandler);
+                                    
+                                    const result = event.detail.result;
+                                    console.log('%c🔐 LOGIN RESULT:', 'background: green; color: white; padding: 5px; font-weight: bold;', result);
+                                    
+                                    if (result && result.success && result.data) {
+                                        console.log('✅ Login exitoso:', result.data.message);
+                                        console.log('🌐 Base URL:', result.data.baseURL);
+                                    } else {
+                                        console.log('❌ Login falló:', result?.data?.message || 'Error desconocido');
+                                    }
+                                    
+                                    resolve(result);
+                                }
+                            };
+                            
+                            document.addEventListener('codim_response', responseHandler);
+                            
+                            setTimeout(() => {
+                                document.removeEventListener('codim_response', responseHandler);
+                                reject(new Error('Timeout'));
+                            }, 30000); // Más tiempo para login
+                            
+                            document.dispatchEvent(new CustomEvent('codim_request', {
+                                detail: { action: 'masnet_login', id: id }
+                            }));
+                        });
+                    };
+                    
+                    // runAllTests
+                    window.runAllTests = async function() {
+                        console.log('🚀 Running all tests...');
+                        try {
+                            console.log('1️⃣ Testing background...');
+                            const bg = await window.testBackground();
+                            
+                            console.log('2️⃣ Testing MASNET...');
+                            const masnet = await window.testMASNET();
+                            
+                            console.log('3️⃣ Testing login...');
+                            const login = await window.testLogin();
+                            
+                            const results = { background: bg, masnet, login };
+                            console.log('%c✅ ALL TESTS COMPLETED:', 'background: purple; color: white; padding: 10px; font-weight: bold; font-size: 16px;', results);
+                            return results;
+                        } catch (error) {
+                            console.error('❌ Error in tests:', error);
+                            return { error: error.message };
+                        }
+                    };
+                    
+                    console.log('✅ Funciones eval creadas:', {
+                        testMASNET: typeof window.testMASNET,
+                        testBackground: typeof window.testBackground,
+                        testLogin: typeof window.testLogin,
+                        runAllTests: typeof window.runAllTests
+                    });
+                `);
+                
+                console.log('✅ Inyección eval completada');
+                
+            } catch (error) {
+                console.error('❌ Error en inyección eval:', error);
+            }
+        }
+
+        injectViaBlob() {
+            try {
+                const scriptCode = `
+                    console.log('📍 Inyectando funciones via blob...');
+                    
+                    // Solo crear si no existen
+                    if (typeof window.testMASNET === 'undefined') {
+                        window.testMASNET = async function() {
+                            console.log('🧪 Testing MASNET (blob)...');
+                            
+                            return new Promise((resolve) => {
+                                const id = 'masnet_' + Date.now();
+                                
+                                const handler = (e) => {
+                                    if (e.detail.id === id) {
+                                        document.removeEventListener('codim_response', handler);
+                                        resolve(e.detail.result);
+                                    }
+                                };
+                                
+                                document.addEventListener('codim_response', handler);
+                                setTimeout(() => resolve(null), 15000);
+                                
+                                document.dispatchEvent(new CustomEvent('codim_request', {
+                                    detail: { action: 'masnet_test', id }
+                                }));
+                            });
+                        };
+                    }
+                    
+                    if (typeof window.testBackground === 'undefined') {
+                        window.testBackground = async function() {
+                            console.log('📡 Testing background (blob)...');
+                            
+                            return new Promise((resolve) => {
+                                const id = 'bg_' + Date.now();
+                                
+                                const handler = (e) => {
+                                    if (e.detail.id === id) {
+                                        document.removeEventListener('codim_response', handler);
+                                        resolve(e.detail.result);
+                                    }
+                                };
+                                
+                                document.addEventListener('codim_response', handler);
+                                setTimeout(() => resolve(null), 10000);
+                                
+                                document.dispatchEvent(new CustomEvent('codim_request', {
+                                    detail: { action: 'ping', id }
+                                }));
+                            });
+                        };
+                    }
+                    
+                    console.log('✅ Funciones blob creadas (fallback)');
+                `;
+                
+                const blob = new Blob([scriptCode], { type: 'application/javascript' });
+                const script = document.createElement('script');
+                script.src = URL.createObjectURL(blob);
+                
+                script.onload = () => {
+                    URL.revokeObjectURL(script.src);
+                    console.log('✅ Script blob cargado');
+                };
+                
+                (document.head || document.documentElement).appendChild(script);
+                
+            } catch (error) {
+                console.error('❌ Error en inyección blob:', error);
+            }
+        }
+
+        injectDirectly() {
+            try {
+                // Funciones de respaldo directo
+                if (typeof window.testMASNET === 'undefined') {
+                    Object.defineProperty(window, 'testMASNET', {
+                        value: async () => {
+                            console.log('🧪 testMASNET (directo)');
+                            return this.comm.sendMessage('masnet_test');
+                        },
+                        writable: false,
+                        enumerable: true,
+                        configurable: true
+                    });
+                }
+                
+                if (typeof window.testBackground === 'undefined') {
+                    Object.defineProperty(window, 'testBackground', {
+                        value: async () => {
+                            console.log('📡 testBackground (directo)');
+                            return this.comm.sendMessage('ping');
+                        },
+                        writable: false,
+                        enumerable: true,
+                        configurable: true
+                    });
+                }
+                
+                console.log('✅ Funciones directas definidas (respaldo)');
+                
+            } catch (error) {
+                console.error('❌ Error en inyección directa:', error);
+            }
+        }
+
+        // Verificación final de funciones
+        verifyFunctions() {
+            setTimeout(() => {
+                console.log('🔍 VERIFICACIÓN FINAL...');
+                
+                const checks = {
+                    testMASNET: typeof window.testMASNET,
+                    testBackground: typeof window.testBackground,
+                    testLogin: typeof window.testLogin,
+                    runAllTests: typeof window.runAllTests,
+                    windowKeys: Object.keys(window).filter(k => k.includes('test'))
+                };
+                
+                console.log('📊 Estado final de funciones:', checks);
+                
+                if (checks.testMASNET === 'function') {
+                    console.log('%c🎉 ¡ÉXITO! Funciones de testing disponibles', 'background: green; color: white; padding: 10px; font-weight: bold; font-size: 16px;');
+                    console.log('%c💡 Ejecuta: testMASNET(), testBackground(), testLogin(), runAllTests()', 'background: blue; color: white; padding: 5px; font-weight: bold;');
+                    
+                    // Auto-test opcional
+                    setTimeout(() => {
+                        console.log('🔄 Auto-test de comunicación...');
+                        window.testBackground().then(result => {
+                            console.log('✅ Auto-test comunicación completado:', result);
+                        }).catch(error => {
+                            console.error('❌ Auto-test comunicación falló:', error);
+                        });
+                    }, 2000);
+                    
+                } else {
+                    console.log('%c❌ FALLO: Funciones no disponibles', 'background: red; color: white; padding: 10px; font-weight: bold;');
+                }
+            }, 3000);
+        }
+    }
+
+    // ===============================
+    // INICIALIZACIÓN MÓDULO 1
+    // ===============================
+    function initializeModule1() {
+        console.log('🔧 Inicializando Módulo 1...');
+        
+        // Inicializar sistema de comunicación
+        const communicationSystem = new CommunicationSystem();
+        
+        // Inicializar funciones de testing
+        const testingFunctions = new TestingFunctions(communicationSystem);
+        
+        // Verificar que todo funcione
+        testingFunctions.verifyFunctions();
+        
+        // Hacer disponible globalmente para otros módulos
+        window.codimCommunication = communicationSystem;
+        
+        console.log('✅ Módulo 1 inicializado - Sistema base listo');
+        
+        return { communicationSystem, testingFunctions };
+    }
+
+    // Ejecutar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeModule1);
+    } else {
+        initializeModule1();
+    }
+}
+
+console.log('✅ CODIM CNS Fix v3.7 - Módulo 1 cargado');
+
+// content.js - MÓDULO 2: SimpleDSLAMSearch class
+// AGREGAR DESPUÉS DEL MÓDULO 1
+
+// ===============================
+// CLASE SIMPLE DSLAM SEARCH
+// ===============================
 class SimpleDSLAMSearch {
     constructor() {
         this.initialized = false;
         this.observer = null;
+        console.log('🔍 SimpleDSLAMSearch inicializado');
     }
 
     init() {
@@ -28,7 +432,7 @@ class SimpleDSLAMSearch {
                                           (node.querySelector ? node.querySelectorAll('table') : []);
                             
                             tables.forEach(table => {
-                                if (this.isResultTable(table) && !table.dataset.searchAdded) {
+                                if (this.isEquipmentTable(table) && !table.dataset.searchAdded) {
                                     console.log('📊 Tabla de resultados detectada, agregando buscador');
                                     setTimeout(() => this.addSearchToTable(table), 500);
                                 }
@@ -51,7 +455,7 @@ class SimpleDSLAMSearch {
     checkExistingTables() {
         const existingTables = document.querySelectorAll('table');
         existingTables.forEach(table => {
-            if (this.isResultTable(table) && !table.dataset.searchAdded) {
+            if (this.isEquipmentTable(table) && !table.dataset.searchAdded) {
                 console.log('📊 Tabla de resultados existente encontrada');
                 this.addSearchToTable(table);
             }
@@ -59,23 +463,23 @@ class SimpleDSLAMSearch {
     }
 
     isEquipmentTable(table) {
-    if (!table || !table.querySelector) return false;
+        if (!table || !table.querySelector) return false;
 
-    const tableText = table.textContent.toLowerCase();
-    const rows = table.querySelectorAll('tr');
-    
-    // ✅ TU SOLUCIÓN PERFECTA:
-    if (tableText.includes('existen reportes pendientes de solucion')) {
-        return false;
+        const tableText = table.textContent.toLowerCase();
+        const rows = table.querySelectorAll('tr');
+        
+        // ✅ EXCLUSIÓN ESPECÍFICA: No agregar buscador a reportes pendientes
+        if (tableText.includes('existen reportes pendientes de solucion')) {
+            return false;
+        }
+        
+        // Verificar que contenga equipos DSLAM
+        const hasEquipmentData = tableText.includes('dslam') || 
+                               tableText.includes('tecnologia') || 
+                               tableText.includes('supervision');
+        
+        return hasEquipmentData && rows.length >= 2 && tableText.length > 50;
     }
-    
-    // Verificar que contenga equipos
-    const hasEquipmentData = tableText.includes('dslam') || 
-                           tableText.includes('tecnologia') || 
-                           tableText.includes('supervision');
-    
-    return hasEquipmentData && rows.length >= 2 && tableText.length > 50;
-}
 
     addSearchToTable(table) {
         if (table.dataset.searchAdded) return;
@@ -450,6 +854,16 @@ class SimpleDSLAMSearch {
 }
 
 // ===============================
+// INSTANCIA GLOBAL PARA MÓDULOS
+// ===============================
+window.codimDSLAMSearch = new SimpleDSLAMSearch();
+
+console.log('✅ CODIM CNS Fix v3.7 - Módulo 2 (SimpleDSLAMSearch) cargado');
+
+// content.js - MÓDULO 3: CODIMResumenWidget class
+// AGREGAR DESPUÉS DEL MÓDULO 2
+
+// ===============================
 // CLASE WIDGET DE RESUMEN
 // ===============================
 class CODIMResumenWidget {
@@ -467,6 +881,8 @@ class CODIMResumenWidget {
         this.refreshInterval = null;
         this.alarmActive = true;
         this.selectedCenter = 'cns';
+        this.contentScript = null; // Referencia al content script principal
+        console.log('📊 CODIMResumenWidget inicializado');
     }
 
     createWidget() {
@@ -586,6 +1002,264 @@ class CODIMResumenWidget {
                 </div>
             </div>
         `;
+    }
+
+    setupEventListeners(widget) {
+        // Selector de centro
+        const centerSelector = widget.querySelector('#centerSelector');
+        centerSelector?.addEventListener('change', (e) => {
+            this.selectedCenter = e.target.value;
+            this.refreshData();
+        });
+
+        // Botón de alarma
+        const alarmBtn = widget.querySelector('#alarmToggle');
+        alarmBtn?.addEventListener('click', () => {
+            this.toggleAlarm();
+        });
+
+        // Botón de refresh
+        const refreshBtn = widget.querySelector('#refreshBtn');
+        refreshBtn?.addEventListener('click', () => {
+            this.refreshData();
+        });
+
+        // Clicks en estadísticas
+        widget.addEventListener('click', (e) => {
+            if (e.target.classList.contains('clickable')) {
+                const params = e.target.getAttribute('data-params');
+                if (params) {
+                    this.openReport(params);
+                }
+            }
+        });
+    }
+
+    toggleAlarm() {
+        this.alarmActive = !this.alarmActive;
+        const alarmBtn = document.querySelector('#alarmToggle');
+        
+        if (alarmBtn) {
+            alarmBtn.className = `alarm-btn ${this.alarmActive ? 'active' : 'inactive'}`;
+            alarmBtn.textContent = this.alarmActive ? '🔔' : '🔕';
+        }
+
+        this.sendAlarmStatus();
+        
+        const status = this.alarmActive ? 'activada' : 'desactivada';
+        this.showNotification(`🔔 Alarma ${status}`, 'info');
+    }
+
+    openReport(params) {
+        const [page, type, count, status] = params.split(',');
+        
+        console.log(`📊 Abriendo reporte: Página=${page}, Tipo=${type}, Cantidad=${count}, Estado=${status}`);
+        
+        // Intentar usar método original si existe
+        if (typeof window.top?.cambia_menu === 'function') {
+            window.top.cambia_menu('resumen', page, type, count, status, '', this.selectedCenter);
+        } else {
+            // Fallback para interfaz moderna
+            const iframe = document.getElementById('modernContentFrame');
+            if (iframe) {
+                const url = `resumen.asp?page=${page}&type=${type}&count=${count}&status=${status}&center=${this.selectedCenter}`;
+                iframe.src = url;
+                
+                // Actualizar títulos
+                const titleElement = document.getElementById('modernContentTitle');
+                const subtitleElement = document.getElementById('modernContentSubtitle');
+                
+                if (titleElement) titleElement.textContent = 'Reporte de Incidentes';
+                if (subtitleElement) subtitleElement.textContent = `Mostrando ${count} reportes (${this.getStatusName(status)})`;
+            }
+        }
+        
+        this.showNotification(`📊 Abriendo reporte con ${count} registros`, 'info');
+    }
+
+    getStatusName(status) {
+        const statusNames = {
+            'P': 'Pendientes',
+            'N': 'No Atendidas',
+            'A': 'Atendidas',
+            'S': 'Sin Reconocer',
+            'R': 'Resueltas'
+        };
+        return statusNames[status] || 'Todos';
+    }
+
+    async refreshData() {
+        const refreshBtn = document.querySelector('#refreshBtn');
+        const lastUpdateElement = document.getElementById('lastUpdateTime');
+        
+        // Mostrar estado de carga
+        if (refreshBtn) {
+            refreshBtn.style.transform = 'rotate(360deg)';
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '⏳';
+        }
+        
+        if (lastUpdateElement) {
+            lastUpdateElement.textContent = 'Actualizando...';
+        }
+
+        try {
+            console.log('🔄 Iniciando actualización de datos...');
+            await this.fetchData();
+            this.updateWidget();
+            this.updateLastUpdateTime();
+            this.showNotification('✅ Datos actualizados correctamente', 'success');
+            console.log('✅ Actualización completada:', this.data);
+        } catch (error) {
+            console.error('❌ Error al actualizar datos:', error);
+            this.showNotification('❌ Error al actualizar datos', 'error');
+        } finally {
+            // Restaurar botón
+            if (refreshBtn) {
+                setTimeout(() => {
+                    refreshBtn.style.transform = 'rotate(0deg)';
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = '🔄';
+                }, 500);
+            }
+        }
+    }
+
+    async fetchData() {
+        // Simular fetch real de primera.asp con datos más realistas
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // Simular datos con variaciones más realistas basadas en el tiempo
+                const currentHour = new Date().getHours();
+                const isBusinessHours = currentHour >= 8 && currentHour <= 18;
+                
+                // Más reportes durante horas laborales
+                const baseVencidos = isBusinessHours ? 
+                    Math.floor(300 + Math.random() * 200) : // 300-500 en horas laborales
+                    Math.floor(150 + Math.random() * 100);  // 150-250 fuera de horas
+                
+                const baseEnTiempo = isBusinessHours ?
+                    Math.floor(50 + Math.random() * 150) :  // 50-200 en horas laborales
+                    Math.floor(20 + Math.random() * 80);    // 20-100 fuera de horas
+                
+                // Generar datos más realistas
+                this.data = {
+                    vencidos: baseVencidos,
+                    enTiempo: baseEnTiempo,
+                    sinAtender: Math.floor(baseVencidos * 0.3 + Math.random() * 50), // ~30% de vencidos
+                    atendidas: Math.floor(baseVencidos * 0.4 + Math.random() * 30),  // ~40% de vencidos
+                    noReconocidas: Math.floor(baseVencidos * 0.2 + Math.random() * 20), // ~20%
+                    reconocidas: Math.floor(baseVencidos * 0.3 + Math.random() * 25),   // ~30%
+                    resueltas: Math.floor((baseVencidos + baseEnTiempo) * 0.1 + Math.random() * 15) // ~10%
+                };
+                
+                this.data.total = this.data.vencidos + this.data.enTiempo;
+                
+                console.log('📊 Datos simulados generados:', {
+                    hora: currentHour,
+                    esHorarioLaboral: isBusinessHours,
+                    datos: this.data
+                });
+                
+                resolve(this.data);
+            }, 1500); // Simular latencia de red realista
+        });
+    }
+
+    updateWidget() {
+        const widget = document.querySelector('.codim-resumen-widget');
+        if (!widget) return;
+
+        // Recrear con datos actualizados
+        widget.innerHTML = this.getWidgetHTML();
+        this.setupEventListeners(widget);
+        
+        // Animar elementos actualizados
+        const animatedElements = widget.querySelectorAll('.card-value-large, .card-value-huge, .status-value');
+        animatedElements.forEach(el => {
+            el.classList.add('updated');
+            setTimeout(() => el.classList.remove('updated'), 1200);
+        });
+        
+        // 🔄 Actualizar sidebar si existe referencia al content script
+        if (this.contentScript && typeof this.contentScript.updateModernSidebarResumen === 'function') {
+            setTimeout(() => {
+                this.contentScript.updateModernSidebarResumen();
+            }, 100); // Pequeño delay para asegurar que el DOM esté actualizado
+        }
+    }
+
+    updateLastUpdateTime() {
+        const timeElement = document.getElementById('lastUpdateTime');
+        if (timeElement) {
+            timeElement.textContent = new Date().toLocaleTimeString();
+        }
+    }
+
+    startAutoRefresh() {
+        // Auto-refresh cada 7.5 minutos
+        this.refreshInterval = setInterval(() => {
+            this.refreshData();
+        }, 450000);
+    }
+
+    stopAutoRefresh() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+    }
+
+    sendAlarmStatus() {
+        // Comunicar con background para enviar estado de alarma
+        if (window.codimCommunication) {
+            window.codimCommunication.sendMessage('alarm_status', {
+                active: this.alarmActive,
+                center: this.selectedCenter
+            }).then(result => {
+                console.log('🔔 Estado de alarma enviado:', result);
+            }).catch(error => {
+                console.log('⚠️ Error enviando estado de alarma:', error);
+            });
+        } else {
+            // Fallback: simular envío
+            console.log('🔔 Enviando estado de alarma (simulado):', this.alarmActive ? 'Activada' : 'Desactivada');
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `codim-notification codim-notification-${type}`;
+        notification.textContent = message;
+        
+        const colors = {
+            success: '#4CAF50',
+            error: '#f44336',
+            warning: '#ff9800',
+            info: '#2196F3'
+        };
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideInNotification 0.3s ease-out;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutNotification 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
     injectStyles() {
@@ -935,254 +1609,20 @@ class CODIMResumenWidget {
                 50% { opacity: 1; }
                 100% { opacity: 0.7; }
             }
+
+            /* Animaciones para notificaciones */
+            @keyframes slideInNotification {
+                from { transform: translateX(300px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutNotification {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(300px); opacity: 0; }
+            }
         `;
         
         document.head.appendChild(style);
-    }
-
-    setupEventListeners(widget) {
-        // Selector de centro
-        const centerSelector = widget.querySelector('#centerSelector');
-        centerSelector?.addEventListener('change', (e) => {
-            this.selectedCenter = e.target.value;
-            this.refreshData();
-        });
-
-        // Botón de alarma
-        const alarmBtn = widget.querySelector('#alarmToggle');
-        alarmBtn?.addEventListener('click', () => {
-            this.toggleAlarm();
-        });
-
-        // Botón de refresh
-        const refreshBtn = widget.querySelector('#refreshBtn');
-        refreshBtn?.addEventListener('click', () => {
-            this.refreshData();
-        });
-
-        // Clicks en estadísticas
-        widget.addEventListener('click', (e) => {
-            if (e.target.classList.contains('clickable')) {
-                const params = e.target.getAttribute('data-params');
-                if (params) {
-                    this.openReport(params);
-                }
-            }
-        });
-    }
-
-    toggleAlarm() {
-        this.alarmActive = !this.alarmActive;
-        const alarmBtn = document.querySelector('#alarmToggle');
-        
-        if (alarmBtn) {
-            alarmBtn.className = `alarm-btn ${this.alarmActive ? 'active' : 'inactive'}`;
-            alarmBtn.textContent = this.alarmActive ? '🔔' : '🔕';
-        }
-
-        this.sendAlarmStatus();
-        
-        const status = this.alarmActive ? 'activada' : 'desactivada';
-        this.showNotification(`🔔 Alarma ${status}`, 'info');
-    }
-
-    openReport(params) {
-        const [page, type, count, status] = params.split(',');
-        
-        console.log(`📊 Abriendo reporte: Página=${page}, Tipo=${type}, Cantidad=${count}, Estado=${status}`);
-        
-        // Intentar usar método original si existe
-        if (typeof window.top?.cambia_menu === 'function') {
-            window.top.cambia_menu('resumen', page, type, count, status, '', this.selectedCenter);
-        } else {
-            // Fallback para interfaz moderna
-            const iframe = document.getElementById('modernContentFrame');
-            if (iframe) {
-                const url = `resumen.asp?page=${page}&type=${type}&count=${count}&status=${status}&center=${this.selectedCenter}`;
-                iframe.src = url;
-                
-                // Actualizar títulos
-                const titleElement = document.getElementById('modernContentTitle');
-                const subtitleElement = document.getElementById('modernContentSubtitle');
-                
-                if (titleElement) titleElement.textContent = 'Reporte de Incidentes';
-                if (subtitleElement) subtitleElement.textContent = `Mostrando ${count} reportes (${this.getStatusName(status)})`;
-            }
-        }
-        
-        this.showNotification(`📊 Abriendo reporte con ${count} registros`, 'info');
-    }
-
-    getStatusName(status) {
-        const statusNames = {
-            'P': 'Pendientes',
-            'N': 'No Atendidas',
-            'A': 'Atendidas',
-            'S': 'Sin Reconocer',
-            'R': 'Resueltas'
-        };
-        return statusNames[status] || 'Todos';
-    }
-
-    async refreshData() {
-        const refreshBtn = document.querySelector('#refreshBtn');
-        const lastUpdateElement = document.getElementById('lastUpdateTime');
-        
-        // Mostrar estado de carga
-        if (refreshBtn) {
-            refreshBtn.style.transform = 'rotate(360deg)';
-            refreshBtn.disabled = true;
-            refreshBtn.textContent = '⏳';
-        }
-        
-        if (lastUpdateElement) {
-            lastUpdateElement.textContent = 'Actualizando...';
-        }
-
-        try {
-            console.log('🔄 Iniciando actualización de datos...');
-            await this.fetchData();
-            this.updateWidget();
-            this.updateLastUpdateTime();
-            this.showNotification('✅ Datos actualizados correctamente', 'success');
-            console.log('✅ Actualización completada:', this.data);
-        } catch (error) {
-            console.error('❌ Error al actualizar datos:', error);
-            this.showNotification('❌ Error al actualizar datos', 'error');
-        } finally {
-            // Restaurar botón
-            if (refreshBtn) {
-                setTimeout(() => {
-                    refreshBtn.style.transform = 'rotate(0deg)';
-                    refreshBtn.disabled = false;
-                    refreshBtn.textContent = '🔄';
-                }, 500);
-            }
-        }
-    }
-
-    async fetchData() {
-        // Simular fetch real de primera.asp con datos más realistas
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Simular datos con variaciones más realistas basadas en el tiempo
-                const currentHour = new Date().getHours();
-                const isBusinessHours = currentHour >= 8 && currentHour <= 18;
-                
-                // Más reportes durante horas laborales
-                const baseVencidos = isBusinessHours ? 
-                    Math.floor(300 + Math.random() * 200) : // 300-500 en horas laborales
-                    Math.floor(150 + Math.random() * 100);  // 150-250 fuera de horas
-                
-                const baseEnTiempo = isBusinessHours ?
-                    Math.floor(50 + Math.random() * 150) :  // 50-200 en horas laborales
-                    Math.floor(20 + Math.random() * 80);    // 20-100 fuera de horas
-                
-                // Generar datos más realistas
-                this.data = {
-                    vencidos: baseVencidos,
-                    enTiempo: baseEnTiempo,
-                    sinAtender: Math.floor(baseVencidos * 0.3 + Math.random() * 50), // ~30% de vencidos
-                    atendidas: Math.floor(baseVencidos * 0.4 + Math.random() * 30),  // ~40% de vencidos
-                    noReconocidas: Math.floor(baseVencidos * 0.2 + Math.random() * 20), // ~20%
-                    reconocidas: Math.floor(baseVencidos * 0.3 + Math.random() * 25),   // ~30%
-                    resueltas: Math.floor((baseVencidos + baseEnTiempo) * 0.1 + Math.random() * 15) // ~10%
-                };
-                
-                this.data.total = this.data.vencidos + this.data.enTiempo;
-                
-                console.log('📊 Datos simulados generados:', {
-                    hora: currentHour,
-                    esHorarioLaboral: isBusinessHours,
-                    datos: this.data
-                });
-                
-                resolve(this.data);
-            }, 1500); // Simular latencia de red realista
-        });
-    }
-
-    updateWidget() {
-        const widget = document.querySelector('.codim-resumen-widget');
-        if (!widget) return;
-
-        // Recrear con datos actualizados
-        widget.innerHTML = this.getWidgetHTML();
-        this.setupEventListeners(widget);
-        
-        // Animar elementos actualizados
-        const animatedElements = widget.querySelectorAll('.card-value-large, .card-value-huge, .status-value');
-        animatedElements.forEach(el => {
-            el.classList.add('updated');
-            setTimeout(() => el.classList.remove('updated'), 1200);
-        });
-        
-        // 🔄 Actualizar sidebar si existe referencia al content script
-        if (this.contentScript && typeof this.contentScript.updateModernSidebarResumen === 'function') {
-            setTimeout(() => {
-                this.contentScript.updateModernSidebarResumen();
-            }, 100); // Pequeño delay para asegurar que el DOM esté actualizado
-        }
-    }
-
-    updateLastUpdateTime() {
-        const timeElement = document.getElementById('lastUpdateTime');
-        if (timeElement) {
-            timeElement.textContent = new Date().toLocaleTimeString();
-        }
-    }
-
-    startAutoRefresh() {
-        // Auto-refresh cada 7.5 minutos
-        this.refreshInterval = setInterval(() => {
-            this.refreshData();
-        }, 450000);
-    }
-
-    stopAutoRefresh() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
-
-    sendAlarmStatus() {
-        // Simular POST a primera.asp
-        console.log('🔔 Enviando estado de alarma:', this.alarmActive ? 'Activada' : 'Desactivada');
-    }
-
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `codim-notification codim-notification-${type}`;
-        notification.textContent = message;
-        
-        const colors = {
-            success: '#4CAF50',
-            error: '#f44336',
-            warning: '#ff9800',
-            info: '#2196F3'
-        };
-        
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${colors[type]};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            animation: slideInNotification 0.3s ease-out;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.animation = 'slideOutNotification 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
     }
 
     destroy() {
@@ -1195,6 +1635,1461 @@ class CODIMResumenWidget {
     }
 }
 
+console.log('✅ CODIM CNS Fix v3.7 - Módulo 3 (CODIMResumenWidget) cargado');
+
+// ===============================
+// COMPONENTE DESBLOQUEO PISA - FUNCIONAL
+// ===============================
+
+// MÓDULO 4: Componente de Desbloqueo PISA - VERSIÓN MEJORADA
+class DesbloqueoComponent {
+    constructor() {
+        this.selectedAmbientes = [];
+        this.isProcessing = false;
+        console.log('🔓 DesbloqueoComponent mejorado inicializado');
+    }
+
+    create() {
+        const container = document.createElement('div');
+        container.className = 'desbloqueo-container';
+        container.innerHTML = this.getHTML();
+        
+        this.setupEventListeners(container);
+        this.injectStyles();
+        
+        return container;
+    }
+
+    getHTML() {
+        return `
+            <div class="desbloqueo-content">
+                <div class="desbloqueo-form">
+                    <div class="form-section">
+                        <label class="section-label">
+                            <span class="label-icon">🏢</span>
+                            <span class="label-text">Ambiente PISA:</span>
+                        </label>
+                        
+                        <div class="checkbox-row">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="ambiente" value="METRO" id="metro-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">METRO</span>
+                            </label>
+                            
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="ambiente" value="MTY" id="mty-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">MTY</span>
+                            </label>
+                            
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="ambiente" value="NTE" id="nte-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">NTE</span>
+                            </label>
+                            
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="ambiente" value="GDL" id="gdl-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">GDL</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="section-label">
+                            <span class="label-icon">🔑</span>
+                            <span class="label-text">Clave de usuario PISA:</span>
+                        </label>
+                        
+                        <div class="password-container">
+                            <input type="text" id="clave-input" class="clave-input" placeholder="Ingrese su clave de usuario">
+                            <button type="button" id="toggle-password" class="toggle-password" title="Mostrar/Ocultar clave">
+                                🙈
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="section-label">
+                            <span class="label-icon">🔑</span>
+                            <span class="label-text">Repetir clave de usuario PISA:</span>
+                        </label>
+                        
+                        <div class="password-container">
+                            <input type="text" id="reclave-input" class="clave-input" placeholder="Confirme su clave de usuario">
+                            <button type="button" id="toggle-repassword" class="toggle-password" title="Mostrar/Ocultar clave">
+                                🙈
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="limpiar-btn" class="btn btn-secondary">
+                            🧹 Limpiar
+                        </button>
+                        
+                        <button type="button" id="desbloquear-btn" class="btn btn-primary">
+                            🔓 Desbloquear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de procesamiento -->
+            <div id="processing-overlay" class="processing-overlay hidden">
+                <div class="processing-modal">
+                    <div class="processing-animation">
+                        <div class="processing-spinner"></div>
+                        <div class="processing-icon">🔓</div>
+                    </div>
+                    <h3 id="processing-title">Procesando desbloqueo...</h3>
+                    <p id="processing-subtitle">Conectando con sistema MASNET</p>
+                    <div class="processing-steps">
+                        <div class="step" id="step-connection">
+                            <span class="step-icon">🔍</span>
+                            <span class="step-text">Verificando conexión</span>
+                            <span class="step-status">⏳</span>
+                        </div>
+                        <div class="step" id="step-login">
+                            <span class="step-icon">🔐</span>
+                            <span class="step-text">Autenticando usuario</span>
+                            <span class="step-status">⏳</span>
+                        </div>
+                        <div class="step" id="step-unlock">
+                            <span class="step-icon">🔓</span>
+                            <span class="step-text">Desbloqueando ambientes</span>
+                            <span class="step-status">⏳</span>
+                        </div>
+                        <div class="step" id="step-logout">
+                            <span class="step-icon">🚪</span>
+                            <span class="step-text">Cerrando sesión</span>
+                            <span class="step-status">⏳</span>
+                        </div>
+                    </div>
+                    <div class="processing-footer">
+                        <small>Este proceso puede tomar unos segundos...</small>
+                        <br><br>
+                        <button type="button" id="cancel-process" class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px;">
+                            ❌ Cancelar Proceso
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de resultado -->
+            <div id="result-modal" class="result-modal hidden">
+                <div class="result-content">
+                    <div class="result-header">
+                        <div class="result-icon" id="result-icon">✅</div>
+                        <h2 id="result-title">Desbloqueo Exitoso</h2>
+                    </div>
+                    <div class="result-body">
+                        <p id="result-message">El desbloqueo se completó correctamente.</p>
+                        <div class="result-details" id="result-details"></div>
+                    </div>
+                    <div class="result-actions">
+                        <button type="button" id="result-close" class="btn btn-primary">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    setupEventListeners(container) {
+        // Checkboxes de ambientes - SOLUCIÓN DEFINITIVA
+        const checkboxes = container.querySelectorAll('input[name="ambiente"]');
+        const checkboxItems = container.querySelectorAll('.checkbox-item');
+        
+        // Event listener en el checkbox real
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.updateSelectedAmbientes();
+                this.validateForm();
+            });
+        });
+
+        // Event listener adicional en el contenedor del checkbox
+        checkboxItems.forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const checkbox = checkboxes[index];
+                checkbox.checked = !checkbox.checked;
+                
+                // Disparar evento change manualmente
+                const event = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(event);
+            });
+        });
+
+        // Inputs de clave
+        const claveInput = container.querySelector('#clave-input');
+        const reclaveInput = container.querySelector('#reclave-input');
+        
+        claveInput.addEventListener('input', () => this.validateForm());
+        reclaveInput.addEventListener('input', () => this.validateForm());
+
+        // Botones de mostrar/ocultar contraseña
+        container.querySelector('#toggle-password').addEventListener('click', () => {
+            this.togglePasswordVisibility('clave-input', 'toggle-password');
+        });
+        
+        container.querySelector('#toggle-repassword').addEventListener('click', () => {
+            this.togglePasswordVisibility('reclave-input', 'toggle-repassword');
+        });
+
+        // Botones de acción
+        container.querySelector('#limpiar-btn').addEventListener('click', () => {
+            this.limpiarFormulario();
+        });
+
+        container.querySelector('#desbloquear-btn').addEventListener('click', () => {
+            this.procesarDesbloqueo();
+        });
+
+        // Modal de resultado
+        container.querySelector('#result-close').addEventListener('click', () => {
+            this.hideResultModal();
+        });
+
+        // Botón de cancelar proceso
+        container.querySelector('#cancel-process').addEventListener('click', () => {
+            this.cancelProcess();
+        });
+
+        console.log('✅ Event listeners configurados para desbloqueo');
+    }
+
+    updateSelectedAmbientes() {
+        const checkboxes = document.querySelectorAll('input[name="ambiente"]:checked');
+        this.selectedAmbientes = Array.from(checkboxes).map(cb => cb.value);
+        console.log('🏢 Ambientes seleccionados:', this.selectedAmbientes);
+    }
+
+    validateForm() {
+        const claveInput = document.querySelector('#clave-input');
+        const reclaveInput = document.querySelector('#reclave-input');
+        const desbloquearBtn = document.querySelector('#desbloquear-btn');
+        
+        const hasAmbientes = this.selectedAmbientes.length > 0;
+        const hasClave = claveInput.value.trim().length > 0;
+        const hasReclave = reclaveInput.value.trim().length > 0;
+        const clavesCoinciden = claveInput.value === reclaveInput.value;
+        
+        const isValid = hasAmbientes && hasClave && hasReclave && clavesCoinciden;
+        
+        desbloquearBtn.disabled = !isValid;
+        desbloquearBtn.classList.toggle('disabled', !isValid);
+        
+        // Mostrar indicador de claves no coinciden
+        if (hasReclave && !clavesCoinciden) {
+            reclaveInput.classList.add('error');
+        } else {
+            reclaveInput.classList.remove('error');
+        }
+        
+        return isValid;
+    }
+
+    togglePasswordVisibility(inputId, buttonId) {
+        const input = document.getElementById(inputId);
+        const button = document.getElementById(buttonId);
+        
+        if (input.type === 'text') {
+            input.type = 'password';
+            button.textContent = '👁️';
+            button.title = 'Mostrar clave';
+        } else {
+            input.type = 'text';
+            button.textContent = '🙈';
+            button.title = 'Ocultar clave';
+        }
+    }
+
+    limpiarFormulario() {
+        // Limpiar checkboxes
+        document.querySelectorAll('input[name="ambiente"]').forEach(cb => {
+            cb.checked = false;
+        });
+        
+        // Limpiar inputs
+        document.getElementById('clave-input').value = '';
+        document.getElementById('reclave-input').value = '';
+        
+        // Limpiar estado
+        this.selectedAmbientes = [];
+        this.validateForm();
+        
+        console.log('🧹 Formulario limpiado');
+    }
+
+    async procesarDesbloqueo() {
+        if (this.isProcessing) return;
+        
+        this.isProcessing = true;
+        
+        try {
+            const clave = document.getElementById('clave-input').value.trim();
+            
+            if (!this.validateForm()) {
+                throw new Error('Por favor complete todos los campos correctamente');
+            }
+            
+            console.log('🔓 Iniciando proceso de desbloqueo:', {
+                ambientes: this.selectedAmbientes,
+                clave: '***OCULTA***'
+            });
+            
+            // Mostrar modal de procesamiento
+            this.showProcessingModal();
+            
+            // Paso 1: Test de conexión
+            await this.updateProcessingStep('step-connection', 'progress');
+            await this.comunicarConBackground('masnet_test');
+            await this.updateProcessingStep('step-connection', 'success');
+            
+            // Paso 2: Proceso completo de desbloqueo
+            await this.updateProcessingStep('step-login', 'progress');
+            await this.updateProcessingStep('step-unlock', 'progress');
+            await this.updateProcessingStep('step-logout', 'progress');
+            
+            const result = await this.comunicarConBackground('masnet_desbloqueo', {
+                ambientes: this.selectedAmbientes,
+                clave: clave
+            });
+            
+            if (result.success && result.data.success) {
+                // Marcar todos los pasos como exitosos
+                await this.updateProcessingStep('step-login', 'success');
+                await this.updateProcessingStep('step-unlock', 'success');
+                await this.updateProcessingStep('step-logout', 'success');
+                
+                // FORZAR LOGOUT ADICIONAL para asegurar desconexión
+                console.log('🔐 Ejecutando logout adicional para asegurar desconexión...');
+                await this.comunicarConBackground('masnet_logout');
+                
+                setTimeout(() => {
+                    this.hideProcessingModal();
+                    this.showResultModal(true, result.data);
+                }, 1000);
+            } else {
+                throw new Error(result.data?.message || 'Error en el desbloqueo');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error en desbloqueo:', error);
+            
+            // LOGOUT DE EMERGENCIA
+            try {
+                console.log('🚨 Ejecutando logout de emergencia...');
+                await this.comunicarConBackground('masnet_logout');
+            } catch (logoutError) {
+                console.error('❌ Logout de emergencia falló:', logoutError);
+            }
+            
+            // Marcar paso actual como error
+            const currentStep = document.querySelector('.step.progress');
+            if (currentStep) {
+                this.updateProcessingStep(currentStep.id, 'error');
+            }
+            
+            setTimeout(() => {
+                this.hideProcessingModal();
+                this.showResultModal(false, { message: error.message });
+            }, 1000);
+        } finally {
+            this.isProcessing = false;
+        }
+    }
+
+    async comunicarConBackground(action, data = null) {
+        return new Promise((resolve, reject) => {
+            console.log(`📡 Comunicación directa ${action}:`, data ? { ...data, clave: '***OCULTA***' } : 'sin datos');
+            
+            chrome.runtime.sendMessage({ action, data }, (response) => {
+                console.log(`📡 Comunicación directa ${action}:`, response);
+                
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else if (response) {
+                    resolve(response);
+                } else {
+                    reject(new Error('No se recibió respuesta del background'));
+                }
+            });
+        });
+    }
+
+    showProcessingModal() {
+        // Remover modal anterior si existe
+        this.hideProcessingModal();
+        
+        // Crear modal dinámicamente
+        const overlay = document.createElement('div');
+        overlay.id = 'processing-overlay';
+        overlay.className = 'processing-overlay';
+        overlay.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 2147483647 !important;
+            backdrop-filter: blur(5px) !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="
+                background: white !important;
+                border-radius: 20px !important;
+                padding: 40px !important;
+                max-width: 500px !important;
+                width: 90% !important;
+                text-align: center !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+                position: relative !important;
+                z-index: 2147483648 !important;
+                animation: modalAppear 0.3s ease-out !important;
+            ">
+                <style>
+                    @keyframes modalAppear {
+                        from { opacity: 0; transform: scale(0.9) translateY(20px); }
+                        to { opacity: 1; transform: scale(1) translateY(0); }
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+                
+                <div style="position: relative; margin-bottom: 24px;">
+                    <div style="
+                        width: 60px;
+                        height: 60px;
+                        border: 4px solid #f3f3f3;
+                        border-top: 4px solid #1976d2;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto;
+                    "></div>
+                    <div style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        font-size: 24px;
+                    ">🔓</div>
+                </div>
+                
+                <h3 style="margin: 0 0 8px 0; font-size: 22px; color: #333;">Procesando desbloqueo...</h3>
+                <p style="margin: 0 0 24px 0; color: #666; font-size: 14px;">Conectando con sistema MASNET</p>
+                
+                <div style="
+                    text-align: left;
+                    background: #f8f9fa;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 24px 0;
+                ">
+                    <div class="step" id="step-connection" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 8px 0;
+                        transition: all 0.3s ease;
+                    ">
+                        <span style="font-size: 18px; width: 24px; text-align: center;">🔍</span>
+                        <span style="flex: 1; font-weight: 500;">Verificando conexión</span>
+                        <span class="step-status" style="font-size: 16px;">⏳</span>
+                    </div>
+                    <div class="step" id="step-login" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 8px 0;
+                        transition: all 0.3s ease;
+                    ">
+                        <span style="font-size: 18px; width: 24px; text-align: center;">🔐</span>
+                        <span style="flex: 1; font-weight: 500;">Autenticando usuario</span>
+                        <span class="step-status" style="font-size: 16px;">⏳</span>
+                    </div>
+                    <div class="step" id="step-unlock" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 8px 0;
+                        transition: all 0.3s ease;
+                    ">
+                        <span style="font-size: 18px; width: 24px; text-align: center;">🔓</span>
+                        <span style="flex: 1; font-weight: 500;">Desbloqueando ambientes</span>
+                        <span class="step-status" style="font-size: 16px;">⏳</span>
+                    </div>
+                    <div class="step" id="step-logout" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 8px 0;
+                        transition: all 0.3s ease;
+                    ">
+                        <span style="font-size: 18px; width: 24px; text-align: center;">🚪</span>
+                        <span style="flex: 1; font-weight: 500;">Cerrando sesión</span>
+                        <span class="step-status" style="font-size: 16px;">⏳</span>
+                    </div>
+                </div>
+                
+                <div style="color: #666; font-style: italic; margin-top: 16px; font-size: 12px;">
+                    <small>Este proceso puede tomar unos segundos...</small>
+                    <br><br>
+                    <button type="button" id="cancel-process-global" style="
+                        background: #f5f5f5;
+                        color: #666;
+                        border: 2px solid #e0e0e0;
+                        padding: 8px 16px;
+                        border-radius: 8px;
+                        font-size: 12px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    ">
+                        ❌ Cancelar Proceso
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Agregar al documento principal (no al iframe)
+        const targetDocument = window.top ? window.top.document : document;
+        const targetBody = targetDocument.body;
+        targetBody.appendChild(overlay);
+        
+        // Event listeners
+        const cancelBtn = overlay.querySelector('#cancel-process-global');
+        cancelBtn.addEventListener('click', () => {
+            this.cancelProcess();
+        });
+        
+        // 🚨 TIMEOUT DE SEGURIDAD: Forzar cierre después de 60 segundos
+        this.safetyTimeout = setTimeout(() => {
+            console.log('🚨 TIMEOUT DE SEGURIDAD: Cerrando modal y ejecutando logout de emergencia');
+            this.hideProcessingModal();
+            
+            // Logout de emergencia
+            this.comunicarConBackground('masnet_logout').catch(error => {
+                console.error('❌ Logout de emergencia falló:', error);
+            });
+            
+            // Mostrar error
+            this.showResultModal(false, { 
+                message: 'Timeout: El proceso tomó demasiado tiempo. Se ejecutó logout de seguridad.' 
+            });
+        }, 60000); // 60 segundos máximo
+        
+        // 🖱️ CLICK PARA CANCELAR: Permitir cerrar haciendo click en el overlay
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                console.log('🚨 Usuario canceló el proceso haciendo click fuera del modal');
+                this.cancelProcess();
+            }
+        });
+        
+        console.log('🔄 Modal de procesamiento mostrado (dinámico)');
+    }
+
+    hideProcessingModal() {
+        // Buscar y remover modal de procesamiento existente
+        const existingOverlay = document.getElementById('processing-overlay');
+        if (existingOverlay && existingOverlay.parentNode) {
+            existingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                if (existingOverlay.parentNode) {
+                    existingOverlay.remove();
+                }
+            }, 300);
+        }
+        
+        // También buscar en el documento principal
+        if (window.top && window.top.document) {
+            const topOverlay = window.top.document.getElementById('processing-overlay');
+            if (topOverlay && topOverlay.parentNode) {
+                topOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    if (topOverlay.parentNode) {
+                        topOverlay.remove();
+                    }
+                }, 300);
+            }
+        }
+        
+        // 🧹 Limpiar timeout de seguridad
+        if (this.safetyTimeout) {
+            clearTimeout(this.safetyTimeout);
+            this.safetyTimeout = null;
+        }
+        
+        console.log('✅ Modal de procesamiento ocultado y removido');
+    }
+
+    // 🚨 MÉTODO PARA CANCELAR PROCESO
+    async cancelProcess() {
+        console.log('🚨 Cancelando proceso de desbloqueo...');
+        this.isProcessing = false;
+        
+        // Ejecutar logout de emergencia
+        try {
+            await this.comunicarConBackground('masnet_logout');
+            console.log('✅ Logout de cancelación ejecutado');
+        } catch (error) {
+            console.error('❌ Error en logout de cancelación:', error);
+        }
+        
+        this.hideProcessingModal();
+        this.showResultModal(false, { 
+            message: 'Proceso cancelado por el usuario. Se ejecutó logout de seguridad.' 
+        });
+    }
+
+    async updateProcessingStep(stepId, status) {
+        // Buscar el paso en cualquier documento (iframe o principal)
+        let step = document.getElementById(stepId);
+        if (!step && window.top && window.top.document) {
+            step = window.top.document.getElementById(stepId);
+        }
+        
+        if (!step) {
+            console.warn(`⚠️ No se encontró el paso: ${stepId}`);
+            return;
+        }
+        
+        const statusElement = step.querySelector('.step-status');
+        if (!statusElement) {
+            console.warn(`⚠️ No se encontró .step-status en: ${stepId}`);
+            return;
+        }
+        
+        // Limpiar clases anteriores
+        step.classList.remove('success', 'error', 'progress');
+        
+        // Aplicar estilos según el estado
+        switch (status) {
+            case 'progress':
+                step.classList.add('progress');
+                step.style.background = 'rgba(25, 118, 210, 0.1)';
+                step.style.borderRadius = '8px';
+                step.style.padding = '12px 16px 12px 8px';
+                step.style.margin = '4px -4px';
+                statusElement.textContent = '🔄';
+                break;
+            case 'success':
+                step.classList.add('success');
+                step.style.color = '#2e7d32';
+                step.style.background = 'rgba(46, 125, 50, 0.1)';
+                step.style.borderRadius = '8px';
+                step.style.padding = '12px 16px 12px 8px';
+                step.style.margin = '4px -4px';
+                statusElement.textContent = '✅';
+                break;
+            case 'error':
+                step.classList.add('error');
+                step.style.color = '#d32f2f';
+                step.style.background = 'rgba(211, 47, 47, 0.1)';
+                step.style.borderRadius = '8px';
+                step.style.padding = '12px 16px 12px 8px';
+                step.style.margin = '4px -4px';
+                statusElement.textContent = '❌';
+                break;
+        }
+        
+        // Pequeña animación
+        step.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            step.style.transform = 'scale(1)';
+        }, 200);
+        
+        // Delay para efecto visual
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        console.log(`📊 Paso ${stepId} actualizado a: ${status}`);
+    }
+
+    showResultModal(success, data) {
+        // Remover modal anterior si existe
+        this.hideResultModal();
+        
+        // Crear modal dinámicamente y agregarlo al documento principal
+        const modal = document.createElement('div');
+        modal.id = 'result-modal';
+        modal.className = 'result-modal';
+        modal.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 2147483647 !important;
+            backdrop-filter: blur(5px) !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        `;
+        
+        const icon = success ? '✅' : '❌';
+        const iconClass = success ? 'success' : 'error';
+        const title = success ? 'Desbloqueo Exitoso' : 'Error en Desbloqueo';
+        const message = success 
+            ? `Se completó el desbloqueo para los ambientes: ${data.ambientes?.join(', ') || 'seleccionados'}`
+            : data.message || 'Ocurrió un error durante el proceso';
+        
+        let details = '';
+        if (success) {
+            details = `
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                        <strong>🏢 Ambientes:</strong> <span>${data.ambientes?.join(', ') || 'N/A'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                        <strong>⏰ Hora:</strong> <span>${new Date().toLocaleString()}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <strong>✅ Estado:</strong> <span>Completado exitosamente</span>
+                    </div>
+					<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <strong>⚠️ Esperar de 1-10 minutos para ingresar en PISA</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            details = `
+                <div style="background: #fff5f5; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: left; border: 1px solid #ffcdd2;">
+                    <div style="color: #d32f2f; padding: 12px; border-radius: 8px; margin: 8px 0;">
+                        <strong>⚠️ Error:</strong> ${data.message || 'Error desconocido'}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                        <strong>⏰ Hora:</strong> <span>${new Date().toLocaleString()}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <strong>💡 Sugerencia:</strong> <span>Verifique su clave y conexión a la red</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        modal.innerHTML = `
+            <div style="
+                background: white !important;
+                border-radius: 20px !important;
+                padding: 30px !important;
+                max-width: 500px !important;
+                width: 90% !important;
+                max-height: 80vh !important;
+                overflow-y: auto !important;
+                text-align: center !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+                position: relative !important;
+                z-index: 2147483648 !important;
+                animation: modalAppear 0.3s ease-out !important;
+            ">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 12px; color: ${success ? '#2e7d32' : '#d32f2f'};">
+                        ${icon}
+                    </div>
+                    <h2 style="margin: 0; font-size: 24px; color: #333; font-weight: 700;">
+                        ${title}
+                    </h2>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <p style="font-size: 16px; color: #666; margin-bottom: 16px; line-height: 1.4;">
+                        ${message}
+                    </p>
+                    ${details}
+                </div>
+                
+                <div style="text-align: center;">
+                    <button type="button" id="result-close-btn" style="
+                        background: linear-gradient(135deg, #1976d2, #1565c0) !important;
+                        color: white !important;
+                        border: none !important;
+                        padding: 12px 24px !important;
+                        border-radius: 8px !important;
+                        font-size: 16px !important;
+                        font-weight: 600 !important;
+                        cursor: pointer !important;
+                        transition: all 0.3s ease !important;
+                        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3) !important;
+                    ">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Agregar al documento principal (no al iframe)
+        const targetDocument = window.top ? window.top.document : document;
+        const targetBody = targetDocument.body;
+        targetBody.appendChild(modal);
+        
+        // Event listeners
+        const closeBtn = modal.querySelector('#result-close-btn');
+        const closeModal = () => {
+            modal.style.opacity = '0';
+            modal.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                if (modal.parentNode) {
+                    modal.remove();
+                }
+                // Limpiar formulario después de cerrar
+                this.limpiarFormulario();
+            }, 300);
+        };
+        
+        closeBtn.addEventListener('click', closeModal);
+        
+        // Cerrar con ESC
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                targetDocument.removeEventListener('keydown', escHandler);
+            }
+        };
+        targetDocument.addEventListener('keydown', escHandler);
+        
+        // Cerrar haciendo click fuera del modal
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        console.log(`📋 Modal de resultado mostrado: ${success ? 'éxito' : 'error'}`);
+    }
+
+    hideResultModal() {
+        // Buscar y remover modal de resultado existente
+        const existingModal = document.getElementById('result-modal');
+        if (existingModal && existingModal.parentNode) {
+            existingModal.remove();
+        }
+        
+        // También buscar en el documento principal
+        if (window.top && window.top.document) {
+            const topModal = window.top.document.getElementById('result-modal');
+            if (topModal && topModal.parentNode) {
+                topModal.remove();
+            }
+        }
+    }
+
+    injectStyles() {
+        if (document.getElementById('desbloqueo-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'desbloqueo-styles';
+        style.textContent = `
+            .desbloqueo-container {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: transparent;
+            }
+
+            .desbloqueo-content {
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                border: 2px solid #e3f2fd;
+                width: 90%;
+                max-width: 650px;
+                margin: 20px auto;
+            }
+
+            .desbloqueo-header {
+                background: linear-gradient(135deg, #1976d2, #1565c0);
+                color: white;
+                padding: 20px 30px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .header-icon {
+                font-size: 32px;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+
+            .header-text h1 {
+                margin: 0 0 4px 0;
+                font-size: 20px;
+                font-weight: 700;
+            }
+
+            .header-text p {
+                margin: 0;
+                font-size: 14px;
+                opacity: 0.9;
+            }
+
+            .desbloqueo-form {
+                padding: 30px;
+            }
+
+            .form-section {
+                margin-bottom: 32px;
+            }
+
+            .section-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                color: #1565c0;
+                margin-bottom: 16px;
+            }
+
+            .label-icon {
+                font-size: 20px;
+            }
+
+            .checkbox-row {
+                display: flex;
+                gap: 24px;
+                flex-wrap: nowrap;
+                align-items: center;
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 12px;
+                border: 2px solid #e9ecef;
+                transition: all 0.3s ease;
+                overflow-x: auto;
+                min-height: 60px;
+            }
+
+            .checkbox-row:hover {
+                border-color: #1976d2;
+                background: #f3f8ff;
+            }
+
+            .checkbox-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                padding: 8px 12px;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                min-width: 100px;
+                position: relative;
+                user-select: none;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .checkbox-item:hover {
+                background: rgba(25, 118, 210, 0.1);
+            }
+
+            /* SOLUCIÓN DEFINITIVA PARA CHECKBOXES */
+            .checkbox-item input[type="checkbox"] {
+                position: absolute;
+                left: -9999px;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .checkbox-custom {
+                width: 20px;
+                height: 20px;
+                border: 2px solid #1976d2;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                background: white;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            .checkbox-item input[type="checkbox"]:checked + .checkbox-custom {
+                background: #1976d2;
+                border-color: #1976d2;
+            }
+
+            .checkbox-item input[type="checkbox"]:checked + .checkbox-custom::after {
+                content: '✓';
+                color: white;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            .checkbox-text {
+                font-weight: 600;
+                color: #333;
+                font-size: 14px;
+                user-select: none;
+                cursor: pointer;
+            }
+
+            .password-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .clave-input {
+                flex: 1;
+                padding: 16px 50px 16px 16px;
+                border: 2px solid #e9ecef;
+                border-radius: 12px;
+                font-size: 16px;
+                background: white;
+                transition: all 0.3s ease;
+                outline: none;
+                text-transform: uppercase;
+            }
+
+            .clave-input:focus {
+                border-color: #1976d2;
+                box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.1);
+            }
+
+            .clave-input.error {
+                border-color: #d32f2f;
+                box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1);
+            }
+
+            .toggle-password {
+                position: absolute;
+                right: 12px;
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 20px;
+                padding: 8px;
+                border-radius: 6px;
+                transition: all 0.3s ease;
+            }
+
+            .toggle-password:hover {
+                background: rgba(25, 118, 210, 0.1);
+            }
+
+            .form-actions {
+                display: flex;
+                gap: 16px;
+                justify-content: center;
+                margin-top: 40px;
+                padding-top: 32px;
+                border-top: 2px solid #f0f0f0;
+            }
+
+            .btn {
+                padding: 16px 32px;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 140px;
+                justify-content: center;
+            }
+
+            .btn-primary {
+                background: linear-gradient(135deg, #1976d2, #1565c0);
+                color: white;
+                box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
+            }
+
+            .btn-primary:hover:not(.disabled) {
+                background: linear-gradient(135deg, #1565c0, #0d47a1);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+            }
+
+            .btn-secondary {
+                background: #f5f5f5;
+                color: #666;
+                border: 2px solid #e0e0e0;
+            }
+
+            .btn-secondary:hover {
+                background: #eeeeee;
+                border-color: #bdbdbd;
+            }
+
+            .btn.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none !important;
+                box-shadow: none !important;
+            }
+
+            /* Modal de procesamiento */
+            .processing-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 2147483647 !important;
+                backdrop-filter: blur(5px) !important;
+            }
+
+            .processing-modal {
+                background: white !important;
+                border-radius: 20px !important;
+                padding: 40px !important;
+                max-width: 500px !important;
+                width: 90% !important;
+                text-align: center !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+                animation: modalAppear 0.3s ease-out !important;
+                position: relative !important;
+                z-index: 2147483648 !important;
+            }
+
+            @keyframes modalAppear {
+                from { 
+                    opacity: 0; 
+                    transform: scale(0.9) translateY(20px); 
+                }
+                to { 
+                    opacity: 1; 
+                    transform: scale(1) translateY(0); 
+                }
+            }
+
+            .processing-animation {
+                position: relative;
+                margin-bottom: 24px;
+            }
+
+            .processing-spinner {
+                width: 60px;
+                height: 60px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #1976d2;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }
+
+            .processing-icon {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 24px;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .processing-steps {
+                text-align: left;
+                margin: 24px 0;
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 20px;
+            }
+
+            .step {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 8px 0;
+                transition: all 0.3s ease;
+            }
+
+            .step-icon {
+                font-size: 18px;
+                width: 24px;
+                text-align: center;
+            }
+
+            .step-text {
+                flex: 1;
+                font-weight: 500;
+            }
+
+            .step-status {
+                font-size: 16px;
+            }
+
+            .step.progress {
+                background: rgba(25, 118, 210, 0.1);
+                border-radius: 8px;
+                padding: 12px 16px 12px 8px;
+                margin: 4px -4px;
+            }
+
+            .step.success {
+                color: #2e7d32;
+            }
+
+            .step.error {
+                color: #d32f2f;
+            }
+
+            .processing-footer {
+                color: #666;
+                font-style: italic;
+                margin-top: 16px;
+            }
+
+            /* Modal de resultado */
+            .result-modal {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 2147483647 !important;
+                backdrop-filter: blur(5px) !important;
+            }
+
+            .result-content {
+                background: white !important;
+                border-radius: 20px !important;
+                padding: 40px !important;
+                max-width: 600px !important;
+                width: 90% !important;
+                text-align: center !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+                animation: modalAppear 0.3s ease-out !important;
+                position: relative !important;
+                z-index: 2147483648 !important;
+            }
+
+            .result-header {
+                margin-bottom: 24px;
+            }
+
+            .result-icon {
+                font-size: 64px;
+                margin-bottom: 16px;
+            }
+
+            .result-icon.success {
+                color: #2e7d32;
+            }
+
+            .result-icon.error {
+                color: #d32f2f;
+            }
+
+            .result-header h2 {
+                margin: 0;
+                font-size: 24px;
+                color: #333;
+            }
+
+            .result-body {
+                margin-bottom: 32px;
+                text-align: left;
+            }
+
+            .result-body p {
+                font-size: 16px;
+                color: #666;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .result-details {
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 20px;
+            }
+
+            .detail-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .detail-item:last-child {
+                border-bottom: none;
+            }
+
+            .detail-item.error {
+                color: #d32f2f;
+                background: rgba(211, 47, 47, 0.05);
+                padding: 12px;
+                border-radius: 8px;
+                border: none;
+                margin: 8px 0;
+            }
+
+            .result-actions {
+                text-align: center;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .desbloqueo-container {
+                    padding: 15px 10px;
+                }
+
+                .desbloqueo-form {
+                    padding: 25px 20px;
+                }
+
+                .checkbox-row {
+                    flex-direction: row;
+                    gap: 12px;
+                    align-items: center;
+                    overflow-x: auto;
+                    padding: 15px;
+                }
+
+                .checkbox-item {
+                    min-width: 80px;
+                    flex-shrink: 0;
+                    padding: 6px 8px;
+                }
+
+                .form-actions {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .btn {
+                    width: 100%;
+                }
+
+                .processing-modal,
+                .result-content {
+                    margin: 20px;
+                    padding: 30px 20px;
+                }
+            }
+
+            /* Animaciones adicionales */
+            @keyframes slideInFromTop {
+                from {
+                    opacity: 0;
+                    transform: translateY(-30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .desbloqueo-content {
+                animation: slideInFromTop 0.6s ease-out;
+            }
+
+            .checkbox-item {
+                animation: slideInFromTop 0.4s ease-out;
+            }
+
+            .checkbox-item:nth-child(1) { animation-delay: 0.1s; }
+            .checkbox-item:nth-child(2) { animation-delay: 0.2s; }
+            .checkbox-item:nth-child(3) { animation-delay: 0.3s; }
+            .checkbox-item:nth-child(4) { animation-delay: 0.4s; }
+
+            /* Efectos hover mejorados */
+            .btn-primary:not(.disabled):active {
+                transform: translateY(1px);
+            }
+
+            .checkbox-item:active {
+                transform: scale(0.98);
+            }
+
+            /* Estados de validación */
+            .clave-input:valid {
+                border-color: #2e7d32;
+            }
+
+            .clave-input:invalid:not(:placeholder-shown) {
+                border-color: #d32f2f;
+            }
+
+            /* Mejoras de accesibilidad */
+            .btn:focus,
+            .clave-input:focus,
+            .checkbox-item:focus-within {
+                outline: 3px solid rgba(25, 118, 210, 0.3);
+                outline-offset: 2px;
+            }
+
+            /* Loading states */
+            .btn.loading {
+                position: relative;
+                color: transparent;
+            }
+
+            .btn.loading::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 20px;
+                height: 20px;
+                margin: -10px 0 0 -10px;
+                border: 2px solid transparent;
+                border-top: 2px solid currentColor;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+        `;
+        
+        document.head.appendChild(style);
+        console.log('✅ Estilos del componente de desbloqueo inyectados');
+    }
+}
+
+// Hacer disponible globalmente
+window.DesbloqueoComponent = DesbloqueoComponent;
+
+console.log('✅ CODIM CNS Fix v3.7 - Módulo 4 (Componente Desbloqueo PISA Mejorado) cargado');
+
+// content.js - MÓDULO 5: CODIMContentScript class - EL MÓDULO PRINCIPAL
+
 // ===============================
 // CLASE PRINCIPAL CONTENT SCRIPT
 // ===============================
@@ -1203,20 +3098,28 @@ class CODIMContentScript {
         this.isMainPage = this.checkIsMainPage();
         this.hasOldInterface = this.checkHasOldInterface();
         this.userData = null;
-        this.resumenWidget = null; // Instancia del widget de resumen
-		this.simpleDSLAMSearch = null;
+        this.resumenWidget = null;
+        this.simpleDSLAMSearch = null;
+        console.log('🎯 CODIMContentScript inicializado', {
+            isMainPage: this.isMainPage,
+            hasOldInterface: this.hasOldInterface
+        });
     }
 
     init() {
+        console.log('🔧 Inicializando CODIMContentScript...');
+        
         // CRÍTICO: Extraer datos ANTES de modificar el DOM
         if (this.shouldReplaceWithModernInterface()) {
             console.log('🎨 Página principal detectada - Extrayendo datos antes de cargar interfaz moderna...');
             this.extractUserDataSync();
             this.loadModernInterface();
         } else {
+            console.log('🔧 Cargando patch clásico + buscador DSLAM...');
             this.loadClassicPatch();
+            this.initializeDSLAMSearch();
         }
-	}
+    }
 
     // ===============================
     // FUNCIÓN CENTRALIZADA CAMBIA_MENU
@@ -1246,8 +3149,8 @@ class CODIMContentScript {
                 self.modernLoadPage(`${seccion}.asp?tipo=${tipo}&folio=${folio}&busca=${busca || ''}`);
             }
         };
-		
-		// Función cancelar global
+        
+        // Función cancelar global
         window.cancelar = function() {
             console.log('🔙 Cancelar global ejecutado');
             if (window.history.length > 1) {
@@ -1569,6 +3472,17 @@ class CODIMContentScript {
         (document.head || document.documentElement).appendChild(script);
     }
 
+    initializeDSLAMSearch() {
+        console.log('🔍 Inicializando buscador DSLAM para páginas clásicas...');
+        
+        // Usar la instancia global del buscador
+        if (window.codimDSLAMSearch) {
+            setTimeout(() => {
+                window.codimDSLAMSearch.init();
+            }, 2000); // Dar tiempo a que se cargue el patch clásico
+        }
+    }
+
     injectModernInterface() {
         console.log('🎨 Inyectando interfaz moderna...');
         
@@ -1632,7 +3546,7 @@ class CODIMContentScript {
 
             <!-- Patch signature -->
             <div class="modern-patch" data-action="showPatch">
-                ⚡ Patch by DemianRey v3.6 + Buscador DSLAMs
+                ⚡ Patch by DemianRey v3.7 - Sistema Híbrido Completo
             </div>
         `;
     }
@@ -1642,8 +3556,8 @@ class CODIMContentScript {
         const ipAddress = this.userData?.ipAddress || '192.168.1.1';
         
         // Obtener datos actuales del widget si existe
-        let vencidos = 0;  // Valor inicial
-        let enTiempo = 0;    // Valor inicial
+        let vencidos = 0;
+        let enTiempo = 0;
         
         if (this.resumenWidget && this.resumenWidget.data) {
             vencidos = this.resumenWidget.data.vencidos;
@@ -1714,10 +3628,10 @@ class CODIMContentScript {
             // Limpiar contenido
             contentBody.innerHTML = '';
             
-            // Crear nuevo widget
+            // Crear nuevo widget usando la clase del Módulo 3
             this.resumenWidget = new CODIMResumenWidget();
             
-            // 🔗 Establecer referencia bidireccional para sincronización
+            // Establecer referencia bidireccional para sincronización
             this.resumenWidget.contentScript = this;
             
             const widgetElement = this.resumenWidget.createWidget();
@@ -1735,6 +3649,36 @@ class CODIMContentScript {
             contentBody.appendChild(widgetElement);
             
             console.log('✅ Widget de resumen cargado en interfaz moderna con sincronización de sidebar');
+        }
+    }
+
+    showDesbloqueoPage() {
+        const contentBody = document.querySelector('.modern-content-body');
+        const contentTitle = document.getElementById('modernContentTitle');
+        const contentSubtitle = document.getElementById('modernContentSubtitle');
+        
+        if (contentTitle) contentTitle.textContent = '🔓 Desbloqueo de usuario PISA';
+        if (contentSubtitle) contentSubtitle.textContent = 'Para desbloqueo seleccione el ambiente y teclee su clave de usuario';
+        
+        if (contentBody) {
+            // Crear componente de desbloqueo PISA usando la clase del Módulo 4
+            const desbloqueoComponent = new DesbloqueoComponent();
+            const componentElement = desbloqueoComponent.create();
+            
+            // Limpiar contenido
+            contentBody.innerHTML = '';
+            
+            // Estilos de integración
+            componentElement.style.cssText = `
+                margin: 0 !important;
+                height: 100% !important;
+                padding: 20px !important;
+                overflow-y: auto !important;
+            `;
+            
+            contentBody.appendChild(componentElement);
+            
+            console.log('✅ Componente de desbloqueo PISA cargado');
         }
     }
 
@@ -1758,8 +3702,8 @@ class CODIMContentScript {
             console.log('✅ Sidebar actualizado con nuevos datos:', { vencidos, enTiempo });
         }
     }
-	
-	showModernLinks() {
+    
+    showModernLinks() {
         const links = [
             'http://intranet/',
             'http://10.192.5.18/cobo',
@@ -1777,7 +3721,7 @@ class CODIMContentScript {
     }
 
     showModernPatchInfo() {
-        const welcomeInfo = `🎯 Sistema CODIM CNS Modernizado
+        const welcomeInfo = `🎯 Sistema CODIM CNS Modernizado v3.7
 
 Interfaz completamente renovada con funcionalidades mejoradas:
 
@@ -1790,13 +3734,16 @@ Interfaz completamente renovada con funcionalidades mejoradas:
 ✅ VBScript convertido a JavaScript
 ✅ Extracción dinámica de datos de usuario
 ✅ Arquitectura modular optimizada
-🔍 NUEVO: Buscador inteligente de DSLAMs con autocompletado
+🔍 Buscador inteligente de DSLAMs con autocompletado
 🔍 Filtrado en tiempo real por nombre de equipo  
 🔍 Sugerencias automáticas y contador de resultados
+🔓 NUEVO: Desbloqueo PISA funcional integrado
+📡 NUEVO: Sistema de comunicación híbrido robusto
+🧪 NUEVO: Funciones de testing MASNET integradas
 
 🔧 Patch by DemianRey
-📅 Mayo 2025
-🚀 Versión 3.6 - Con Buscador DSLAMs`;
+📅 Junio 2025
+🚀 Versión 3.7 - Sistema Híbrido Completo`;
 
         alert(welcomeInfo);
     }
@@ -1825,9 +3772,9 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 self.showModernPatchInfo();
             }
         });
-		
-		// Función centralizada
-		this.createGlobalCambiaMenu();
+        
+        // Función centralizada
+        this.createGlobalCambiaMenu();
     }
 
     modernSwitchTab(tabName) {
@@ -1848,6 +3795,13 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         const subtitleElement = document.getElementById('modernContentSubtitle');
         const contentBody = document.querySelector('.modern-content-body');
         
+        // CRÍTICO: Manejar páginas especiales ANTES de cualquier otro código
+        if (page === 'desbloqueo-pisa.html') {
+            this.showDesbloqueoPage();
+            return;
+        }
+        
+        // Continuar con el flujo normal para otras páginas
         if (titleElement) titleElement.textContent = 'Cargando...';
         if (subtitleElement) subtitleElement.textContent = 'Por favor espera...';
         
@@ -1875,133 +3829,133 @@ Interfaz completamente renovada con funcionalidades mejoradas:
     }
 
     enhanceIframe(iframe) {
-    if (!iframe) return;
-    
-    iframe.addEventListener('load', () => {
-        try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            if (iframeDoc) {
-                const style = iframeDoc.createElement('style');
-                style.textContent = this.getIframeCSS();
-                iframeDoc.head.appendChild(style);
-                
-                // Inyectar funciones de compatibilidad en el iframe
-                const compatScript = iframeDoc.createElement('script');
-                compatScript.textContent = `
-                    // Funciones básicas para iframe
-                    if (typeof window.ventana === 'undefined') window.ventana = null;
-					
-					 // Función cancelar para botones Regresar
-                    window.cancelar = function() {
-                        console.log('🔙 Cancelar en iframe');
-                        if (window.history.length > 1) {
-                            window.history.back();
-                        } else {
-                            window.location.href = '/';
-                        }
-                    };
-                    
-                    window.cierra_opcion = function(tiempox, y, x, pagina, tarda) {
-                        if (window.ventana && window.ventana.style) {
-                            window.ventana.style.clip = "rect(0," + x + "," + y + ",0)";
-                        }
-                        if (pagina && pagina !== "") {
-                            setTimeout(function() {
-                                window.location.href = 'ver_rep.asp?folio=' + pagina;
-                            }, tarda || 100);
-                        }
-                    };
-                    
-                    window.muestra = function(folio, busca) {
-                        if (typeof window.parent.cambia_menu === 'function') {
-                            window.parent.cambia_menu('consulta', 'S', folio, '', '', '', busca);
-                        }
-                    };
-                    
-                    // Usar función centralizada del padre
-                    if (window.parent && window.parent.cambia_menu) {
-                        window.cambia_menu = window.parent.cambia_menu;
-                    }
-                `;
-                iframeDoc.head.appendChild(compatScript);
-                
-                // Activar buscador específico para iframe
-                setTimeout(() => {
-                    this.addIframeDSLAMSearch(iframeDoc);
-                }, 1000);
-                
-                console.log('✅ Iframe mejorado con buscador y funciones de compatibilidad');
-            }
-        } catch (error) {
-            console.log('⚠️ No se pudo acceder al iframe (CORS)');
-        }
-    });
-}
-
-	addIframeDSLAMSearch(iframeDoc) {
-    if (!iframeDoc) return;
-    
-    // Verificar si la página contiene texto específico de reportes pendientes (NO de equipos)
-    const bodyText = iframeDoc.body.textContent.toLowerCase();
-    const isReportPage = (
-        bodyText.includes('existen reportes pendientes de solucion')
-    );
-    
-    if (isReportPage) {
-        console.log('❌ Página de reportes pendientes detectada en iframe - NO agregar buscador');
-        return;
-    }
-    
-    // Buscar tablas específicas de equipos DSLAM
-    const tables = iframeDoc.querySelectorAll('table');
-    let targetTable = null;
-    
-    tables.forEach(table => {
-        const tableText = table.textContent.toLowerCase();
-        const rows = table.querySelectorAll('tr');
+        if (!iframe) return;
         
-        // EXCLUIR solo si contiene palabras específicas de reportes (NO de contadores)
-        const isTableWithReports = (
-            tableText.includes('folio') ||
-            tableText.includes('falla equipos fuera de gestion') ||
-            tableText.includes('capturar otro') ||
-            tableText.includes('cancelar')
+        iframe.addEventListener('load', () => {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (iframeDoc) {
+                    const style = iframeDoc.createElement('style');
+                    style.textContent = this.getIframeCSS();
+                    iframeDoc.head.appendChild(style);
+                    
+                    // Inyectar funciones de compatibilidad en el iframe
+                    const compatScript = iframeDoc.createElement('script');
+                    compatScript.textContent = `
+                        // Funciones básicas para iframe
+                        if (typeof window.ventana === 'undefined') window.ventana = null;
+                        
+                        // Función cancelar para botones Regresar
+                        window.cancelar = function() {
+                            console.log('🔙 Cancelar en iframe');
+                            if (window.history.length > 1) {
+                                window.history.back();
+                            } else {
+                                window.location.href = '/';
+                            }
+                        };
+                        
+                        window.cierra_opcion = function(tiempox, y, x, pagina, tarda) {
+                            if (window.ventana && window.ventana.style) {
+                                window.ventana.style.clip = "rect(0," + x + "," + y + ",0)";
+                            }
+                            if (pagina && pagina !== "") {
+                                setTimeout(function() {
+                                    window.location.href = 'ver_rep.asp?folio=' + pagina;
+                                }, tarda || 100);
+                            }
+                        };
+                        
+                        window.muestra = function(folio, busca) {
+                            if (typeof window.parent.cambia_menu === 'function') {
+                                window.parent.cambia_menu('consulta', 'S', folio, '', '', '', busca);
+                            }
+                        };
+                        
+                        // Usar función centralizada del padre
+                        if (window.parent && window.parent.cambia_menu) {
+                            window.cambia_menu = window.parent.cambia_menu;
+                        }
+                    `;
+                    iframeDoc.head.appendChild(compatScript);
+                    
+                    // Activar buscador específico para iframe usando la instancia global
+                    setTimeout(() => {
+                        this.addIframeDSLAMSearch(iframeDoc);
+                    }, 1000);
+                    
+                    console.log('✅ Iframe mejorado con buscador y funciones de compatibilidad');
+                }
+            } catch (error) {
+                console.log('⚠️ No se pudo acceder al iframe (CORS)');
+            }
+        });
+    }
+
+    addIframeDSLAMSearch(iframeDoc) {
+        if (!iframeDoc) return;
+        
+        // Verificar si la página contiene texto específico de reportes pendientes (NO de equipos)
+        const bodyText = iframeDoc.body.textContent.toLowerCase();
+        const isReportPage = (
+            bodyText.includes('existen reportes pendientes de solucion')
         );
         
-        if (isTableWithReports) {
-            console.log('❌ Tabla de reportes en iframe detectada - NO agregar buscador');
+        if (isReportPage) {
+            console.log('❌ Página de reportes pendientes detectada en iframe - NO agregar buscador');
             return;
         }
         
-        // Verificar que sea una tabla de equipos DSLAM válida
-        const isEquipmentTable = (
-            (tableText.includes('dslam') || tableText.includes('tecnologia') || tableText.includes('supervision')) &&
-            rows.length >= 3
-        );
+        // Buscar tablas específicas de equipos DSLAM
+        const tables = iframeDoc.querySelectorAll('table');
+        let targetTable = null;
         
-        // Verificar que tenga headers de equipos (incluir "pendientes" como contador)
-        const hasEquipmentHeaders = (
-            table.querySelector('td')?.textContent.includes('Dslam') ||
-            table.querySelector('td')?.textContent.includes('Tecnologia') ||
-            table.querySelector('td')?.textContent.includes('O.S.') ||
-            table.querySelector('td')?.textContent.includes('Quejas')
-        );
+        tables.forEach(table => {
+            const tableText = table.textContent.toLowerCase();
+            const rows = table.querySelectorAll('tr');
+            
+            // EXCLUIR solo si contiene palabras específicas de reportes (NO de contadores)
+            const isTableWithReports = (
+                tableText.includes('folio') ||
+                tableText.includes('falla equipos fuera de gestion') ||
+                tableText.includes('capturar otro') ||
+                tableText.includes('cancelar')
+            );
+            
+            if (isTableWithReports) {
+                console.log('❌ Tabla de reportes en iframe detectada - NO agregar buscador');
+                return;
+            }
+            
+            // Verificar que sea una tabla de equipos DSLAM válida
+            const isEquipmentTable = (
+                (tableText.includes('dslam') || tableText.includes('tecnologia') || tableText.includes('supervision')) &&
+                rows.length >= 3
+            );
+            
+            // Verificar que tenga headers de equipos (incluir "pendientes" como contador)
+            const hasEquipmentHeaders = (
+                table.querySelector('td')?.textContent.includes('Dslam') ||
+                table.querySelector('td')?.textContent.includes('Tecnologia') ||
+                table.querySelector('td')?.textContent.includes('O.S.') ||
+                table.querySelector('td')?.textContent.includes('Quejas')
+            );
+            
+            if (isEquipmentTable && hasEquipmentHeaders && !table.dataset.searchAdded) {
+                targetTable = table;
+            }
+        });
         
-        if (isEquipmentTable && hasEquipmentHeaders && !table.dataset.searchAdded) {
-            targetTable = table;
+        if (!targetTable) {
+            console.log('ℹ️ No se encontró tabla de equipos válida en iframe');
+            return;
         }
-    });
-    
-    if (!targetTable) {
-        console.log('ℹ️ No se encontró tabla de equipos válida en iframe');
-        return;
+        
+        console.log('📊 Tabla de equipos REAL encontrada en iframe, agregando buscador específico');
+        
+        // Crear buscador específico para iframe
+        this.createIframeDSLAMSearchBox(targetTable, iframeDoc);
     }
-    
-    console.log('📊 Tabla de equipos REAL encontrada en iframe, agregando buscador específico');
-    
-    // Crear buscador específico para iframe
-    this.createIframeDSLAMSearchBox(targetTable, iframeDoc);
-}
 
     createIframeDSLAMSearchBox(table, iframeDoc) {
         if (table.dataset.searchAdded) return;
@@ -2450,6 +4404,18 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                     from { transform: translateX(0); opacity: 1; }
                     to { transform: translateX(300px); opacity: 0; }
                 }
+
+                /* Animación para actualización del sidebar */
+                @keyframes highlightUpdate {
+                    0% { 
+                        background: rgba(76, 175, 80, 0.2);
+                        transform: scale(1.05);
+                    }
+                    100% { 
+                        background: transparent;
+                        transform: scale(1);
+                    }
+                }
             </style>
         `;
     }
@@ -2521,15 +4487,53 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 items: [
                     { title: 'Configuración', icon: '⚙️', page: 'configura.asp' }
                 ]
+            },
+            extras: {
+                title: 'Extras',
+                icon: '🔧',
+                items: [
+                    { title: 'Desbloqueo PISA', icon: '🔓', page: 'desbloqueo-pisa.html' }
+                ]
             }
         };
     }
 }
 
 // ===============================
-// INICIALIZACIÓN
+// INICIALIZACIÓN FINAL DEL SISTEMA COMPLETO
 // ===============================
-const codimFix = new CODIMContentScript();
-codimFix.init();
+function initializeCODIMSystem() {
+    console.log('🚀 Inicializando sistema CODIM completo...');
+    
+    // Verificar que todos los módulos estén disponibles
+    const moduleCheck = {
+        communication: !!window.codimCommunication,
+        dslamSearch: !!window.codimDSLAMSearch,
+        resumenWidget: typeof CODIMResumenWidget !== 'undefined',
+        desbloqueoComponent: typeof DesbloqueoComponent !== 'undefined'
+    };
+    
+    console.log('📊 Estado de módulos:', moduleCheck);
+    
+    // Crear instancia principal del content script
+    const codimContentScript = new CODIMContentScript();
+    
+    // Hacer disponible globalmente para debugging
+    window.codimContentScript = codimContentScript;
+    
+    // Inicializar el sistema
+    codimContentScript.init();
+    
+    console.log('✅ Sistema CODIM inicializado completamente');
+    
+    return codimContentScript;
+}
 
-console.log('✅ CODIM CNS Fix v3.6 - Inicialización completada con Widget de Resumen + Buscador DSLAMs modular');
+// Ejecutar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCODIMSystem);
+} else {
+    initializeCODIMSystem();
+}
+
+console.log('✅ CODIM CNS Fix v3.7 - Módulo 5 (CODIMContentScript Principal) cargado');

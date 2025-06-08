@@ -5,10 +5,14 @@
   "description": "Moderniza completamente CODIM CNS con interfaz responsive y arreglos de VBScript",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
-    "http://13.131.146.246/*"
+    "http://13.131.146.246/*",
+    "https://masnet.intranet.telmex.com/*",
+    "https://*.intranet.telmex.com/*",
+    "http://*.intranet.telmex.com/*"
   ],
   "icons": {
     "16": "telmex.png",
@@ -26,6 +30,9 @@
       "all_frames": true
     }
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "web_accessible_resources": [
     {
       "resources": [
