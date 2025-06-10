@@ -28,15 +28,58 @@
         return false; // Continuar con patch
     }
     
+    // ✅ NUEVA VERIFICACIÓN ESPECÍFICA PARA IFRAMES
+    function shouldSkipClassicPatch() {
+        // ✅ 1. Si estamos en iframe, NO aplicar classic patch
+        if (window !== window.top) {
+            console.log('🖼️ Estamos en iframe - NO aplicar classic patch, se manejará desde content script');
+            return true;
+        }
+        
+        // ✅ 2. Si hay indicador de que el iframe está siendo manejado
+        if (window.CODIM_IFRAME_ENHANCED || document.documentElement.getAttribute('data-codim-enhanced')) {
+            console.log('🎯 Página marcada como manejada por content script - saltando classic patch');
+            return true;
+        }
+        
+        // ✅ 3. Si es formulario de captura de incidentes
+        const bodyText = document.body.textContent || '';
+        const isIncidentForm = bodyText.includes('Captura de Incidentes') || 
+                              bodyText.includes('Proporciona la central') ||
+                              document.querySelector('input[name*="central"]') ||
+                              bodyText.includes('Reporte fallas a CNS');
+                              
+        if (isIncidentForm) {
+            console.log('📋 Formulario de captura detectado - NO aplicar classic patch, se manejará desde iframe enhancement');
+            return true;
+        }
+        
+        // ✅ 4. Si es página de resultados de equipos DSLAM
+        const isDSLAMResults = bodyText.includes('Reporte Fallas a CNS 2 Supervision') ||
+                               (document.querySelector('table') && bodyText.includes('Dslam') && bodyText.includes('Tecnologia'));
+                               
+        if (isDSLAMResults) {
+            console.log('📊 Página de resultados DSLAM detectada - NO aplicar classic patch, se manejará desde iframe enhancement');
+            return true;
+        }
+        
+        // ✅ 5. Verificar interfaz moderna
+        if (checkForModernInterface()) {
+            return true;
+        }
+        
+        return false; // Continuar con patch
+    }
+    
     // ✅ VERIFICACIÓN INICIAL
-    if (checkForModernInterface()) {
+    if (shouldSkipClassicPatch()) {
         return;
     }
     
     // ✅ VERIFICACIÓN ADICIONAL CON TIMEOUT
     setTimeout(() => {
-        if (checkForModernInterface()) {
-            console.log('🎨 Interfaz moderna detectada después de timeout, abortando patch clásico');
+        if (shouldSkipClassicPatch()) {
+            console.log('🎨 Verificación secundaria: saltando classic patch');
             return;
         }
         
@@ -57,8 +100,8 @@
 
             init() {
                 // ✅ VERIFICACIÓN FINAL antes de aplicar
-                if (this.isModernInterface || document.getElementById('modern-codim-interface')) {
-                    console.log('🎨 Interfaz moderna detectada en init(), saltando patch clásico');
+                if (shouldSkipClassicPatch()) {
+                    console.log('🎨 Verificación final: saltando classic patch');
                     return;
                 }
 
@@ -90,164 +133,6 @@
                 this.scheduleAdditionalCleanups();
                 
                 console.log('✅ CODIM CNS Fix aplicado exitosamente');
-            }
-
-            // ===============================
-            // LOADING OVERLAY
-            // ===============================
-            showLoading(title = 'Cargando...', subtitle = 'Por favor espera...') {
-                // ✅ NO mostrar loading si hay interfaz moderna
-                if (document.getElementById('modern-codim-interface')) {
-                    return;
-                }
-                
-                // Remover loading anterior si existe
-                this.hideLoading();
-                
-                const loadingOverlay = document.createElement('div');
-                loadingOverlay.id = 'codim-loading-overlay';
-                loadingOverlay.innerHTML = `
-                    <div class="loading-container">
-                        <div class="loading-spinner"></div>
-                        <h3 class="loading-title">${title}</h3>
-                        <p class="loading-subtitle">${subtitle}</p>
-                        <div class="loading-dots">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </div>
-                `;
-                
-                loadingOverlay.style.cssText = `
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100vw !important;
-                    height: 100vh !important;
-                    background: rgba(0, 0, 0, 0.8) !important;
-                    backdrop-filter: blur(5px) !important;
-                    z-index: 999999 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    font-family: 'Segoe UI', Arial, sans-serif !important;
-                    animation: fadeInLoading 0.3s ease-out !important;
-                `;
-                
-                // Agregar estilos del loading
-                const loadingStyle = document.createElement('style');
-                loadingStyle.id = 'codim-loading-styles';
-                loadingStyle.textContent = `
-                    @keyframes fadeInLoading {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    
-                    @keyframes bounce {
-                        0%, 80%, 100% { transform: scale(0); }
-                        40% { transform: scale(1); }
-                    }
-                    
-                    .loading-container {
-                        text-align: center !important;
-                        background: white !important;
-                        padding: 40px !important;
-                        border-radius: 15px !important;
-                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
-                        max-width: 400px !important;
-                        animation: slideInUp 0.5s ease-out !important;
-                    }
-                    
-                    @keyframes slideInUp {
-                        from { 
-                            opacity: 0; 
-                            transform: translateY(30px); 
-                        }
-                        to { 
-                            opacity: 1; 
-                            transform: translateY(0); 
-                        }
-                    }
-                    
-                    .loading-spinner {
-                        width: 50px !important;
-                        height: 50px !important;
-                        border: 4px solid #f3f3f3 !important;
-                        border-top: 4px solid #4A90E2 !important;
-                        border-radius: 50% !important;
-                        animation: spin 1s linear infinite !important;
-                        margin: 0 auto 20px auto !important;
-                    }
-                    
-                    .loading-title {
-                        color: #2c3e50 !important;
-                        font-size: 20px !important;
-                        font-weight: 600 !important;
-                        margin: 0 0 10px 0 !important;
-                    }
-                    
-                    .loading-subtitle {
-                        color: #7f8c8d !important;
-                        font-size: 14px !important;
-                        margin: 0 0 20px 0 !important;
-                        line-height: 1.4 !important;
-                    }
-                    
-                    .loading-dots {
-                        display: flex !important;
-                        justify-content: center !important;
-                        gap: 5px !important;
-                    }
-                    
-                    .loading-dots span {
-                        width: 8px !important;
-                        height: 8px !important;
-                        background: #4A90E2 !important;
-                        border-radius: 50% !important;
-                        display: inline-block !important;
-                        animation: bounce 1.4s infinite ease-in-out both !important;
-                    }
-                    
-                    .loading-dots span:nth-child(1) { animation-delay: -0.32s !important; }
-                    .loading-dots span:nth-child(2) { animation-delay: -0.16s !important; }
-                    .loading-dots span:nth-child(3) { animation-delay: 0s !important; }
-                `;
-                
-                document.head.appendChild(loadingStyle);
-                document.body.appendChild(loadingOverlay);
-                
-                // Auto-ocultar después de 30 segundos por seguridad
-                setTimeout(() => {
-                    this.hideLoading();
-                }, 30000);
-                
-                console.log('🔄 Loading mostrado:', title);
-            }
-            
-            hideLoading() {
-                const overlay = document.getElementById('codim-loading-overlay');
-                const styles = document.getElementById('codim-loading-styles');
-                
-                if (overlay) {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => {
-                        if (overlay.parentNode) {
-                            overlay.remove();
-                        }
-                    }, 300);
-                }
-                
-                if (styles) {
-                    styles.remove();
-                }
-                
-                console.log('✅ Loading ocultado');
             }
 
             // ===============================
@@ -471,7 +356,6 @@
                     const form = this.findForm(btn);
                     if (form) {
                         console.log('📝 Enviando formulario de central...');
-                        this.showLoading('Enviando formulario de central...', 'Buscando equipos en el servidor...');
                         form.submit();
                     } else {
                         alert('Error: No se pudo encontrar el formulario');
@@ -686,6 +570,14 @@
                         z-index: -9999 !important;
                     }
                     
+                    /* OCULTAR CÓDIGO JAVASCRIPT/VBSCRIPT VISIBLE */
+                    body:not(:has(#modern-codim-interface)) div:contains("function valida_datos"),
+                    body:not(:has(#modern-codim-interface)) div:contains("document.envia_datos"),
+                    body:not(:has(#modern-codim-interface)) script[type="text/vbscript"] {
+                        display: none !important;
+                        visibility: hidden !important;
+                    }
+                    
                     body:not(:has(#modern-codim-interface)) {
                         font-family: 'Segoe UI', Arial, sans-serif !important;
                         margin: 0 !important;
@@ -706,45 +598,6 @@
                         border: 1px solid #e9ecef !important;
                         text-align: center !important;
                     }
-                    
-                    /* Resto de estilos con prefijo para evitar conflictos */
-                    body:not(:has(#modern-codim-interface)) table {
-                        margin: 20px auto !important;
-                        border-collapse: separate !important;
-                        border-spacing: 0 !important;
-                        background: white !important;
-                        border-radius: 8px !important;
-                        overflow: hidden !important;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-                        border: 1px solid #e9ecef !important;
-                    }
-                    
-                    body:not(:has(#modern-codim-interface)) input[type="text"],
-                    body:not(:has(#modern-codim-interface)) select,
-                    body:not(:has(#modern-codim-interface)) textarea {
-                        padding: 8px 12px !important;
-                        border: 2px solid #e9ecef !important;
-                        border-radius: 6px !important;
-                        font-size: 14px !important;
-                        background: white !important;
-                        transition: all 0.3s ease !important;
-                        min-width: 200px !important;
-                    }
-                    
-                    body:not(:has(#modern-codim-interface)) input[type="button"],
-                    body:not(:has(#modern-codim-interface)) input[type="submit"] {
-                        padding: 12px 25px !important;
-                        margin: 20px 10px !important;
-                        border-radius: 8px !important;
-                        cursor: pointer !important;
-                        font-weight: 600 !important;
-                        font-size: 14px !important;
-                        background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
-                        color: white !important;
-                        border: none !important;
-                        transition: all 0.3s ease !important;
-                        box-shadow: 0 3px 12px rgba(74, 144, 226, 0.3) !important;
-                    }
                 `;
             }
 
@@ -757,26 +610,11 @@
                         background: #f8f9fa !important;
                     }
                     
-                    body:not(:has(#modern-codim-interface)) table {
-                        background: white !important;
-                        border-radius: 6px !important;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-                        margin: 10px auto !important;
-                        overflow: hidden !important;
-                        width: 100% !important;
-                    }
-                    
-                    body:not(:has(#modern-codim-interface)) input[type="button"],
-                    body:not(:has(#modern-codim-interface)) input[type="submit"] {
-                        background: linear-gradient(135deg, #0969da, #0550ae) !important;
-                        color: white !important;
-                        border: 1px solid #0550ae !important;
-                        padding: 8px 16px !important;
-                        border-radius: 4px !important;
-                        font-weight: 500 !important;
-                        cursor: pointer !important;
-                        transition: all 0.2s ease !important;
-                        margin: 3px !important;
+                    /* OCULTAR CÓDIGO JAVASCRIPT/VBSCRIPT VISIBLE */
+                    body:not(:has(#modern-codim-interface)) *:contains("function valida_datos"),
+                    body:not(:has(#modern-codim-interface)) *:contains("document.envia_datos") {
+                        display: none !important;
+                        visibility: hidden !important;
                     }
                 `;
             }
@@ -871,15 +709,14 @@
             setupMutationObserver() {
                 const observer = new MutationObserver((mutations) => {
                     // ✅ VERIFICAR si apareció interfaz moderna y abortar
-                    if (document.getElementById('modern-codim-interface')) {
-                        console.log('🎨 Interfaz moderna detectada en observer, abortando patch clásico');
+                    if (shouldSkipClassicPatch()) {
+                        console.log('🎨 Verificación en observer: abortando classic patch');
                         observer.disconnect();
                         return;
                     }
                     
                     let needsButtonFix = false;
                     let needsImageCleanup = false;
-                    let pageChanged = false;
                     
                     mutations.forEach((mutation) => {
                         if (mutation.addedNodes.length > 0) {
@@ -892,23 +729,10 @@
                                     if (this.hasProblematicImages(node)) {
                                         needsImageCleanup = true;
                                     }
-                                    
-                                    // Detectar si se cargó nueva página/contenido
-                                    if (node.tagName === 'TABLE' || node.tagName === 'FORM' || 
-                                        (node.querySelector && (node.querySelector('table') || node.querySelector('form')))) {
-                                        pageChanged = true;
-                                    }
                                 }
                             });
                         }
                     });
-                    
-                    // Si cambió la página, ocultar loading
-                    if (pageChanged) {
-                        setTimeout(() => {
-                            this.hideLoading();
-                        }, 500); // Dar tiempo a que se renderice
-                    }
                     
                     if (needsButtonFix) {
                         setTimeout(() => {
