@@ -4517,9 +4517,7 @@ processIframeContent(iframe, iframeDoc) {
     console.log('✅ CSS del iframe aplicado');
     
     // ✅ PASO 2.5: OCULTAR CÓDIGO JAVASCRIPT VISIBLE
-    setTimeout(() => {
-        this.hideVisibleJavaScriptCode(iframeDoc);
-    }, 100);
+   
     
     // ✅ PASO 3: FORZAR RESET DE LAYOUT INMEDIATO (antes que classic-patch)
     setTimeout(() => {
@@ -4527,13 +4525,6 @@ processIframeContent(iframe, iframeDoc) {
         this.forceLayoutReset(iframeDoc);
     }, 200);
     
-    // ✅ PASO 4: Segundo reset por seguridad + limpieza adicional
-    setTimeout(() => {
-        console.log('🔧 Ejecutando segundo reset de layout...');
-        this.forceLayoutReset(iframeDoc);
-        // Limpiar código nuevamente por si aparece dinámicamente
-        this.hideVisibleJavaScriptCode(iframeDoc);
-    }, 500);
     
     // ✅ PASO 5: Inyectar funciones de compatibilidad
     const compatScript = iframeDoc.createElement('script');
@@ -4586,11 +4577,8 @@ processIframeContent(iframe, iframeDoc) {
     }, 1000);
     
     // ✅ PASO 7: Limpieza final del código después de todo
-    setTimeout(() => {
-        console.log('🧹 Limpieza final del código JavaScript...');
-        this.hideVisibleJavaScriptCode(iframeDoc);
-    }, 2000);
-    
+   
+    hideVisibleJavaScriptCode(iframeDoc)
     console.log('✅ Iframe enhancement completado');
 }
 
@@ -4628,148 +4616,431 @@ processIframeContent(iframe, iframeDoc) {
 
     // ✅ MÉTODO: Forzar reset completo del layout
     forceLayoutReset(iframeDoc) {
-        console.log('🔄 Forzando reset completo del layout en iframe...');
+    console.log('🔄 Forzando reset completo del layout en iframe...');
+    
+    try {
+        // ✅ DETECCIÓN MÁS AGRESIVA: Formulario de captura de incidentes
+        const bodyText = iframeDoc.body.textContent || '';
+        const bodyHTML = iframeDoc.body.innerHTML || '';
         
-        try {
-            // ✅ DETECCIÓN MÁS AGRESIVA: Formulario de captura de incidentes
-            const bodyText = iframeDoc.body.textContent || '';
-            const bodyHTML = iframeDoc.body.innerHTML || '';
-            
-            const isIncidentForm = bodyText.includes('Captura de Incidentes') || 
-                                  bodyText.includes('Proporciona la central') ||
-                                  bodyHTML.includes('Proporciona la central') ||
-                                  bodyText.includes('Reporte fallas a CNS') ||
-                                  iframeDoc.querySelector('input[name*="central"]') ||
-                                  bodyHTML.includes('name="central"') ||
-                                  bodyHTML.includes('Reporte.asp');
-                                  
-            console.log('🔍 Detección de formulario:', {
-                bodyTextLength: bodyText.length,
-                hasCaptura: bodyText.includes('Captura de Incidentes'),
-                hasProporciona: bodyText.includes('Proporciona la central'),
-                hasReporte: bodyText.includes('Reporte fallas a CNS'),
-                hasInputCentral: !!iframeDoc.querySelector('input[name*="central"]'),
-                htmlIncludes: bodyHTML.includes('name="central"')
-            });
-                                  
-            if (isIncidentForm) {
-                console.log('📋 Formulario de captura detectado - Aplicando estilo específico');
-                const success = this.styleIncidentForm(iframeDoc);
-                if (success) {
-                    return; // Salir si la transformación fue exitosa
-                }
+        const isIncidentForm = bodyText.includes('Proporciona la central') ||
+                              bodyHTML.includes('Proporciona la central');
+                              
+        console.log('🔍 Detección de formulario simple:', {
+            bodyTextLength: bodyText.length,
+            hasProporciona: bodyText.includes('Proporciona la central')
+        });
+                              
+        if (isIncidentForm) {
+            console.log('📋 Formulario de captura simple detectado - Aplicando estilo específico');
+            const success = this.styleIncidentForm(iframeDoc);
+            if (success) {
+                return; // Salir si la transformación fue exitosa
             }
-            
-            console.log('🔧 Aplicando reset normal...');
-            this.applyGeneralReset(iframeDoc);
-            
-        } catch (error) {
-            console.error('❌ Error en reset de layout:', error);
         }
+        
+        console.log('🔧 Aplicando reset normal...');
+        this.applyGeneralReset(iframeDoc);
+        
+    } catch (error) {
+        console.error('❌ Error en reset de layout:', error);
     }
+}
 
-    // ✅ MÉTODO: Aplicar reset general (separado para limpieza de código)
-    applyGeneralReset(iframeDoc) {
-        console.log('📐 Aplicando reset general del layout...');
+	// ✅ MÉTODO MEJORADO: applyGeneralReset con mejor detección y layout
+
+// ✅ FUNCIÓN QUE FALTABA: analyzeElementStructure
+analyzeElementStructure(absoluteElements) {
+    console.log('🔍 Analizando estructura de elementos...');
+    
+    const analysis = {
+        totalElements: absoluteElements.length,
+        elementTypes: {},
+        rows: [],
+        hasHeader: false,
+        hasReportLink: false,
+        hasForm: false,
+        fieldCount: 0
+    };
+    
+    // Analizar cada elemento
+    absoluteElements.forEach((element, index) => {
+        const top = parseInt(element.style.top) || 0;
+        const left = parseInt(element.style.left) || 0;
+        const type = this.detectElementType(element, top, left);
         
-        // Encontrar todos los elementos con posicionamiento absoluto y resetearlos
-        const absoluteElements = iframeDoc.querySelectorAll('[style*="position: absolute"], [style*="position:absolute"]');
+        // Contar tipos
+        analysis.elementTypes[type] = (analysis.elementTypes[type] || 0) + 1;
         
-        absoluteElements.forEach((element, index) => {
-            console.log(`📐 Reseteando elemento absoluto #${index}:`, element.tagName, element.style.cssText.substring(0, 100));
+        // Detectar características específicas
+        if (type === 'header') analysis.hasHeader = true;
+        if (type === 'report-link') analysis.hasReportLink = true;
+        if (type === 'input-field') {
+            analysis.hasForm = true;
+            analysis.fieldCount++;
+        }
+        
+        // Organizar por filas aproximadas (tolerancia de 20px)
+        let assignedRow = analysis.rows.find(row => Math.abs(row.top - top) <= 20);
+        if (!assignedRow) {
+            assignedRow = { top: top, elements: [] };
+            analysis.rows.push(assignedRow);
+        }
+        assignedRow.elements.push({ element, type, top, left, index });
+    });
+    
+    // Ordenar filas por posición top
+    analysis.rows.sort((a, b) => a.top - b.top);
+    
+    console.log(`📊 Análisis completado: ${analysis.totalElements} elementos, ${analysis.rows.length} filas`);
+    console.log('📋 Tipos encontrados:', analysis.elementTypes);
+    
+    return analysis;
+}
+
+applyGeneralReset(iframeDoc) {
+    console.log('📐 Aplicando reset general MEJORADO del layout...');
+    
+    // Encontrar todos los elementos con posicionamiento absoluto
+    const absoluteElements = iframeDoc.querySelectorAll('[style*="position: absolute"], [style*="position:absolute"]');
+    
+    // ✅ PASO 1: Analizar estructura antes de resetear
+    const elementAnalysis = this.analyzeElementStructure(absoluteElements);
+    console.log('📊 Análisis de estructura:', elementAnalysis);
+    
+    absoluteElements.forEach((element, index) => {
+        const originalTop = parseInt(element.style.top) || 0;
+        const originalLeft = parseInt(element.style.left) || 0;
+        const elementType = this.detectElementType(element, originalTop, originalLeft);
+        
+        console.log(`📐 Reseteando elemento #${index}: ${elementType} - top:${originalTop} left:${originalLeft}`);
+        
+        // Resetear posición
+        element.style.setProperty('position', 'static', 'important');
+        element.style.setProperty('left', 'auto', 'important');
+        element.style.setProperty('top', 'auto', 'important');
+        element.style.setProperty('right', 'auto', 'important');
+        element.style.setProperty('bottom', 'auto', 'important');
+        element.style.setProperty('z-index', 'auto', 'important');
+        element.style.setProperty('display', 'block', 'important');
+        
+        // ✅ APLICAR ESTILOS SEGÚN TIPO DETECTADO
+        this.applyElementSpecificStyles(element, elementType, index);
+    });
+    
+    // ✅ PASO 2: Organizar en layout de tabla
+    this.organizeAsTableLayout(iframeDoc, elementAnalysis);
+    
+    // ✅ PASO 3: Aplicar estilos generales
+    this.applyGeneralStyles(iframeDoc);
+    
+    console.log('✅ Reset general MEJORADO finalizado');
+}
+
+// ✅ DETECTAR TIPO DE ELEMENTO MÁS INTELIGENTEMENTE
+detectElementType(element, top, left) {
+    const text = element.textContent?.trim().toLowerCase() || '';
+    const tagName = element.tagName.toLowerCase();
+    const hasInput = element.querySelector('input, select, textarea');
+    
+    // Detectar por contenido y posición
+    if (text.includes('captura de incidentes') || (top < 30 && text.length > 10)) {
+        return 'header';
+    }
+    if (text.includes('reporte fallas') || text.includes('supervision')) {
+        return 'report-link';
+    }
+    if (hasInput || tagName === 'input' || tagName === 'select' || tagName === 'textarea') {
+        return 'input-field';
+    }
+    if (text.includes('aceptar') || text.includes('regresar') || (top > 500)) {
+        return 'button';
+    }
+    if (text && text.length > 0 && text.length < 50 && !hasInput) {
+        return 'label';
+    }
+    if (element.offsetWidth > 300 || top < 10) {
+        return 'container';
+    }
+    
+    return 'content';
+}
+
+// ✅ APLICAR ESTILOS ESPECÍFICOS POR TIPO
+applyElementSpecificStyles(element, elementType, index) {
+    switch (elementType) {
+        case 'header':
+            element.style.setProperty('background', 'linear-gradient(135deg, #667eea, #764ba2)', 'important');
+            element.style.setProperty('color', 'white', 'important');
+            element.style.setProperty('padding', '15px 20px', 'important');
+            element.style.setProperty('text-align', 'center', 'important');
+            element.style.setProperty('font-weight', '600', 'important');
+            element.style.setProperty('font-size', '16px', 'important');
+            element.style.setProperty('margin-bottom', '0', 'important');
+            console.log(`✅ Header aplicado a elemento #${index}`);
+            break;
             
-            // Forzar posición estática
-            element.style.setProperty('position', 'static', 'important');
-            element.style.setProperty('left', 'auto', 'important');
-            element.style.setProperty('top', 'auto', 'important');
-            element.style.setProperty('right', 'auto', 'important');
-            element.style.setProperty('bottom', 'auto', 'important');
-            element.style.setProperty('z-index', 'auto', 'important');
+        case 'report-link':
+            element.style.setProperty('background', '#f8f9fa', 'important');
+            element.style.setProperty('padding', '10px', 'important');
+            element.style.setProperty('text-align', 'center', 'important');
+            element.style.setProperty('border-bottom', '1px solid #eee', 'important');
             
-            // Aplicar estilos específicos según el tipo de elemento
-            if (element.style.cssText.includes('top: 5') || element.style.cssText.includes('top:5')) {
-                // Es el header
-                element.style.setProperty('background', 'linear-gradient(135deg, #667eea, #764ba2)', 'important');
-                element.style.setProperty('color', 'white', 'important');
-                element.style.setProperty('padding', '25px 30px', 'important');
-                element.style.setProperty('text-align', 'center', 'important');
-                element.style.setProperty('font-weight', '700', 'important');
-                console.log('✅ Header aplicado a elemento #' + index);
-            } else if (element.style.cssText.includes('top: 70') || element.style.cssText.includes('top:70')) {
-                // Es el contenido
-                element.style.setProperty('padding', '30px', 'important');
-                element.style.setProperty('background', 'white', 'important');
-                console.log('✅ Contenido aplicado a elemento #' + index);
+            // Estilizar el enlace dentro
+            const link = element.querySelector('a') || element;
+            if (link) {
+                link.style.setProperty('background', '#28a745', 'important');
+                link.style.setProperty('color', 'white', 'important');
+                link.style.setProperty('padding', '8px 16px', 'important');
+                link.style.setProperty('text-decoration', 'none', 'important');
+                link.style.setProperty('border-radius', '4px', 'important');
+                link.style.setProperty('font-size', '13px', 'important');
+                link.style.setProperty('display', 'inline-block', 'important');
             }
+            console.log(`✅ Report-link aplicado a elemento #${index}`);
+            break;
             
-            // Forzar display block
-            element.style.setProperty('display', 'block', 'important');
+        case 'label':
+            element.style.setProperty('font-weight', '500', 'important');
+            element.style.setProperty('color', '#333', 'important');
+            element.style.setProperty('font-size', '13px', 'important');
+            element.style.setProperty('margin', '5px 8px 5px 0', 'important');
+            element.style.setProperty('display', 'inline-block', 'important');
+            element.style.setProperty('vertical-align', 'middle', 'important');
+            console.log(`✅ Label aplicado a elemento #${index}: "${element.textContent.substring(0, 20)}"`);
+            break;
+            
+        case 'input-field':
+            // Detectar qué tipo de campo es para aplicar ancho apropiado
+            const fieldName = this.detectFieldName(element);
+            const fieldWidth = this.getFieldWidth(fieldName);
+            
+            element.style.setProperty('width', fieldWidth, 'important');
+            element.style.setProperty('padding', '4px 6px', 'important');
+            element.style.setProperty('border', '1px solid #ccc', 'important');
+            element.style.setProperty('border-radius', '3px', 'important');
+            element.style.setProperty('font-size', '12px', 'important');
+            element.style.setProperty('background', 'white', 'important');
+            element.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
+            element.style.setProperty('margin', '2px', 'important');
+            element.style.setProperty('display', 'inline-block', 'important');
+            element.style.setProperty('vertical-align', 'middle', 'important');
+            console.log(`✅ Input-field aplicado a elemento #${index}: ${fieldName} (ancho: ${fieldWidth})`);
+            break;
+            
+        case 'button':
+            element.style.setProperty('background', '#007bff', 'important');
+            element.style.setProperty('color', 'white', 'important');
+            element.style.setProperty('border', 'none', 'important');
+            element.style.setProperty('padding', '6px 16px', 'important');
+            element.style.setProperty('border-radius', '3px', 'important');
+            element.style.setProperty('font-size', '12px', 'important');
+            element.style.setProperty('cursor', 'pointer', 'important');
+            element.style.setProperty('margin', '0 4px', 'important');
+            console.log(`✅ Button aplicado a elemento #${index}`);
+            break;
+            
+        default:
+            element.style.setProperty('margin', '5px 0', 'important');
+            console.log(`✅ Estilo default aplicado a elemento #${index}`);
+    }
+}
+
+	// ✅ FUNCIÓN MEJORADA: detectFieldName con análisis de contexto visual
+
+detectFieldName(element) {
+    const name = element.name || '';
+    const value = element.value || '';
+    const text = element.textContent || '';
+    const placeholder = element.placeholder || '';
+    const tagName = element.tagName.toLowerCase();
+    
+    // ✅ NUEVO: Analizar elemento anterior (label) para obtener contexto
+    const previousElement = element.previousElementSibling;
+    const nextElement = element.nextElementSibling;
+    const parentText = element.parentElement?.textContent || '';
+    
+    // Obtener texto del contexto cercano
+    const contextText = (
+        (previousElement?.textContent || '') + ' ' +
+        (nextElement?.textContent || '') + ' ' +
+        parentText + ' ' +
+        text + ' ' +
+        value + ' ' +
+        name + ' ' +
+        placeholder
+    ).toLowerCase();
+    
+    console.log(`🔍 Analizando campo: contexto="${contextText.substring(0, 50)}..." value="${value}"`);
+    
+    // ✅ DETECCIÓN POR POSICIÓN Y VALOR ESPECÍFICO
+    if (value.includes('QRO-') || value.includes('MTY-') || value.includes('GDL-') || 
+        value.includes('CORREGIDORA') || value.length > 10) {
+        console.log('   → Detectado como: nombre-pisa');
+        return 'nombre-pisa';
+    }
+    
+    if (value.includes('ISAM') || value.includes('HUAWEI') || value.includes('CISCO') || 
+        contextText.includes('clase')) {
+        console.log('   → Detectado como: clase');
+        return 'clase';
+    }
+    
+    // ✅ DETECCIÓN POR CONTEXTO DE TEXTO CERCANO
+    if (contextText.includes('falla') && tagName === 'select') {
+        console.log('   → Detectado como: select');
+        return 'select';
+    }
+    
+    if (contextText.includes('quejas') || contextText.includes('pendientes')) {
+        console.log('   → Detectado como: numero-pequeno');
+        return 'numero-pequeno';
+    }
+    
+    if (contextText.includes('validaciones') || contextText.includes('proceso') || 
+        contextText.includes('atencion') || contextText.includes('linea')) {
+        console.log('   → Detectado como: campo-mediano');
+        return 'campo-mediano';
+    }
+    
+    if (contextText.includes('bastidor') || contextText.includes('repisa') || 
+        contextText.includes('tarjeta') || contextText.includes('ip') || 
+        contextText.includes('equipo')) {
+        console.log('   → Detectado como: campo-tecnico');
+        return 'campo-tecnico';
+    }
+    
+    if (tagName === 'textarea' || contextText.includes('comentarios') || 
+        contextText.includes('observaciones') || element.rows > 1) {
+        console.log('   → Detectado como: comentarios');
+        return 'comentarios';
+    }
+    
+    // ✅ DETECCIÓN POR VALOR NUMÉRICO
+    if (value === '0' || /^\d+$/.test(value)) {
+        console.log('   → Detectado como: numero-pequeno');
+        return 'numero-pequeno';
+    }
+    
+    // ✅ DETECCIÓN POR POSICIÓN EN LA ESTRUCTURA
+    const allInputs = Array.from(element.closest('form, body')?.querySelectorAll('input, select, textarea') || []);
+    const inputIndex = allInputs.indexOf(element);
+    
+    // Usar índice para determinar tipo (basado en el orden típico del formulario)
+    if (inputIndex === 0) return 'select';        // Primer campo = Falla
+    if (inputIndex === 1) return 'nombre-pisa';   // Segundo = Nombre Pisa
+    if (inputIndex === 2) return 'clase';         // Tercero = Clase
+    if (inputIndex >= 3 && inputIndex <= 5) return 'numero-pequeno'; // Contadores
+    if (inputIndex >= 6 && inputIndex <= 7) return 'campo-mediano';  // Validaciones/Atención
+    if (inputIndex >= 8 && inputIndex <= 11) return 'campo-tecnico'; // IP/Bastidor/etc
+    if (inputIndex === allInputs.length - 1) return 'comentarios';   // Último = Comentarios
+    
+    console.log('   → Detectado como: default');
+    return 'default';
+}
+
+	// ✅ FUNCIÓN MEJORADA: getFieldWidth con anchos más específicos
+getFieldWidth(fieldName) {
+    const widths = {
+        'nombre-pisa': '180px',    // ✅ Más ancho para ver "QRO-CORREGIDORA" completo
+        'clase': '90px',           // ISAM, HUAWEI
+        'numero-pequeno': '45px',  // 0, 1, 2 (más pequeño)
+        'campo-mediano': '110px',  // Validaciones, Atención
+        'campo-tecnico': '70px',   // IP, Bastidor, etc (más pequeño)
+        'comentarios': '300px',    // Textarea específico
+        'select': '150px',         // Select con opciones
+        'default': '80px'          // Por defecto más pequeño
+    };
+    
+    return widths[fieldName] || widths.default;
+}
+
+// ✅ FUNCIÓN ADICIONAL: Aplicar anchos después del reseteo
+applySmartFieldWidths(iframeDoc) {
+    console.log('📏 Aplicando anchos inteligentes a campos...');
+    
+    const inputs = iframeDoc.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach((input, index) => {
+        const fieldName = this.detectFieldName(input);
+        const fieldWidth = this.getFieldWidth(fieldName);
+        
+        // Aplicar ancho específico
+        input.style.setProperty('width', fieldWidth, 'important');
+        
+        // Aplicar estilos adicionales según tipo
+        if (fieldName === 'comentarios') {
+            input.style.setProperty('height', '60px', 'important');
+            input.style.setProperty('resize', 'vertical', 'important');
+        }
+        
+        if (fieldName === 'numero-pequeno') {
+            input.style.setProperty('text-align', 'center', 'important');
+        }
+        
+        console.log(`📏 Campo #${index}: ${fieldName} → ${fieldWidth}`);
+    });
+    
+    console.log('✅ Anchos inteligentes aplicados');
+}
+
+// ✅ ORGANIZAR COMO LAYOUT DE TABLA (OPCIONAL)
+organizeAsTableLayout(iframeDoc, elementAnalysis) {
+    console.log('📐 Organizando elementos en layout de tabla...');
+    
+    // Buscar contenedor principal del formulario
+    const formContainer = iframeDoc.querySelector('form') || 
+                         iframeDoc.querySelector('body > div') || 
+                         iframeDoc.body;
+    
+    if (formContainer) {
+        formContainer.style.setProperty('display', 'block', 'important');
+        formContainer.style.setProperty('padding', '15px', 'important');
+        
+        // Hacer que labels e inputs estén en la misma línea
+        const labels = formContainer.querySelectorAll('[data-element-type="label"]');
+        const inputs = formContainer.querySelectorAll('[data-element-type="input-field"]');
+        
+        // Agrupar elementos relacionados
+        labels.forEach(label => {
+            label.style.setProperty('display', 'inline-block', 'important');
+            label.style.setProperty('width', 'auto', 'important');
+            label.style.setProperty('margin-right', '8px', 'important');
         });
         
-        // Aplicar estilos al body del iframe
-        const body = iframeDoc.body;
-        if (body) {
-            body.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
-            body.style.setProperty('background', 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', 'important');
-            body.style.setProperty('margin', '0', 'important');
-            body.style.setProperty('padding', '20px', 'important');
-            console.log('✅ Body del iframe estilizado');
-        }
-        
-        // Buscar y estilizar contenedor principal
-        const containers = iframeDoc.querySelectorAll('body > *, body > div, body > center, body > table, body > form');
-        containers.forEach((container, index) => {
-            container.style.setProperty('max-width', '900px', 'important');
+        inputs.forEach(input => {
+            input.style.setProperty('display', 'inline-block', 'important');
+            input.style.setProperty('margin-right', '15px', 'important');
+        });
+    }
+}
+
+// ✅ APLICAR ESTILOS GENERALES
+applyGeneralStyles(iframeDoc) {
+    // Body
+    const body = iframeDoc.body;
+    if (body) {
+        body.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
+        body.style.setProperty('background', 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', 'important');
+        body.style.setProperty('margin', '0', 'important');
+        body.style.setProperty('padding', '20px', 'important');
+    }
+    
+    // Contenedor principal
+    const containers = iframeDoc.querySelectorAll('body > *, body > div, body > center, body > form');
+    containers.forEach((container, index) => {
+        if (index === 0) { // Solo el primer contenedor
+            container.style.setProperty('max-width', '700px', 'important');
             container.style.setProperty('margin', '20px auto', 'important');
             container.style.setProperty('background', 'white', 'important');
-            container.style.setProperty('border-radius', '15px', 'important');
+            container.style.setProperty('border-radius', '12px', 'important');
             container.style.setProperty('box-shadow', '0 8px 32px rgba(0, 0, 0, 0.1)', 'important');
             container.style.setProperty('border', '1px solid #e9ecef', 'important');
             container.style.setProperty('overflow', 'hidden', 'important');
-            console.log(`✅ Contenedor #${index} estilizado`);
-        });
-        
-        // Estilizar todos los inputs y botones
-        const inputs = iframeDoc.querySelectorAll('input[type="text"], input[type="password"], select, textarea');
-        inputs.forEach((input, index) => {
-            input.style.setProperty('width', '100%', 'important');
-            input.style.setProperty('max-width', '400px', 'important');
-            input.style.setProperty('padding', '12px 16px', 'important');
-            input.style.setProperty('border', '2px solid #e9ecef', 'important');
-            input.style.setProperty('border-radius', '8px', 'important');
-            input.style.setProperty('font-size', '14px', 'important');
-            input.style.setProperty('background', 'white', 'important');
-            input.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
-            console.log(`✅ Input #${index} estilizado`);
-        });
-        
-        // Estilizar botones
-        const buttons = iframeDoc.querySelectorAll('input[type="button"], input[type="submit"], button');
-        buttons.forEach((button, index) => {
-            button.style.setProperty('background', 'linear-gradient(135deg, #4A90E2, #357ABD)', 'important');
-            button.style.setProperty('color', 'white', 'important');
-            button.style.setProperty('border', 'none', 'important');
-            button.style.setProperty('padding', '12px 24px', 'important');
-            button.style.setProperty('border-radius', '8px', 'important');
-            button.style.setProperty('font-weight', '600', 'important');
-            button.style.setProperty('font-size', '14px', 'important');
-            button.style.setProperty('cursor', 'pointer', 'important');
-            button.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
-            button.style.setProperty('margin', '10px 10px 10px 0', 'important');
-            button.style.setProperty('box-shadow', '0 4px 12px rgba(74, 144, 226, 0.3)', 'important');
-            console.log(`✅ Botón #${index} estilizado`);
-        });
-        
-        // Ocultar imágenes problemáticas
-        const problematicImages = iframeDoc.querySelectorAll('img[src*="fondo.bmp"], img[src*="menu.bmp"]');
-        problematicImages.forEach((img, index) => {
-            img.style.setProperty('display', 'none', 'important');
-            img.style.setProperty('visibility', 'hidden', 'important');
-            console.log(`✅ Imagen problemática #${index} ocultada`);
-        });
-        
-        console.log('✅ Reset general del layout finalizado');
-    }
+        }
+    });
+}
+
 
 	// ✅ MÉTODO CORREGIDO: styleIncidentForm() 
 // Recrear formulario EXACTAMENTE como el original pero con mejor diseño
@@ -4904,7 +5175,7 @@ processIframeContent(iframe, iframeDoc) {
         const centralInput = iframeDoc.createElement('input');
         centralInput.type = 'text';
         centralInput.name = 'ctl';
-        centralInput.placeholder = 'Ej: QRO-CORREGIDORA, MTY-CENTRO, GDL-NORTE...';
+        centralInput.placeholder = 'Ej: COG, QRT, ODA, MQS ...';
         centralInput.required = true;
         centralInput.style.cssText = `
             width: 100% !important;
@@ -5259,7 +5530,12 @@ showFormLoadingAnimation(iframeDoc, centralName) {
         console.error('❌ Error mostrando loading:', error);
     }
 }
-	
+
+	// ✅ REEMPLAZAR EL MÉTODO styleComplexCSMForm() CON ESTA VERSIÓN CORREGIDA
+
+	// ✅ MÉTODO CORREGIDO: styleComplexCSMForm() - VERSION CON DEBUG Y DETECCIÓN COMPLETA
+
+
     addIframeDSLAMSearch(iframeDoc) {
         if (!iframeDoc) return;
         
@@ -5330,7 +5606,7 @@ showFormLoadingAnimation(iframeDoc, centralName) {
                    placeholder="Buscar DSLAM..." 
                    class="search-input-low">
             <div class="search-counter-low" id="iframe-counter-low">
-                <span id="iframe-count-low">${dataRows.length}</span> equipos
+                <span id="iframe-count-low">${dataRows.length} </span> equipos
             </div>
             <button type="button" 
                     id="iframe-clear-btn-low" 
@@ -5401,7 +5677,7 @@ showFormLoadingAnimation(iframeDoc, centralName) {
             color: white;
             padding: 1px 6px;
             border-radius: 8px;
-            font-size: 10px;
+            font-size: 14px;
             font-weight: 600;
             white-space: nowrap;
             flex-shrink: 0;
@@ -5546,147 +5822,296 @@ showFormLoadingAnimation(iframeDoc, centralName) {
     console.log(`✅ Buscador BAJO agregado al iframe - ${dataRows.length} equipos disponibles`);
 }
 	
-    // ===============================
-    // CSS PARA IFRAMES
-    // ===============================
-    getIframeCSS() {
-        return `
-            /* ✅ OCULTAR IMÁGENES DE FONDO PROBLEMÁTICAS */
-            img[src*="fondo.bmp"], 
-            img[src*="menu.bmp"], 
-            img[src*="background"] { 
-                display: none !important; 
-                visibility: hidden !important;
-            }
+    /* ✅ MEJORAS SIMPLES PARA getIframeCSS() - Solo mejorar lo que ya funciona */
 
-            /* ✅ RESET COMPLETO DEL BODY */
-            body { 
-                font-family: 'Segoe UI', Arial, sans-serif !important;
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-                margin: 0 !important;
-                padding: 20px !important;
-                min-height: 100vh !important;
-                box-sizing: border-box !important;
-            }
+getIframeCSS() {
+    return `
+        /* ✅ OCULTAR IMÁGENES DE FONDO PROBLEMÁTICAS */
+        img[src*="fondo.bmp"], 
+        img[src*="menu.bmp"], 
+        img[src*="background"] { 
+            display: none !important; 
+            visibility: hidden !important;
+        }
 
-            /* ✅ CONTENEDOR PRINCIPAL - FORZAR LAYOUT MODERNO */
-            body > *, 
-            body > div, 
-            body > center, 
-            body > table,
-            body > form {
-                position: static !important;
-                display: block !important;
-                max-width: 900px !important;
-                margin: 20px auto !important;
-                background: white !important;
-                border-radius: 15px !important;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-                border: 1px solid #e9ecef !important;
-                overflow: hidden !important;
-                z-index: auto !important;
-                left: auto !important;
-                top: auto !important;
-                right: auto !important;
-                bottom: auto !important;
-                width: auto !important;
-                height: auto !important;
-            }
+        /* ✅ RESET COMPLETO DEL BODY */
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif !important;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            min-height: 100vh !important;
+            box-sizing: border-box !important;
+        }
 
-            /* ✅ RESET TOTAL DE POSICIONES ABSOLUTAS */
-            div[style*="position: absolute"],
-            div[style*="position:absolute"],
-            table[style*="position: absolute"],
-            table[style*="position:absolute"] {
-                position: static !important;
-                left: auto !important;
-                top: auto !important;
-                right: auto !important;
-                bottom: auto !important;
-                z-index: auto !important;
-                width: auto !important;
-                height: auto !important;
-                margin: 0 !important;
-                padding: 20px !important;
-                background: white !important;
-                display: block !important;
-            }
+        /* ✅ CONTENEDOR PRINCIPAL - FORZAR LAYOUT MODERNO */
+        body > *, 
+        body > div, 
+        body > center, 
+        body > table,
+        body > form {
+            position: static !important;
+            display: block !important;
+            max-width: 900px !important;
+            margin: 20px auto !important;
+            background: white !important;
+            border-radius: 15px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #e9ecef !important;
+            overflow: hidden !important;
+            z-index: auto !important;
+            left: auto !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            width: auto !important;
+            height: auto !important;
+            padding: 25px !important; /* ✅ Más padding para mejor espaciado */
+        }
 
-            /* ✅ HEADER DEL FORMULARIO - TÍTULO PRINCIPAL */
-            div[style*="top: 5"],
-            div[style*="top:5"],
-            div:first-child {
-                background: linear-gradient(135deg, #667eea, #764ba2) !important;
-                color: white !important;
-                padding: 25px 30px !important;
-                margin: 0 !important;
-                text-align: center !important;
-                border-radius: 0 !important;
-                font-size: 18px !important;
-                font-weight: 700 !important;
-            }
+        /* ✅ RESET TOTAL DE POSICIONES ABSOLUTAS */
+        div[style*="position: absolute"],
+        div[style*="position:absolute"],
+        table[style*="position: absolute"],
+        table[style*="position:absolute"] {
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            z-index: auto !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            background: white !important;
+            display: block !important;
+        }
 
-            /* ✅ CAMPOS DE ENTRADA */
+        /* ✅ HEADER DEL FORMULARIO - TÍTULO PRINCIPAL MEJORADO */
+        div[style*="top: 5"],
+        div[style*="top:5"],
+        div:first-child,
+        body > div:first-child {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            color: white !important;
+            padding: 25px 30px !important;
+            margin: 0 0 20px 0 !important;
+            text-align: center !important;
+            border-radius: 12px 12px 0 0 !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2) !important;
+            border-bottom: 3px solid rgba(255,255,255,0.2) !important;
+        }
+
+        /* ✅ MEJORAR ENLACE AL REPORTE */
+        a[href*="Reporte"], a[onclick*="Reporte"] {
+            display: inline-block !important;
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            color: white !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            margin: 10px auto !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+            text-align: center !important;
+        }
+
+        a[href*="Reporte"]:hover, a[onclick*="Reporte"]:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+            text-decoration: none !important;
+            color: white !important;
+        }
+
+        /* ✅ CAMPOS DE ENTRADA MEJORADOS */
+        input[type="text"], 
+        input[type="password"],
+        input[name*="central"],
+        input[name*="folio"],
+        select, 
+        textarea {
+            width: 100% !important;
+            max-width: 400px !important;
+            padding: 12px 16px !important;
+            border: 2px solid #e9ecef !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            background: white !important;
+            transition: all 0.3s ease !important;
+            font-family: 'Segoe UI', Arial, sans-serif !important;
+            box-sizing: border-box !important;
+            margin: 8px 5px 15px 5px !important; /* ✅ Mejor espaciado */
+        }
+
+        /* ✅ EFECTOS DE FOCUS MEJORADOS */
+        input[type="text"]:focus, 
+        input[type="password"]:focus,
+        select:focus, 
+        textarea:focus {
+            border-color: #4A90E2 !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15) !important;
+            background: #fafbfc !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* ✅ ETIQUETAS DE CAMPOS MEJORADAS */
+        td, th {
+            padding: 8px 12px !important;
+            vertical-align: middle !important;
+            font-size: 14px !important;
+            color: #495057 !important;
+        }
+
+        /* ✅ ETIQUETAS EN NEGRITA */
+        td:first-child, th {
+            font-weight: 600 !important;
+            color: #2c3e50 !important;
+            text-align: right !important;
+            padding-right: 15px !important;
+            white-space: nowrap !important;
+        }
+
+        /* ✅ BOTONES MEJORADOS */
+        input[type="button"], 
+        input[type="submit"],
+        button {
+            background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            margin: 10px 8px !important; /* ✅ Mejor espaciado entre botones */
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3) !important;
+            font-family: 'Segoe UI', Arial, sans-serif !important;
+            min-width: 100px !important;
+        }
+
+        /* ✅ EFECTOS HOVER PARA BOTONES */
+        input[type="button"]:hover, 
+        input[type="submit"]:hover,
+        button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4) !important;
+            background: linear-gradient(135deg, #357ABD, #2968A3) !important;
+        }
+
+        /* ✅ BOTÓN REGRESAR CON COLOR DIFERENTE */
+        input[value*="Regresar"], 
+        input[onclick*="history.back"], 
+        button[onclick*="history.back"] {
+            background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3) !important;
+        }
+
+        input[value*="Regresar"]:hover,
+        input[onclick*="history.back"]:hover,
+        button[onclick*="history.back"]:hover {
+            background: linear-gradient(135deg, #5a6268, #495057) !important;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4) !important;
+        }
+
+        /* ✅ TABLAS MEJORADAS */
+        table {
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 8px !important; /* ✅ Mejor espaciado entre celdas */
+            background: white !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: none !important; /* ✅ Sin sombra doble */
+            border: none !important;
+            margin: 15px 0 !important;
+            position: static !important;
+        }
+
+        /* ✅ FILAS DE TABLA CON HOVER */
+        tr:hover {
+            background: rgba(74, 144, 226, 0.05) !important;
+            transition: background 0.2s ease !important;
+        }
+
+        /* ✅ TEXTAREA ESPECÍFICO */
+        textarea {
+            min-height: 80px !important;
+            resize: vertical !important;
+            line-height: 1.4 !important;
+        }
+
+        /* ✅ SELECT MEJORADO */
+        select {
+            cursor: pointer !important;
+            background-image: linear-gradient(45deg, transparent 50%, #495057 50%), linear-gradient(135deg, #495057 50%, transparent 50%) !important;
+            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px) !important;
+            background-size: 5px 5px, 5px 5px !important;
+            background-repeat: no-repeat !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+        }
+
+        /* ✅ OVERRIDE FORZADO PARA ELEMENTOS PROBLEMÁTICOS */
+        * {
+            position: static !important;
+            box-sizing: border-box !important;
+        }
+
+        /* ✅ ESTILO RESPONSIVO MEJORADO */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px !important;
+            }
+            
+            body > *, body > div, body > center, body > table, body > form {
+                margin: 10px auto !important;
+                padding: 15px !important;
+                max-width: 95% !important;
+            }
+            
             input[type="text"], 
             input[type="password"],
-            input[name*="central"],
-            input[name*="folio"],
             select, 
             textarea {
-                width: 100% !important;
-                max-width: 400px !important;
-                padding: 12px 16px !important;
-                border: 2px solid #e9ecef !important;
-                border-radius: 8px !important;
-                font-size: 14px !important;
-                background: white !important;
-                transition: all 0.3s ease !important;
-                font-family: 'Segoe UI', Arial, sans-serif !important;
-                box-sizing: border-box !important;
-                margin: 5px 0 15px 0 !important;
+                max-width: 100% !important;
+                margin: 5px 0 10px 0 !important;
             }
-
-            /* ✅ BOTONES */
-            input[type="button"], 
-            input[type="submit"],
-            button {
-                background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
-                color: white !important;
-                border: none !important;
-                padding: 12px 24px !important;
-                border-radius: 8px !important;
-                font-weight: 600 !important;
-                font-size: 14px !important;
-                cursor: pointer !important;
-                transition: all 0.3s ease !important;
-                margin: 10px 10px 10px 0 !important;
-                box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3) !important;
-                font-family: 'Segoe UI', Arial, sans-serif !important;
-                min-width: 100px !important;
-            }
-
-            /* ✅ TABLAS */
+            
             table {
-                width: 100% !important;
-                border-collapse: separate !important;
-                border-spacing: 0 !important;
-                background: white !important;
-                border-radius: 8px !important;
-                overflow: hidden !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-                border: 1px solid #e9ecef !important;
-                margin: 20px 0 !important;
-                position: static !important;
+                border-spacing: 4px !important;
             }
-
-            /* ✅ OVERRIDE FORZADO */
-            * {
-                position: static !important;
-                box-sizing: border-box !important;
+            
+            td {
+                padding: 6px 8px !important;
             }
-        `;
-    }
+        }
 
+        /* ✅ ANIMACIÓN SUAVE AL CARGAR */
+        body > div:first-child {
+            animation: slideInDown 0.5s ease-out !important;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    `;
+}
+	
     // ===============================
     // COMPONENTES DE INTERFAZ MODERNA
     // ===============================
@@ -6066,40 +6491,46 @@ showFormLoadingAnimation(iframeDoc, centralName) {
             }
         };
     }
-	// ✅ MÉTODO: Ocultar código JavaScript/VBScript visible
-hideVisibleJavaScriptCode(iframeDoc) {
-    console.log('🧹 Limpiando código JavaScript visible...');
+	
+	// ✅ SOLUCIÓN SIMPLE: Ocultar código visualmente pero mantener funcionalidad
+
+	// ✅ SOLUCIÓN DEFINITIVA: Extraer funciones necesarias ANTES de ocultar código
+
+	hideVisibleJavaScriptCode(iframeDoc) {
+    console.log('🧹 Ocultando código JavaScript visible (MÉTODO AGRESIVO)...');
     
     try {
-        // Buscar todos los elementos de texto que contengan código
-        const allElements = iframeDoc.querySelectorAll('*');
         let hiddenElements = 0;
         
+        // ✅ MÉTODO 1: Ocultar por contenido específico
+        const allElements = iframeDoc.querySelectorAll('*');
+        
         allElements.forEach((element) => {
-            // Solo procesar elementos de texto (sin hijos HTML)
             if (element.children.length === 0 && element.textContent) {
                 const text = element.textContent.trim();
                 
-                // Detectar código JavaScript/VBScript
-                const hasJavaScriptCode = text.includes('function valida_datos') ||
-                                         text.includes('document.envia_datos') ||
-                                         text.includes('document.datos_dslam') ||
-                                         text.includes('msgbox') ||
-                                         text.includes('vbscript:') ||
-                                         text.includes('javascript:') ||
-                                         text.includes('trim(document') ||
-                                         text.includes('len(var') ||
-                                         text.includes('mid(var') ||
-                                         text.includes('.value)') ||
-                                         text.includes('cual_falla.value') ||
-                                         text.includes('obsdslam.value') ||
-                                         (text.includes('function') && text.includes('document')) ||
-                                         (text.length > 100 && text.includes('if') && text.includes('then'));
+                // Detectar código JavaScript/VBScript por patrones específicos
+                const hasCode = (
+                    text.includes('function valida_datos') ||
+                    text.includes('function valida_e') ||
+                    text.includes('document.envia_datos') ||
+                    text.includes('document.datos_dslam') ||
+                    text.includes('msgbox') ||
+                    text.includes('vbscript:') ||
+                    text.includes('javascript:') && text.length > 50 ||
+                    text.includes('trim(document') ||
+                    text.includes('len(var') ||
+                    text.includes('mid(var') ||
+                    text.includes('cual_falla.value') ||
+                    text.includes('obsdslam.value') ||
+                    (text.includes('function') && text.includes('document') && text.length > 100) ||
+                    (text.includes('if') && text.includes('then') && text.length > 100 && text.includes('var'))
+                );
                 
-                if (hasJavaScriptCode) {
-                    console.log('🚫 Ocultando código JavaScript visible:', text.substring(0, 50) + '...');
+                if (hasCode) {
+                    console.log('🚫 Código detectado y ocultado:', text.substring(0, 50) + '...');
                     
-                    // Ocultar completamente el elemento
+                    // ✅ OCULTADO TOTAL
                     element.style.cssText = `
                         display: none !important;
                         visibility: hidden !important;
@@ -6111,11 +6542,15 @@ hideVisibleJavaScriptCode(iframeDoc) {
                         height: 0 !important;
                         overflow: hidden !important;
                         z-index: -9999 !important;
+                        font-size: 0 !important;
+                        line-height: 0 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                     `;
                     
-                    // También ocultar el elemento padre si es necesario
+                    // También ocultar el elemento padre si solo contiene código
                     const parent = element.parentElement;
-                    if (parent && parent.children.length === 1 && parent.textContent.trim() === text) {
+                    if (parent && parent.textContent.trim() === text) {
                         parent.style.cssText = `
                             display: none !important;
                             visibility: hidden !important;
@@ -6127,30 +6562,54 @@ hideVisibleJavaScriptCode(iframeDoc) {
             }
         });
         
-        // También buscar elementos <script> visibles
-        const scriptElements = iframeDoc.querySelectorAll('script[type="text/vbscript"], script:not([src])');
-        scriptElements.forEach((script) => {
-            if (script.textContent && script.textContent.includes('function')) {
+        // ✅ MÉTODO 2: Ocultar script tags problemáticos
+        const scriptTags = iframeDoc.querySelectorAll('script[type="text/vbscript"], script:not([src])');
+        scriptTags.forEach((script) => {
+            const scriptContent = script.textContent || script.innerHTML;
+            if (scriptContent && (scriptContent.includes('function') || scriptContent.includes('msgbox'))) {
                 script.style.display = 'none';
                 script.remove();
                 hiddenElements++;
-                console.log('🚫 Script tag eliminado');
+                console.log('🚫 Script tag removido');
             }
         });
         
-        // Limpiar divs o spans con código inline
-        const divSpans = iframeDoc.querySelectorAll('div, span, p, td');
-        divSpans.forEach((element) => {
-            const text = element.textContent;
-            if (text && text.length > 50 && text.includes('function') && text.includes('document')) {
-                // Verificar que no sea una tabla de datos importante
-                if (!element.closest('table') || !text.includes('QRO-') && !text.includes('MTY-')) {
-                    element.style.display = 'none';
-                    hiddenElements++;
-                    console.log('🚫 Div/span con código eliminado');
-                }
+        // ✅ MÉTODO 3: CSS para ocultar patrones específicos
+        const hideStyle = iframeDoc.createElement('style');
+        hideStyle.id = 'hide-javascript-code';
+        hideStyle.textContent = `
+            /* Ocultar elementos que contengan código específico */
+            div:contains("function valida_datos"),
+            div:contains("function valida_e"),
+            div:contains("document.envia_datos"),
+            div:contains("msgbox"),
+            span:contains("function valida_datos"),
+            td:contains("function valida_datos"),
+            p:contains("function valida_datos") {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
+                opacity: 0 !important;
             }
-        });
+            
+            /* Asegurar que formularios sigan visibles */
+            form, form *, 
+            input, select, textarea, button,
+            table, tr, td, th {
+                position: relative !important;
+                left: auto !important;
+                top: auto !important;
+                opacity: 1 !important;
+                display: initial !important;
+                visibility: visible !important;
+            }
+        `;
+        
+        iframeDoc.head.appendChild(hideStyle);
         
         console.log(`✅ ${hiddenElements} elementos con código JavaScript ocultados`);
         
@@ -6160,6 +6619,148 @@ hideVisibleJavaScriptCode(iframeDoc) {
         console.error('❌ Error ocultando código JavaScript:', error);
         return 0;
     }
+}
+	
+// ✅ EXTRAER FUNCIONES NECESARIAS DEL CÓDIGO ORIGINAL
+extractNecessaryFunctions(iframeDoc) {
+    console.log('🔍 Extrayendo funciones necesarias del código original...');
+    
+    const extractedFunctions = [];
+    const functionNames = ['valida_datos', 'valida_e', 'trim', 'len', 'mid', 'asc'];
+    
+    // Buscar en todos los elementos que contengan JavaScript
+    const allElements = iframeDoc.querySelectorAll('*');
+    
+    allElements.forEach((element) => {
+        if (element.children.length === 0 && element.textContent) {
+            const text = element.textContent.trim();
+            
+            // Buscar funciones específicas en el texto
+            functionNames.forEach(funcName => {
+                const functionRegex = new RegExp(`function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{[^}]*(?:\\{[^}]*\\}[^}]*)*\\}`, 'gi');
+                const matches = text.match(functionRegex);
+                
+                if (matches) {
+                    matches.forEach(match => {
+                        console.log(`📦 Función extraída: ${funcName}`);
+                        extractedFunctions.push({
+                            name: funcName,
+                            code: match.trim()
+                        });
+                    });
+                }
+            });
+            
+            // También buscar definiciones de variables/funciones con = 
+            const assignmentRegex = /(?:var\s+|window\.|this\.)?(\w+)\s*=\s*function[^}]*(?:\{[^}]*(?:\{[^}]*\}[^}]*)*\})/gi;
+            let match;
+            while ((match = assignmentRegex.exec(text)) !== null) {
+                const funcName = match[1];
+                if (functionNames.includes(funcName)) {
+                    console.log(`📦 Asignación de función extraída: ${funcName}`);
+                    extractedFunctions.push({
+                        name: funcName,
+                        code: match[0].trim()
+                    });
+                }
+            }
+        }
+    });
+    
+    // Buscar en script tags
+    const scriptTags = iframeDoc.querySelectorAll('script');
+    scriptTags.forEach(script => {
+        const scriptContent = script.textContent || script.innerHTML || '';
+        if (scriptContent) {
+            functionNames.forEach(funcName => {
+                if (scriptContent.includes(`function ${funcName}`) || scriptContent.includes(`${funcName} =`)) {
+                    console.log(`📦 Función encontrada en script tag: ${funcName}`);
+                    // Extraer todo el contenido del script que contiene la función
+                    extractedFunctions.push({
+                        name: funcName,
+                        code: scriptContent,
+                        isFullScript: true
+                    });
+                }
+            });
+        }
+    });
+    
+    console.log(`✅ ${extractedFunctions.length} funciones extraídas`);
+    return extractedFunctions;
+}
+
+	hideVisibleJavaScriptCode(iframeDoc) {
+    console.log('🧹 SOLO limpiando imágenes problemáticas (JavaScript intacto)...');
+    
+    try {
+        let cleanedElements = 0;
+        
+        // ✅ SOLO LIMPIAR IMÁGENES - NO TOCAR JAVASCRIPT
+        const problematicImages = iframeDoc.querySelectorAll('img[src*="fondo.bmp"], img[src*="menu.bmp"]');
+        problematicImages.forEach((img) => {
+            img.style.setProperty('display', 'none', 'important');
+            img.style.setProperty('visibility', 'hidden', 'important');
+            cleanedElements++;
+        });
+        
+        // ✅ OCULTAR ELEMENTOS DE FONDO PROBLEMÁTICOS
+        const bgElements = iframeDoc.querySelectorAll('[style*="fondo.bmp"]');
+        bgElements.forEach((element) => {
+            element.style.setProperty('background-image', 'none', 'important');
+            element.style.setProperty('background', 'transparent', 'important');
+            cleanedElements++;
+        });
+        
+        console.log(`✅ ${cleanedElements} elementos problemáticos limpiados (JavaScript preservado)`);
+        
+        // ✅ NO HACER NADA CON EL JAVASCRIPT - DEJARLO FUNCIONAR
+        return cleanedElements;
+        
+    } catch (error) {
+        console.error('❌ Error limpiando elementos:', error);
+        return 0;
+    }
+}
+
+// ✅ MÉTODO ALTERNATIVO MÁS SIMPLE: Usar CSS para ocultar
+addCodeHidingCSS(iframeDoc) {
+    console.log('🎨 Agregando CSS para ocultar código JavaScript...');
+    
+    const style = iframeDoc.createElement('style');
+    style.id = 'code-hiding-css';
+    style.textContent = `
+        /* Ocultar divs que contengan código JavaScript visible */
+        div:contains("function valida_datos"),
+        div:contains("function valida_e"),
+        div:contains("document.envia_datos"),
+        div:contains("msgbox"),
+        script[type="text/vbscript"] {
+            color: transparent !important;
+            font-size: 0 !important;
+            line-height: 0 !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            overflow: hidden !important;
+            max-height: 0 !important;
+            max-width: 0 !important;
+        }
+        
+        /* Asegurar que el formulario siga funcionando */
+        form, form * {
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            opacity: 1 !important;
+            color: initial !important;
+            font-size: initial !important;
+        }
+    `;
+    
+    iframeDoc.head.appendChild(style);
+    console.log('✅ CSS para ocultar código agregado');
 }
 }
 

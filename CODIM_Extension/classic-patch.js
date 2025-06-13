@@ -138,76 +138,190 @@
             // ===============================
             // REEMPLAZO DE VBSCRIPT
             // ===============================
-            replaceVBScriptFunctions() {
-                console.log('🔄 Reemplazando funciones VBScript...');
-                
-                // Helpers globales
-                window.trim = (str) => str ? str.replace(/^\s+|\s+$/g, '') : '';
-                window.len = (str) => str ? str.length : 0;
-                window.mid = (str, start, length) => str ? str.substring(start - 1, start - 1 + length) : '';
-                window.asc = (char) => char ? char.charCodeAt(0) : 0;
-                window.msgbox = (message) => alert(message);
-                
-                // Función principal de validación
-                window.valida_datos = () => this.validaDatos();
-                window.vertexto = () => this.verTexto();
-
-                // Funciones para manejo de ventanas emergentes - GLOBALES
-                if (typeof window.ventana === 'undefined') {
-                    window.ventana = null;
-                }
-
-                window.cierra_opcion = function(tiempox, y, x, pagina, tarda) {
-                    if (window.ventana && window.ventana.style) {
-                        window.ventana.style.clip = `rect(0,${x},${y},0)`;
-                    }
-                    if (pagina && pagina !== "") {
-                        setTimeout(function() {
-                            // Navegar en la misma ventana como IE
-                            window.location.href = `ver_rep.asp?folio=${pagina}`;
-                        }, tarda || 100);
-                    }
-                };
-
-                window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
-                    console.log('🔄 cambia_menu llamado:', arguments);
-                    
-                    // Si es una consulta de folio - navegar en la misma ventana
-                    if (seccion === 'consulta' && (folio || busca || param3)) {
-                        const folioFinal = folio || busca || param3;
-                        const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
-                        console.log('📋 Navegando a consulta:', url);
-                        window.location.href = url;
-                        return;
-                    }
-                    
-                    // Para otros casos, usar el método original si existe
-                    if (typeof window.top?.cambia_menu === 'function') {
-                        window.top.cambia_menu.apply(window.top, arguments);
-                    }
-                };
-                
-                // Función cancelar para botones "Regresar"
-                window.cancelar = function() {
-                    console.log('🔙 Función cancelar ejecutada');
-                    if (window.history.length > 1) {
-                        window.history.back();
-                    } else {
-                        // Si no hay historial, ir a página principal
-                        window.location.href = '/';
-                    }
-                };
-
-                // Asegurar que las funciones estén en el ámbito global correcto
-                if (typeof window.top !== 'undefined') {
-                    window.top.cierra_opcion = window.cierra_opcion;
-                    window.top.cambia_menu = window.cambia_menu;
-                    window.top.ventana = window.ventana;
-                }
-                
-                console.log('✅ Funciones VBScript reemplazadas por JavaScript');
+			replaceVBScriptFunctions() {
+    console.log('🔄 Reemplazando funciones VBScript...');
+    
+    // Helpers globales
+    window.trim = (str) => str ? str.replace(/^\s+|\s+$/g, '') : '';
+    window.len = (str) => str ? str.length : 0;
+    window.mid = (str, start, length) => str ? str.substring(start - 1, start - 1 + length) : '';
+    window.asc = (char) => char ? char.charCodeAt(0) : 0;
+    window.msgbox = (message) => alert(message);
+    
+    // ✅ CAMBIO CRÍTICO: Función valida_datos DIRECTA (no this.validaDatos)
+    window.valida_datos = () => {
+        console.log('🔍 Ejecutando validación de datos (CORREGIDA)...');
+        
+        // Buscar formulario de múltiples maneras
+        const form = document.envia_datos || 
+                    document.forms.envia_datos || 
+                    document.forms[0] ||
+                    document.querySelector('form[name="envia_datos"]');
+        
+        if (!form) {
+            console.error('❌ No se encontró el formulario envia_datos');
+            alert('Error: No se encontró el formulario');
+            return false;
+        }
+        
+        console.log('✅ Formulario encontrado:', form.name);
+        
+        // Buscar campo de falla
+        const fallaField = form.cual_falla || form.querySelector('[name="cual_falla"]');
+        
+        if (!fallaField) {
+            console.log('⚠️ Campo cual_falla no encontrado, enviando formulario directamente...');
+            form.submit();
+            return true;
+        }
+        
+        const varz = window.trim(fallaField.value);
+        console.log('📋 Falla seleccionada:', varz);
+        
+        // Validación principal - EXACTA al VBScript original
+        if (varz !== "00" && varz !== "") {
+            // Buscar campo de observaciones
+            const obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
+            
+            if (!obsField) {
+                console.log('⚠️ Campo obsdslam no encontrado, enviando formulario...');
+                form.submit();
+                return true;
             }
+            
+            const obsText = window.trim(obsField.value);
+            const cuenta = window.len(obsText);
+            console.log('📝 Observaciones length:', cuenta);
+            
+            if (cuenta > 2) {
+                // Validar caracteres prohibidos
+                for (let i = 1; i <= cuenta; i++) {
+                    const letra = window.mid(obsText, i, 1);
+                    if (letra === "'" || window.asc(letra) === 10) {
+                        window.msgbox("En el Texto de OBS, Hay un Caracter Invalido.\nNo puedes utilizar apostrofe ni la tecla Enter.");
+                        return false;
+                    }
+                }
+                
+                // ✅ CRÍTICO: Marcar campo salvar como "S"
+                const salvarField = form.salvar || form.querySelector('[name="salvar"]');
+                if (salvarField) {
+                    salvarField.value = "S";
+                    console.log('✅ Campo salvar marcado como "S"');
+                }
+                
+                console.log('✅ Validación exitosa. Enviando formulario...');
+                
+                try {
+                    // ✅ ENVÍO FORZADO
+                    form.submit();
+                    return true;
+                } catch (error) {
+                    console.error('❌ Error al enviar:', error);
+                    alert('Error al enviar el formulario: ' + error.message);
+                    return false;
+                }
+            } else {
+                window.msgbox("Es indispensable anotar comentarios.");
+                obsField.focus();
+                return false;
+            }
+        } else {
+            window.msgbox("Favor de Seleccionar una Falla en el Catalogo.");
+            fallaField.focus();
+            return false;
+        }
+        
+        return false;
+    };
+    
+    // ✅ CAMBIO CRÍTICO: Función vertexto DIRECTA (no this.verTexto)
+    window.vertexto = () => {
+        const form = document.envia_datos || 
+                    document.forms.envia_datos || 
+                    document.forms[0] ||
+                    document.querySelector('form[name="envia_datos"]');
+        
+        if (!form) return;
+        
+        const obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
+        if (!obsField) return;
+        
+        const obsText = window.trim(obsField.value);
+        const cuenta = window.len(obsText);
+        
+        if (cuenta > 0) {
+            const ultima = window.mid(obsText, cuenta, 1);
+            
+            if (ultima === "'") {
+                window.msgbox("Caracter Invalido.");
+                obsField.value = window.mid(obsField.value, 1, cuenta - 1);
+            } else if (window.asc(ultima) === 10) {
+                window.msgbox("Favor de NO utilizar la tecla Enter");
+                obsField.value = window.mid(obsField.value, 1, cuenta - 2);
+            } else if (cuenta > 30000) {
+                window.msgbox("Maximo puedes usar 30000 Caracteres.");
+                obsField.value = window.mid(obsField.value, 1, 30000);
+            }
+        }
+    };
 
+    // Funciones para manejo de ventanas emergentes - GLOBALES
+    if (typeof window.ventana === 'undefined') {
+        window.ventana = null;
+    }
+
+    window.cierra_opcion = function(tiempox, y, x, pagina, tarda) {
+        if (window.ventana && window.ventana.style) {
+            window.ventana.style.clip = `rect(0,${x},${y},0)`;
+        }
+        if (pagina && pagina !== "") {
+            setTimeout(function() {
+                // Navegar en la misma ventana como IE
+                window.location.href = `ver_rep.asp?folio=${pagina}`;
+            }, tarda || 100);
+        }
+    };
+
+    window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
+        console.log('🔄 cambia_menu llamado:', arguments);
+        
+        // Si es una consulta de folio - navegar en la misma ventana
+        if (seccion === 'consulta' && (folio || busca || param3)) {
+            const folioFinal = folio || busca || param3;
+            const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
+            console.log('📋 Navegando a consulta:', url);
+            window.location.href = url;
+            return;
+        }
+        
+        // Para otros casos, usar el método original si existe
+        if (typeof window.top?.cambia_menu === 'function') {
+            window.top.cambia_menu.apply(window.top, arguments);
+        }
+    };
+    
+    // Función cancelar para botones "Regresar"
+    window.cancelar = function() {
+        console.log('🔙 Función cancelar ejecutada');
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            // Si no hay historial, ir a página principal
+            window.location.href = '/';
+        }
+    };
+
+    // Asegurar que las funciones estén en el ámbito global correcto
+    if (typeof window.top !== 'undefined') {
+        window.top.cierra_opcion = window.cierra_opcion;
+        window.top.cambia_menu = window.cambia_menu;
+        window.top.ventana = window.ventana;
+    }
+    
+    console.log('✅ Funciones VBScript reemplazadas por JavaScript');
+}
+			
             validaDatos() {
                 console.log('🔍 Ejecutando validación de datos...');
                 
@@ -366,15 +480,32 @@
             }
 
             fixVBScriptButton(btn) {
-                btn.removeAttribute('onclick');
-                btn.onclick = (e) => {
-                    e.preventDefault();
-                    console.log('📋 Ejecutando validación de datos...');
-                    return window.valida_datos();
-                };
-                
-                this.markAsFixed(btn, '#2196F3');
-            }
+    const originalOnclick = btn.onclick;
+    
+    btn.removeAttribute('onclick');
+    
+    // ✅ NUEVA FUNCIÓN DE CLICK MÁS ROBUSTA
+    btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('📋 Ejecutando validación corregida desde botón VBScript...');
+        
+        // ✅ EJECUTAR VALIDACIÓN CON CONTEXTO CORRECTO
+        try {
+            const result = window.valida_datos();
+            console.log('✅ Resultado validación:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ Error en validación:', error);
+            alert('Error en validación: ' + error.message);
+            return false;
+        }
+    };
+    
+    this.markAsFixed(btn, '#2196F3');
+    console.log('🔧 Botón VBScript corregido:', btn.value);
+}
 
             findForm(btn) {
                 return btn.closest('form') || 
