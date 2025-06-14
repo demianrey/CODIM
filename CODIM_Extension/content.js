@@ -398,547 +398,6 @@ if (window !== window.top) {
 
 console.log('✅ CODIM CNS Fix v3.7 - Módulo 1 cargado');
 
-// content.js - MÓDULO 2: SimpleDSLAMSearch class
-// AGREGAR DESPUÉS DEL MÓDULO 1
-
-// ===============================
-// CLASE SIMPLE DSLAM SEARCH
-// ===============================
-class SimpleDSLAMSearch {
-    constructor() {
-        this.initialized = false;
-        this.observer = null;
-        console.log('🔍 SimpleDSLAMSearch inicializado');
-    }
-    
-    init() {
-        if (this.initialized) return;
-        
-        // ✅ AGREGAR SOLO ESTA LÍNEA:
-        return; // Deshabilitar completamente el buscador principal
-        
-        console.log('🔍 Inicializando buscador simple de DSLAMs...');
-        this.setupObserver();
-        this.injectStyles();
-        this.initialized = true;
-    }
-
-    setupObserver() {
-    // Observer para detectar nuevas tablas después de envío de formularios
-    this.observer = new MutationObserver((mutations) => {
-        // ✅ VERIFICACIÓN INMEDIATA en observer
-        const modernInterface = document.getElementById('modern-codim-interface');
-        const hasIframe = document.querySelector('iframe.modern-iframe, .modern-content-body iframe');
-        const hasModernHeader = document.querySelector('.modern-header');
-        const hasModernNav = document.querySelector('.modern-nav');
-        const hasModernSidebar = document.querySelector('.modern-sidebar');
-        const hasModernContent = document.querySelector('.modern-content');
-        const isInModernContext = modernInterface || hasModernHeader || hasModernNav || hasIframe || hasModernSidebar || hasModernContent;
-        
-        if (isInModernContext) {
-            // En interfaz moderna, solo el iframe debería tener buscador
-            return;
-        }
-        
-        mutations.forEach((mutation) => {
-            if (mutation.addedNodes.length > 0) {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) {
-                        // Buscar tablas que contengan resultados de DSLAMs
-                        const tables = node.tagName === 'TABLE' ? [node] : 
-                                      (node.querySelector ? node.querySelectorAll('table') : []);
-                        
-                        tables.forEach(table => {
-                            if (this.isEquipmentTable(table) && !table.dataset.searchAdded) {
-                                console.log('📊 Tabla de resultados detectada en página clásica, agregando buscador');
-                                setTimeout(() => this.addSearchToTable(table), 500);
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    });
-
-    this.observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    // También revisar tablas existentes (con delay)
-    this.checkExistingTables();
-}
-	
-    checkExistingTables() {
-    // ✅ DELAY para asegurar que la interfaz moderna esté completamente cargada
-    setTimeout(() => {
-        const modernInterface = document.getElementById('modern-codim-interface');
-        const hasIframe = document.querySelector('iframe.modern-iframe, .modern-content-body iframe');
-        const hasModernHeader = document.querySelector('.modern-header');
-        const hasModernNav = document.querySelector('.modern-nav');
-        const hasModernSidebar = document.querySelector('.modern-sidebar');
-        const hasModernContent = document.querySelector('.modern-content');
-        const isInModernContext = modernInterface || hasModernHeader || hasModernNav || hasIframe || hasModernSidebar || hasModernContent;
-        
-        console.log('🔍 Verificando contexto de interfaz:', {
-            modernInterface: !!modernInterface,
-            hasIframe: !!hasIframe,
-            hasModernHeader: !!hasModernHeader,
-            hasModernNav: !!hasModernNav,
-            hasModernSidebar: !!hasModernSidebar,
-            hasModernContent: !!hasModernContent,
-            isInModernContext: isInModernContext
-        });
-        
-        if (isInModernContext) {
-            console.log('🎨 Interfaz moderna detectada CON DELAY - Saltando buscador en página principal');
-            return; // Salir sin agregar buscador a la página principal
-        }
-        
-        console.log('📊 Interfaz clásica confirmada CON DELAY - Procesando tablas en página principal');
-        
-        // Solo agregar buscador si NO estamos en interfaz moderna
-        const existingTables = document.querySelectorAll('table');
-        existingTables.forEach(table => {
-            if (this.isEquipmentTable(table) && !table.dataset.searchAdded) {
-                console.log('📊 Tabla de resultados existente encontrada en página clásica');
-                this.addSearchToTable(table);
-            }
-        });
-    }, 3000); // 3 segundos de delay para asegurar que la interfaz moderna esté lista
-}
-
-    isEquipmentTable(table) {
-    if (!table || !table.querySelector) return false;
-
-    const tableText = table.textContent.toLowerCase();
-    const rows = table.querySelectorAll('tr');
-    
-    // ✅ LÓGICA SIMPLE: Solo buscar "Reporte Fallas a CNS 2 Supervision"
-    const hasEquipmentTitle = (
-        tableText.includes('reporte fallas a cns 2 supervision') ||
-        tableText.includes('reporte fallas a') ||
-        (tableText.includes('dslam') && tableText.includes('tecnologia') && tableText.includes('supervision'))
-    );
-    
-    // ❌ EXCLUIR específicamente reportes de incidentes con folios
-    const isIncidentReport = (
-        tableText.includes('reportes pendientes de solucion') ||
-        (tableText.includes('folio') && tableText.includes('tipo de falla') && tableText.includes('elaboro'))
-    );
-    
-    if (isIncidentReport) {
-        console.log('❌ Tabla de reportes de incidentes detectada - NO agregar buscador');
-        return false;
-    }
-    
-    const isValidEquipmentTable = hasEquipmentTitle && rows.length >= 2 && !table.dataset.searchAdded;
-    
-    if (isValidEquipmentTable) {
-        console.log('✅ Tabla de equipos DSLAM válida detectada por título');
-    }
-    
-    return isValidEquipmentTable;
-}
-
-    addSearchToTable(table) {
-    // ✅ VERIFICACIÓN INMEDIATA Y DEFINITIVA
-    const modernInterface = document.getElementById('modern-codim-interface');
-    const hasIframe = document.querySelector('iframe.modern-iframe, .modern-content-body iframe');
-    const hasModernHeader = document.querySelector('.modern-header');
-    const hasModernNav = document.querySelector('.modern-nav');
-    const hasModernSidebar = document.querySelector('.modern-sidebar');
-    const hasModernContent = document.querySelector('.modern-content');
-    const isInModernContext = modernInterface || hasModernHeader || hasModernNav || hasIframe || hasModernSidebar || hasModernContent;
-    
-    if (isInModernContext) {
-        console.log('🎨 BLOQUEADO DEFINITIVAMENTE: No agregar buscador en página principal porque estamos en interfaz moderna');
-        console.log('🔍 Elementos detectados:', {
-            modernInterface: !!modernInterface,
-            hasIframe: !!hasIframe,
-            hasModernHeader: !!hasModernHeader,
-            hasModernNav: !!hasModernNav,
-            hasModernSidebar: !!hasModernSidebar,
-            hasModernContent: !!hasModernContent
-        });
-        return; // No agregar buscador
-    }
-    
-    if (table.dataset.searchAdded) return;
-    
-    // Obtener filas de datos (excluyendo header)
-    const dataRows = Array.from(table.querySelectorAll('tr')).slice(1);
-    
-    if (dataRows.length === 0) {
-        console.log('⚠️ No se encontraron filas de datos');
-        return;
-    }
-
-    // Crear buscador
-    const searchContainer = this.createSearchBox(dataRows.length);
-    
-    // Insertar antes de la tabla
-    const parent = table.parentNode;
-    if (parent) {
-        parent.insertBefore(searchContainer, table);
-    }
-
-    // Configurar búsqueda
-    this.setupSearch(searchContainer, table, dataRows);
-    
-    // Mejorar estilos de la tabla
-    this.enhanceTableStyles(table);
-
-    console.log(`✅ Buscador agregado EN PÁGINA CLÁSICA CONFIRMADA - ${dataRows.length} equipos disponibles`);
-}
-	
-    createSearchBox(totalRows) {
-        const container = document.createElement('div');
-        container.className = 'dslam-search-container';
-        
-        const uniqueId = 'search_' + Date.now();
-        
-        container.innerHTML = `
-            <div class="search-header">
-                <div class="search-title">
-                    <span class="search-icon">🔍</span>
-                    <span>Buscar DSLAM</span>
-                </div>
-                <div class="search-counter" id="counter_${uniqueId}">
-                    <span id="count_${uniqueId}">${totalRows}</span> equipos
-                </div>
-            </div>
-            <div class="search-input-group">
-                <input 
-                    type="text" 
-                    id="input_${uniqueId}" 
-                    class="search-input"
-                    placeholder="Nombre del DSLAM (ej: QRO-CORREGIDORA, COG1, ISAM...)"
-                    autocomplete="off"
-                >
-                <button type="button" class="search-clear" id="clear_${uniqueId}" title="Limpiar">
-                    ✕
-                </button>
-            </div>
-        `;
-
-        container.dataset.uniqueId = uniqueId;
-        return container;
-    }
-
-    setupSearch(container, table, dataRows) {
-        const uniqueId = container.dataset.uniqueId;
-        const searchInput = container.querySelector(`#input_${uniqueId}`);
-        const clearBtn = container.querySelector(`#clear_${uniqueId}`);
-        
-        // Event listeners
-        searchInput.addEventListener('input', (e) => {
-            this.performSearch(e.target.value.trim(), dataRows, uniqueId);
-        });
-
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.clearSearch(searchInput, dataRows, uniqueId);
-            }
-        });
-
-        clearBtn.addEventListener('click', () => {
-            this.clearSearch(searchInput, dataRows, uniqueId);
-            searchInput.focus();
-        });
-
-        // Auto-focus
-        setTimeout(() => searchInput.focus(), 300);
-    }
-
-    performSearch(searchTerm, dataRows, uniqueId) {
-        console.log(`🔍 Buscando: "${searchTerm}"`);
-
-        const searchLower = searchTerm.toLowerCase();
-        let visibleCount = 0;
-
-        dataRows.forEach(row => {
-            const rowText = row.textContent.toLowerCase();
-            
-            // Buscar en todo el contenido de la fila
-            const matches = searchTerm === '' || rowText.includes(searchLower);
-
-            if (matches) {
-                row.style.display = '';
-                row.classList.remove('hidden-row');
-                row.classList.add('visible-row');
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-                row.classList.add('hidden-row');
-                row.classList.remove('visible-row');
-            }
-        });
-
-        this.updateCounter(visibleCount, searchTerm, uniqueId, dataRows.length);
-        console.log(`📊 ${visibleCount} de ${dataRows.length} equipos visibles`);
-    }
-
-    updateCounter(visibleCount, searchTerm, uniqueId, totalRows) {
-        const counter = document.querySelector(`#count_${uniqueId}`);
-        const counterContainer = document.querySelector(`#counter_${uniqueId}`);
-        
-        if (counter) {
-            counter.textContent = visibleCount;
-        }
-        
-        if (counterContainer) {
-            counterContainer.className = 'search-counter';
-            
-            if (visibleCount === 0 && searchTerm !== '') {
-                counterContainer.classList.add('no-results');
-            } else if (visibleCount < totalRows && searchTerm !== '') {
-                counterContainer.classList.add('filtered');
-            }
-        }
-    }
-
-    clearSearch(input, dataRows, uniqueId) {
-        input.value = '';
-        this.performSearch('', dataRows, uniqueId);
-    }
-
-    enhanceTableStyles(table) {
-        table.classList.add('enhanced-results-table');
-        
-        // Mejorar filas
-        const rows = table.querySelectorAll('tr');
-        rows.forEach((row, index) => {
-            if (index === 0) {
-                row.classList.add('table-header');
-            } else {
-                row.classList.add('table-data-row');
-            }
-        });
-    }
-
-    injectStyles() {
-        if (document.getElementById('simple-dslam-search-styles')) return;
-        
-        const style = document.createElement('style');
-        style.id = 'simple-dslam-search-styles';
-        style.textContent = `
-            .dslam-search-container {
-                background: linear-gradient(135deg, #ffffff, #f8fdff);
-                border: 2px solid #e3f2fd;
-                border-radius: 10px;
-                padding: 16px;
-                margin: 16px auto;
-                max-width: 600px;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-                font-family: 'Segoe UI', Arial, sans-serif;
-                animation: slideInSearch 0.4s ease-out;
-            }
-
-            @keyframes slideInSearch {
-                from { opacity: 0; transform: translateY(-15px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-
-            .search-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 12px;
-            }
-
-            .search-title {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-weight: 600;
-                font-size: 1rem;
-                color: #1565c0;
-            }
-
-            .search-icon {
-                font-size: 1.2rem;
-            }
-
-            .search-counter {
-                background: #2196f3;
-                color: white;
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 0.85rem;
-                font-weight: 600;
-                transition: all 0.3s ease;
-            }
-
-            .search-counter.filtered {
-                background: #ff9800;
-                animation: pulseCounter 0.8s ease-in-out;
-            }
-
-            .search-counter.no-results {
-                background: #f44336;
-                animation: shakeCounter 0.4s ease-in-out;
-            }
-
-            @keyframes pulseCounter {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.08); }
-                100% { transform: scale(1); }
-            }
-
-            @keyframes shakeCounter {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-2px); }
-                75% { transform: translateX(2px); }
-            }
-
-            .search-input-group {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-            }
-
-            .search-input {
-                flex: 1;
-                padding: 10px 14px;
-                border: 2px solid #e1e5e9;
-                border-radius: 20px;
-                font-size: 14px;
-                transition: all 0.3s ease;
-                background: white;
-                outline: none;
-            }
-
-            .search-input:focus {
-                border-color: #2196f3;
-                box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-                transform: scale(1.01);
-            }
-
-            .search-input::placeholder {
-                color: #9e9e9e;
-                font-style: italic;
-            }
-
-            .search-clear {
-                background: #f44336;
-                color: white;
-                border: none;
-                padding: 8px 10px;
-                border-radius: 50%;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-size: 12px;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-            }
-
-            .search-clear:hover {
-                background: #d32f2f;
-                transform: scale(1.1);
-            }
-
-            .enhanced-results-table {
-                border-collapse: separate;
-                border-spacing: 0;
-                width: 100%;
-                border-radius: 6px;
-                overflow: hidden;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-                margin-top: 12px;
-            }
-
-            .enhanced-results-table .table-header {
-                background: linear-gradient(135deg, #2196f3, #1976d2);
-                color: white;
-            }
-
-            .enhanced-results-table .table-header td {
-                padding: 10px !important;
-                font-weight: 600 !important;
-                text-align: center !important;
-                font-size: 0.9rem !important;
-            }
-
-            .enhanced-results-table .table-data-row {
-                transition: all 0.25s ease;
-                background: white;
-            }
-
-            .enhanced-results-table .table-data-row:nth-child(even) {
-                background: #fafafa;
-            }
-
-            .enhanced-results-table .table-data-row:hover {
-                background: #e3f2fd !important;
-                transform: scale(1.005);
-                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            }
-
-            .enhanced-results-table .table-data-row td {
-                padding: 8px !important;
-                border-bottom: 1px solid #e0e0e0 !important;
-                font-size: 0.9rem !important;
-            }
-
-            .enhanced-results-table .visible-row {
-                animation: fadeInRow 0.3s ease-out;
-            }
-
-            @keyframes fadeInRow {
-                from { opacity: 0; transform: translateX(-8px); }
-                to { opacity: 1; transform: translateX(0); }
-            }
-
-            /* Responsive */
-            @media (max-width: 600px) {
-                .dslam-search-container {
-                    margin: 10px;
-                    padding: 12px;
-                }
-
-                .search-header {
-                    flex-direction: column;
-                    gap: 8px;
-                    text-align: center;
-                }
-
-                .search-input {
-                    font-size: 16px; /* Evita zoom en móviles */
-                }
-            }
-        `;
-        
-        document.head.appendChild(style);
-        console.log('✅ Estilos del buscador simple inyectados');
-    }
-
-    destroy() {
-        if (this.observer) {
-            this.observer.disconnect();
-        }
-        
-        const searchContainers = document.querySelectorAll('.dslam-search-container');
-        searchContainers.forEach(container => container.remove());
-        
-        const styles = document.getElementById('simple-dslam-search-styles');
-        if (styles) styles.remove();
-        
-        this.initialized = false;
-        console.log('🗑️ Buscador simple limpiado');
-    }
-}
-
-// ===============================
-// INSTANCIA GLOBAL PARA MÓDULOS
-// ===============================
-window.codimDSLAMSearch = new SimpleDSLAMSearch();
-
-console.log('✅ CODIM CNS Fix v3.7 - Módulo 2 (SimpleDSLAMSearch) cargado');
 
 // content.js - MÓDULO 3: CODIMResumenWidget class
 // AGREGAR DESPUÉS DEL MÓDULO 2
@@ -2400,12 +1859,19 @@ class DesbloqueoComponent {
             });
         });
 
-        // Inputs de clave
-        const claveInput = container.querySelector('#clave-input');
-        const reclaveInput = container.querySelector('#reclave-input');
-        
-        claveInput.addEventListener('input', () => this.validateForm());
-        reclaveInput.addEventListener('input', () => this.validateForm());
+        // Inputs de clave con conversión automática a mayúsculas
+		const claveInput = container.querySelector('#clave-input');
+		const reclaveInput = container.querySelector('#reclave-input');
+
+		// ✅ CONVERTIR A MAYÚSCULAS MIENTRAS SE ESCRIBE
+		claveInput.addEventListener('input', (e) => {
+			e.target.value = e.target.value.toUpperCase();
+			this.validateForm();
+		});
+		reclaveInput.addEventListener('input', (e) => {
+			e.target.value = e.target.value.toUpperCase();
+			this.validateForm();
+		});
 
         // Botones de mostrar/ocultar contraseña
         container.querySelector('#toggle-password').addEventListener('click', () => {
@@ -2445,29 +1911,31 @@ class DesbloqueoComponent {
     }
 
     validateForm() {
-        const claveInput = document.querySelector('#clave-input');
-        const reclaveInput = document.querySelector('#reclave-input');
-        const desbloquearBtn = document.querySelector('#desbloquear-btn');
-        
-        const hasAmbientes = this.selectedAmbientes.length > 0;
-        const hasClave = claveInput.value.trim().length > 0;
-        const hasReclave = reclaveInput.value.trim().length > 0;
-        const clavesCoinciden = claveInput.value === reclaveInput.value;
-        
-        const isValid = hasAmbientes && hasClave && hasReclave && clavesCoinciden;
-        
-        desbloquearBtn.disabled = !isValid;
-        desbloquearBtn.classList.toggle('disabled', !isValid);
-        
-        // Mostrar indicador de claves no coinciden
-        if (hasReclave && !clavesCoinciden) {
-            reclaveInput.classList.add('error');
-        } else {
-            reclaveInput.classList.remove('error');
-        }
-        
-        return isValid;
-    }
+		const claveInput = document.querySelector('#clave-input');
+		const reclaveInput = document.querySelector('#reclave-input');
+		const desbloquearBtn = document.querySelector('#desbloquear-btn');
+		
+		const hasAmbientes = this.selectedAmbientes.length > 0;
+		const hasClave = claveInput.value.trim().length > 0;
+		const hasReclave = reclaveInput.value.trim().length > 0;
+		
+		// ✅ COMPARAR EN MAYÚSCULAS
+		const clavesCoinciden = claveInput.value.toUpperCase() === reclaveInput.value.toUpperCase();
+		
+		const isValid = hasAmbientes && hasClave && hasReclave && clavesCoinciden;
+		
+		desbloquearBtn.disabled = !isValid;
+		desbloquearBtn.classList.toggle('disabled', !isValid);
+		
+		// Mostrar indicador de claves no coinciden
+		if (hasReclave && !clavesCoinciden) {
+			reclaveInput.classList.add('error');
+		} else {
+			reclaveInput.classList.remove('error');
+		}
+		
+		return isValid;
+	}
 
     togglePasswordVisibility(inputId, buttonId) {
         const input = document.getElementById(inputId);
@@ -2502,39 +1970,47 @@ class DesbloqueoComponent {
     }
 
     async procesarDesbloqueo() {
-        if (this.isProcessing) return;
+    if (this.isProcessing) return;
+    
+    this.isProcessing = true;
+    
+    try {
+        const clave = document.getElementById('clave-input').value.trim().toUpperCase(); // ← CONVERTIR A MAYÚSCULAS
+        const reclave = document.getElementById('reclave-input').value.trim().toUpperCase(); // ← CONVERTIR A MAYÚSCULAS
         
-        this.isProcessing = true;
+        if (!this.validateForm()) {
+            throw new Error('Por favor complete todos los campos correctamente');
+        }
         
-        try {
-            const clave = document.getElementById('clave-input').value.trim();
-            
-            if (!this.validateForm()) {
-                throw new Error('Por favor complete todos los campos correctamente');
-            }
-            
-            console.log('🔓 Iniciando proceso de desbloqueo:', {
-                ambientes: this.selectedAmbientes,
-                clave: '***OCULTA***'
-            });
-            
-            // Mostrar modal de procesamiento
-            this.showProcessingModal();
-            
-            // Paso 1: Test de conexión
-            await this.updateProcessingStep('step-connection', 'progress');
-            await this.comunicarConBackground('masnet_test');
-            await this.updateProcessingStep('step-connection', 'success');
-            
-            // Paso 2: Proceso completo de desbloqueo
-            await this.updateProcessingStep('step-login', 'progress');
-            await this.updateProcessingStep('step-unlock', 'progress');
-            await this.updateProcessingStep('step-logout', 'progress');
-            
-            const result = await this.comunicarConBackground('masnet_desbloqueo', {
-                ambientes: this.selectedAmbientes,
-                clave: clave
-            });
+        // ✅ VERIFICAR QUE LAS CLAVES COINCIDAN DESPUÉS DE LA CONVERSIÓN
+        if (clave !== reclave) {
+            throw new Error('Las claves no coinciden');
+        }
+        
+        console.log('🔓 Iniciando proceso de desbloqueo con clave en mayúsculas');
+        
+        // Mostrar modal de procesamiento
+        this.showProcessingModal();
+        
+        // Paso 1: Test de conexión
+        await this.updateProcessingStep('step-connection', 'progress');
+        await this.comunicarConBackground('masnet_test');
+        await this.updateProcessingStep('step-connection', 'success');
+        
+        // Paso 2: Proceso completo de desbloqueo
+        await this.updateProcessingStep('step-login', 'progress');
+        await this.updateProcessingStep('step-unlock', 'progress');
+        await this.updateProcessingStep('step-logout', 'progress');
+        
+        const result = await this.comunicarConBackground('masnet_desbloqueo', {
+            ambientes: this.selectedAmbientes,
+            clave: clave // ← Ya está en mayúsculas
+        });
+			
+			console.log('📤 Datos enviados a background:', JSON.stringify({
+			ambientes: this.selectedAmbientes,
+			clave: clave
+			}, null, 2));
             
             if (result.success && result.data.success) {
                 // Marcar todos los pasos como exitosos
@@ -2581,22 +2057,22 @@ class DesbloqueoComponent {
     }
 
     async comunicarConBackground(action, data = null) {
-        return new Promise((resolve, reject) => {
-            console.log(`📡 Comunicación directa ${action}:`, data ? { ...data, clave: '***OCULTA***' } : 'sin datos');
+    return new Promise((resolve, reject) => {
+        console.log(`📡 Comunicación directa ${action}:`, data ? JSON.stringify(data, null, 2) : 'sin datos');
+        
+        chrome.runtime.sendMessage({ action, data }, (response) => {
+            console.log(`📡 Comunicación directa ${action} response:`, JSON.stringify(response, null, 2));
             
-            chrome.runtime.sendMessage({ action, data }, (response) => {
-                console.log(`📡 Comunicación directa ${action}:`, response);
-                
-                if (chrome.runtime.lastError) {
-                    reject(new Error(chrome.runtime.lastError.message));
-                } else if (response) {
-                    resolve(response);
-                } else {
-                    reject(new Error('No se recibió respuesta del background'));
-                }
-            });
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else if (response) {
+                resolve(response);
+            } else {
+                reject(new Error('No se recibió respuesta del background'));
+            }
         });
-    }
+    });
+}
 
     showProcessingModal() {
         // Remover modal anterior si existe
@@ -3233,16 +2709,18 @@ class DesbloqueoComponent {
             }
 
             .clave-input {
-                flex: 1;
-                padding: 16px 50px 16px 16px;
-                border: 2px solid #e9ecef;
-                border-radius: 12px;
-                font-size: 16px;
-                background: white;
-                transition: all 0.3s ease;
-                outline: none;
-                text-transform: uppercase;
-            }
+			flex: 1;
+			padding: 16px 50px 16px 16px;
+			border: 2px solid #e9ecef;
+			border-radius: 12px;
+			font-size: 16px;
+			background: white;
+			transition: all 0.3s ease;
+			outline: none;
+			text-transform: uppercase; /* ← Mostrar siempre en mayúsculas */
+			font-family: 'Courier New', monospace; /* ← Fuente monoespaciada para mejor lectura */
+			letter-spacing: 1px; /* ← Espaciado entre letras */
+			}
 
             .clave-input:focus {
                 border-color: #1976d2;
@@ -3678,7 +3156,6 @@ class CODIMContentScript {
         this.hasOldInterface = this.checkHasOldInterface();
         this.userData = null;
         this.resumenWidget = null;
-        this.simpleDSLAMSearch = null;
         console.log('🎯 CODIMContentScript inicializado', {
             isMainPage: this.isMainPage,
             hasOldInterface: this.hasOldInterface
@@ -4437,16 +3914,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original - Buscador DSLAMs activo';
             });
             
-            // ✅ AGREGAR TIMEOUT DE SEGURIDAD
-            setTimeout(() => {
-                console.log('⏰ Timeout de seguridad: Verificando estado del iframe...');
-                console.log('🔍 Iframe readyState:', iframe.contentDocument?.readyState);
-                
-                if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-                    console.log('🔥 Ejecutando enhancement por timeout...');
-                    this.enhanceIframe(iframe);
-                }
-            }, 2000);
+           
             
             // ✅ TAMBIÉN ESCUCHAR DOMContentLoaded DEL IFRAME
             iframe.addEventListener('DOMContentLoaded', () => {
@@ -4485,18 +3953,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         console.log('⚠️ No se puede acceder inmediatamente al iframe (normal si no está cargado)');
     }
     
-    // ✅ EVENT LISTENER PARA LOAD
-    iframe.addEventListener('load', () => {
-        try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            if (iframeDoc) {
-                console.log('🔄 Iframe cargado, iniciando enhancement...');
-                this.processIframeContent(iframe, iframeDoc);
-            }
-        } catch (error) {
-            console.log('⚠️ No se pudo acceder al iframe (CORS):', error);
-        }
-    });
+    
 }
 	
 	// ✅ MÉTODO MEJORADO: processIframeContent 
@@ -4505,9 +3962,7 @@ processIframeContent(iframe, iframeDoc) {
     console.log('🔄 Procesando contenido del iframe...');
     console.log('📄 Document title:', iframeDoc.title);
     console.log('📄 Body content length:', iframeDoc.body?.textContent?.length || 0);
-    
-    // ✅ PASO 1: PREVENIR que classic-patch interfiera
-    this.preventClassicPatchInterference(iframeDoc);
+   
     
     // ✅ PASO 2: Aplicar CSS inmediatamente después de cargar
     const style = iframeDoc.createElement('style');
@@ -4576,43 +4031,8 @@ processIframeContent(iframe, iframeDoc) {
         this.addIframeDSLAMSearch(iframeDoc);
     }, 1000);
     
-    // ✅ PASO 7: Limpieza final del código después de todo
-   
-    hideVisibleJavaScriptCode(iframeDoc)
     console.log('✅ Iframe enhancement completado');
 }
-
-    // ✅ MÉTODO: Prevenir interferencia del classic-patch
-    preventClassicPatchInterference(iframeDoc) {
-        console.log('🛡️ Previniendo interferencia del classic-patch...');
-        
-        try {
-            // Marcar iframe como manejado
-            iframeDoc.documentElement.setAttribute('data-codim-enhanced', 'true');
-            
-            // Agregar meta tag para identificación
-            const meta = iframeDoc.createElement('meta');
-            meta.name = 'codim-iframe-enhanced';
-            meta.content = 'true';
-            iframeDoc.head.appendChild(meta);
-            
-            // Interceptar la función de classic-patch si existe
-            if (iframeDoc.defaultView) {
-                iframeDoc.defaultView.CODIM_IFRAME_ENHANCED = true;
-                
-                // Sobrescribir función de classic-patch
-                iframeDoc.defaultView.initClassicPatch = function() {
-                    console.log('🛡️ Classic-patch interceptado en iframe - no ejecutando');
-                    return;
-                };
-            }
-            
-            console.log('✅ Interferencia del classic-patch prevenida');
-            
-        } catch (error) {
-            console.warn('⚠️ Error previniendo interferencia:', error);
-        }
-    }
 
     // ✅ MÉTODO: Forzar reset completo del layout
     forceLayoutReset(iframeDoc) {
@@ -5557,8 +4977,7 @@ showFormLoadingAnimation(iframeDoc, centralName) {
             // ✅ LÓGICA SIMPLE: Buscar por título específico
             const hasEquipmentTitle = (
                 tableText.includes('reporte fallas a cns 2 supervision') ||
-                tableText.includes('reporte fallas a') ||
-                (tableText.includes('dslam') && tableText.includes('tecnologia') && tableText.includes('supervision'))
+                (tableText.includes('dslam') && tableText.includes('tecnologia'))
             );
             
             // ❌ EXCLUIR reportes de incidentes
@@ -6491,277 +5910,7 @@ getIframeCSS() {
             }
         };
     }
-	
-	// ✅ SOLUCIÓN SIMPLE: Ocultar código visualmente pero mantener funcionalidad
 
-	// ✅ SOLUCIÓN DEFINITIVA: Extraer funciones necesarias ANTES de ocultar código
-
-	hideVisibleJavaScriptCode(iframeDoc) {
-    console.log('🧹 Ocultando código JavaScript visible (MÉTODO AGRESIVO)...');
-    
-    try {
-        let hiddenElements = 0;
-        
-        // ✅ MÉTODO 1: Ocultar por contenido específico
-        const allElements = iframeDoc.querySelectorAll('*');
-        
-        allElements.forEach((element) => {
-            if (element.children.length === 0 && element.textContent) {
-                const text = element.textContent.trim();
-                
-                // Detectar código JavaScript/VBScript por patrones específicos
-                const hasCode = (
-                    text.includes('function valida_datos') ||
-                    text.includes('function valida_e') ||
-                    text.includes('document.envia_datos') ||
-                    text.includes('document.datos_dslam') ||
-                    text.includes('msgbox') ||
-                    text.includes('vbscript:') ||
-                    text.includes('javascript:') && text.length > 50 ||
-                    text.includes('trim(document') ||
-                    text.includes('len(var') ||
-                    text.includes('mid(var') ||
-                    text.includes('cual_falla.value') ||
-                    text.includes('obsdslam.value') ||
-                    (text.includes('function') && text.includes('document') && text.length > 100) ||
-                    (text.includes('if') && text.includes('then') && text.length > 100 && text.includes('var'))
-                );
-                
-                if (hasCode) {
-                    console.log('🚫 Código detectado y ocultado:', text.substring(0, 50) + '...');
-                    
-                    // ✅ OCULTADO TOTAL
-                    element.style.cssText = `
-                        display: none !important;
-                        visibility: hidden !important;
-                        opacity: 0 !important;
-                        position: absolute !important;
-                        left: -9999px !important;
-                        top: -9999px !important;
-                        width: 0 !important;
-                        height: 0 !important;
-                        overflow: hidden !important;
-                        z-index: -9999 !important;
-                        font-size: 0 !important;
-                        line-height: 0 !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    `;
-                    
-                    // También ocultar el elemento padre si solo contiene código
-                    const parent = element.parentElement;
-                    if (parent && parent.textContent.trim() === text) {
-                        parent.style.cssText = `
-                            display: none !important;
-                            visibility: hidden !important;
-                        `;
-                    }
-                    
-                    hiddenElements++;
-                }
-            }
-        });
-        
-        // ✅ MÉTODO 2: Ocultar script tags problemáticos
-        const scriptTags = iframeDoc.querySelectorAll('script[type="text/vbscript"], script:not([src])');
-        scriptTags.forEach((script) => {
-            const scriptContent = script.textContent || script.innerHTML;
-            if (scriptContent && (scriptContent.includes('function') || scriptContent.includes('msgbox'))) {
-                script.style.display = 'none';
-                script.remove();
-                hiddenElements++;
-                console.log('🚫 Script tag removido');
-            }
-        });
-        
-        // ✅ MÉTODO 3: CSS para ocultar patrones específicos
-        const hideStyle = iframeDoc.createElement('style');
-        hideStyle.id = 'hide-javascript-code';
-        hideStyle.textContent = `
-            /* Ocultar elementos que contengan código específico */
-            div:contains("function valida_datos"),
-            div:contains("function valida_e"),
-            div:contains("document.envia_datos"),
-            div:contains("msgbox"),
-            span:contains("function valida_datos"),
-            td:contains("function valida_datos"),
-            p:contains("function valida_datos") {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                width: 0 !important;
-                overflow: hidden !important;
-                position: absolute !important;
-                left: -9999px !important;
-                opacity: 0 !important;
-            }
-            
-            /* Asegurar que formularios sigan visibles */
-            form, form *, 
-            input, select, textarea, button,
-            table, tr, td, th {
-                position: relative !important;
-                left: auto !important;
-                top: auto !important;
-                opacity: 1 !important;
-                display: initial !important;
-                visibility: visible !important;
-            }
-        `;
-        
-        iframeDoc.head.appendChild(hideStyle);
-        
-        console.log(`✅ ${hiddenElements} elementos con código JavaScript ocultados`);
-        
-        return hiddenElements;
-        
-    } catch (error) {
-        console.error('❌ Error ocultando código JavaScript:', error);
-        return 0;
-    }
-}
-	
-// ✅ EXTRAER FUNCIONES NECESARIAS DEL CÓDIGO ORIGINAL
-extractNecessaryFunctions(iframeDoc) {
-    console.log('🔍 Extrayendo funciones necesarias del código original...');
-    
-    const extractedFunctions = [];
-    const functionNames = ['valida_datos', 'valida_e', 'trim', 'len', 'mid', 'asc'];
-    
-    // Buscar en todos los elementos que contengan JavaScript
-    const allElements = iframeDoc.querySelectorAll('*');
-    
-    allElements.forEach((element) => {
-        if (element.children.length === 0 && element.textContent) {
-            const text = element.textContent.trim();
-            
-            // Buscar funciones específicas en el texto
-            functionNames.forEach(funcName => {
-                const functionRegex = new RegExp(`function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{[^}]*(?:\\{[^}]*\\}[^}]*)*\\}`, 'gi');
-                const matches = text.match(functionRegex);
-                
-                if (matches) {
-                    matches.forEach(match => {
-                        console.log(`📦 Función extraída: ${funcName}`);
-                        extractedFunctions.push({
-                            name: funcName,
-                            code: match.trim()
-                        });
-                    });
-                }
-            });
-            
-            // También buscar definiciones de variables/funciones con = 
-            const assignmentRegex = /(?:var\s+|window\.|this\.)?(\w+)\s*=\s*function[^}]*(?:\{[^}]*(?:\{[^}]*\}[^}]*)*\})/gi;
-            let match;
-            while ((match = assignmentRegex.exec(text)) !== null) {
-                const funcName = match[1];
-                if (functionNames.includes(funcName)) {
-                    console.log(`📦 Asignación de función extraída: ${funcName}`);
-                    extractedFunctions.push({
-                        name: funcName,
-                        code: match[0].trim()
-                    });
-                }
-            }
-        }
-    });
-    
-    // Buscar en script tags
-    const scriptTags = iframeDoc.querySelectorAll('script');
-    scriptTags.forEach(script => {
-        const scriptContent = script.textContent || script.innerHTML || '';
-        if (scriptContent) {
-            functionNames.forEach(funcName => {
-                if (scriptContent.includes(`function ${funcName}`) || scriptContent.includes(`${funcName} =`)) {
-                    console.log(`📦 Función encontrada en script tag: ${funcName}`);
-                    // Extraer todo el contenido del script que contiene la función
-                    extractedFunctions.push({
-                        name: funcName,
-                        code: scriptContent,
-                        isFullScript: true
-                    });
-                }
-            });
-        }
-    });
-    
-    console.log(`✅ ${extractedFunctions.length} funciones extraídas`);
-    return extractedFunctions;
-}
-
-	hideVisibleJavaScriptCode(iframeDoc) {
-    console.log('🧹 SOLO limpiando imágenes problemáticas (JavaScript intacto)...');
-    
-    try {
-        let cleanedElements = 0;
-        
-        // ✅ SOLO LIMPIAR IMÁGENES - NO TOCAR JAVASCRIPT
-        const problematicImages = iframeDoc.querySelectorAll('img[src*="fondo.bmp"], img[src*="menu.bmp"]');
-        problematicImages.forEach((img) => {
-            img.style.setProperty('display', 'none', 'important');
-            img.style.setProperty('visibility', 'hidden', 'important');
-            cleanedElements++;
-        });
-        
-        // ✅ OCULTAR ELEMENTOS DE FONDO PROBLEMÁTICOS
-        const bgElements = iframeDoc.querySelectorAll('[style*="fondo.bmp"]');
-        bgElements.forEach((element) => {
-            element.style.setProperty('background-image', 'none', 'important');
-            element.style.setProperty('background', 'transparent', 'important');
-            cleanedElements++;
-        });
-        
-        console.log(`✅ ${cleanedElements} elementos problemáticos limpiados (JavaScript preservado)`);
-        
-        // ✅ NO HACER NADA CON EL JAVASCRIPT - DEJARLO FUNCIONAR
-        return cleanedElements;
-        
-    } catch (error) {
-        console.error('❌ Error limpiando elementos:', error);
-        return 0;
-    }
-}
-
-// ✅ MÉTODO ALTERNATIVO MÁS SIMPLE: Usar CSS para ocultar
-addCodeHidingCSS(iframeDoc) {
-    console.log('🎨 Agregando CSS para ocultar código JavaScript...');
-    
-    const style = iframeDoc.createElement('style');
-    style.id = 'code-hiding-css';
-    style.textContent = `
-        /* Ocultar divs que contengan código JavaScript visible */
-        div:contains("function valida_datos"),
-        div:contains("function valida_e"),
-        div:contains("document.envia_datos"),
-        div:contains("msgbox"),
-        script[type="text/vbscript"] {
-            color: transparent !important;
-            font-size: 0 !important;
-            line-height: 0 !important;
-            opacity: 0 !important;
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-            overflow: hidden !important;
-            max-height: 0 !important;
-            max-width: 0 !important;
-        }
-        
-        /* Asegurar que el formulario siga funcionando */
-        form, form * {
-            position: relative !important;
-            left: auto !important;
-            top: auto !important;
-            opacity: 1 !important;
-            color: initial !important;
-            font-size: initial !important;
-        }
-    `;
-    
-    iframeDoc.head.appendChild(style);
-    console.log('✅ CSS para ocultar código agregado');
-}
 }
 
 // ===============================

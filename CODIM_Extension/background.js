@@ -278,19 +278,17 @@ class MASNETBackgroundService {
             
             // ✅ CONSTRUIR PAYLOAD según tu ejemplo exitoso
             const payload = {
-                ambienteMetro: requestData.ambientes.includes('METRO') ? 'METRO' : '',
-                ambienteMty: requestData.ambientes.includes('MTY') ? 'MTY' : '',
-                ambienteNte: requestData.ambientes.includes('NTE') ? 'NTE' : '',
-                ambienteGdl: requestData.ambientes.includes('GDL') ? 'GDL' : '',
-                clave: requestData.clave,
-                reclave: requestData.clave
-            };
-            
-            console.log('📤 Payload para desbloqueo:', {
-                ...payload,
-                clave: '***OCULTA***',
-                reclave: '***OCULTA***'
-            });
+			ambienteMetro: requestData.ambientes.includes('METRO') ? 'METRO' : '',
+			ambienteMty: requestData.ambientes.includes('MTY') ? 'MTY' : '',
+			ambienteNte: requestData.ambientes.includes('NTE') ? 'NTE' : '',
+			ambienteGdl: requestData.ambientes.includes('GDL') ? 'GDL' : '',
+			clave: requestData.clave.toUpperCase(), // ← CRÍTICO: Convertir a mayúsculas
+			reclave: requestData.clave.toUpperCase() // ← CRÍTICO: Convertir a mayúsculas
+		};
+
+		// ✅ LOG COMPLETO SIN OCULTAR Y EN FORMATO JSON
+		console.log('📤 Payload para desbloqueo (JSON completo):', JSON.stringify(payload, null, 2));
+		console.log('📤 Payload para desbloqueo (objeto):', payload);
             
             // ✅ LLAMADA REAL A LA API MASNET
             const response = await fetch('https://masnet.intranet.telmex.com/MASNET/app/desbloqueoUsuario', {
@@ -417,14 +415,12 @@ class MASNETBackgroundService {
         }
     }
 
-    // ✅ MÉTODO PRINCIPAL DE DESBLOQUEO - CORREGIDO con manejo manual de logout
-    async handleDesbloqueoRequest(requestData) {
-        console.log('🔓 === INICIANDO DESBLOQUEO PISA ===');
-        console.log('📦 Datos recibidos:', {
-            ambientes: requestData.ambientes,
-            tieneClave: !!requestData.clave,
-            claveLength: requestData.clave?.length || 0
-        });
+		// ✅ MÉTODO PRINCIPAL DE DESBLOQUEO - CORREGIDO con manejo manual de logout
+		async handleDesbloqueoRequest(requestData) {
+		console.log('🔓 === INICIANDO DESBLOQUEO PISA ===');
+		console.log('📦 Datos recibidos (JSON):', JSON.stringify(requestData, null, 2));
+		console.log('📦 Datos recibidos (objeto):', requestData);
+   
         
         try {
             // PASO 1: Login automático
