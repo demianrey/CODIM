@@ -3746,6 +3746,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 const hasVisibleCode = (
                     text.includes('function valida_datos') ||
                     text.includes('function valida') ||
+					text.includes('function manda') ||
                     text.includes('document.envia_datos') ||
                     text.includes('msgbox') ||
                     text.includes('trim(document.') ||
@@ -4412,7 +4413,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         const containers = iframeDoc.querySelectorAll('body > *, body > div, body > center, body > form');
         containers.forEach((container, index) => {
             if (index === 0) { // Solo el primer contenedor
-                container.style.setProperty('max-width', '700px', 'important');
+                container.style.setProperty('max-width', '1200px', 'important');
                 container.style.setProperty('margin', '20px auto', 'important');
                 container.style.setProperty('background', 'white', 'important');
                 container.style.setProperty('border-radius', '12px', 'important');
@@ -4421,7 +4422,25 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 container.style.setProperty('overflow', 'hidden', 'important');
             }
         });
-    }
+
+        // CENTRAR TÍTULOS DE REPORTES
+        const titleElements = iframeDoc.querySelectorAll('h1, h2, h3, h4, h5, h6, div[style*="font-weight"], font[size="3"], font[size="4"]');
+        titleElements.forEach(title => {
+            title.style.setProperty('text-align', 'center', 'important');
+            title.style.setProperty('width', '100%', 'important');
+            title.style.setProperty('display', 'block', 'important');
+        });
+
+        // BUSCAR ELEMENTOS QUE CONTENGAN "REPORTE" Y CENTRARLOS
+        const reportElements = iframeDoc.querySelectorAll('*');
+        reportElements.forEach(element => {
+            const text = element.textContent || '';
+            if (text.includes('Reporte') && !element.querySelector('input, select, table')) {
+                element.style.setProperty('text-align', 'center', 'important');
+                element.style.setProperty('width', '100%', 'important');
+            }
+        });
+        }
 
     // ✅ MÉTODO CORREGIDO: styleIncidentForm()
     // Recrear formulario EXACTAMENTE como el original pero con mejor diseño
@@ -5054,20 +5073,23 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         }
         
         .search-counter-low {
-            background: #1976d2;
-            color: white;
-            padding: 1px 6px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: all 0.3s ease;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            line-height: 1;
-        }
+			background: #1976d2;
+			color: white;
+			padding: 1px 6px;
+			border-radius: 8px;
+			font-size: 12px; /* ← CAMBIAR: era 14px, ahora 12px consistente */
+			font-weight: 600;
+			white-space: nowrap;
+			flex-shrink: 0;
+			transition: all 0.3s ease;
+			height: 16px;
+			display: flex;
+			align-items: center;
+			line-height: 1;
+			gap: 2px; /* ← AGREGAR: espacio interno entre elementos */
+			letter-spacing: 0.5px; /* ← AGREGAR: espaciado entre letras */
+		}
+
         
         .search-counter-low.filtered {
             background: #ff9800;
@@ -5116,28 +5138,30 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         
         /* Responsive para móviles */
         @media (max-width: 600px) {
-            .search-input-low {
-                min-width: 150px;
-            }
-            
-            .low-search-bar {
-                gap: 4px;
-                padding: 2px 6px;
-                height: 26px;
-            }
-            
-            .search-counter-low {
-                font-size: 9px;
-                padding: 1px 4px;
-                height: 14px;
-            }
-            
-            .clear-btn-low {
-                width: 14px;
-                height: 14px;
-                font-size: 7px;
-            }
-        }
+		.search-input-low {
+			min-width: 150px;
+		}
+		
+		.low-search-bar {
+			gap: 4px;
+			padding: 2px 6px;
+			height: 26px;
+		}
+		
+		.search-counter-low {
+			font-size: 11px; /* ← CAMBIAR: era 9px, ahora 11px más legible */
+			padding: 1px 4px;
+			height: 14px;
+			gap: 2px; /* ← MANTENER: gap interno */
+			letter-spacing: 0.3px; /* ← AGREGAR: espaciado en móviles */
+		}
+		
+		.clear-btn-low {
+			width: 14px;
+			height: 14px;
+			font-size: 7px;
+		}
+	}
     `;
         iframeDoc.head.appendChild(style);
 
@@ -5166,7 +5190,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 }
             });
 
-            counter.textContent = visibleCount;
+            counter.textContent = visibleCount + ' ';
 
             // Actualizar clases del contador
             counterContainer.classList.remove('filtered', 'no-results');
@@ -5661,18 +5685,20 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 }
                 
                 .modern-main {
-                    display: flex;
-                    gap: 1rem;
-                    margin: 0 2rem 2rem 2rem;
-                    height: calc(100vh - 300px);
-                }
+					display: flex;
+					gap: 1rem;
+					margin: 0 2rem 2rem 2rem;
+					height: calc(100vh - 180px);
+					min-height: 600px;
+				}
                 
                 .modern-sidebar {
-                    width: 200px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                }
+					width: 160px;
+					display: flex;
+					flex-direction: column;
+					gap: 1rem;
+					flex-shrink: 0;
+				}
                 
                 .modern-sidebar-card {
                     background: rgba(255, 255, 255, 0.95);
@@ -5704,13 +5730,15 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 }
                 
                 .modern-content {
-                    flex: 1;
-                    background: rgba(255, 255, 255, 0.95);
-                    backdrop-filter: blur(10px);
-                    border-radius: 15px;
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                    overflow: hidden;
-                }
+				flex: 1;
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(10px);
+				border-radius: 15px;
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+				overflow: hidden;
+				display: flex;
+				flex-direction: column;
+			}
                 
                 .modern-content-header {
                     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -5731,10 +5759,11 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 }
                 
                 .modern-content-body {
-                    padding: 0;
-                    overflow-y: auto;
-                    height: calc(100% - 70px);
-                }
+					padding: 0;
+					overflow: auto;
+					flex: 1;
+					min-height: 0;
+				}
                 
                 .modern-iframe {
                     width: 100%;
@@ -5766,7 +5795,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 }
                 
                 /* Responsive */
-                @media (max-width: 768px) {
+                @media (max-width: 1024px) {
                     .modern-header {
                         flex-direction: column;
                         gap: 1rem;
