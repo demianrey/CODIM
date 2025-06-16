@@ -20,34 +20,52 @@ if (window !== window.top) {
 
         setupEventListeners() {
             // Handler para requests desde página
-            document.addEventListener('codim_request', async (event) => {
+            document.addEventListener('codim_request', async(event) => {
                 const { action, id } = event.detail;
                 console.log(`📨 Request recibido: ${action} (${id})`);
-                
+
                 try {
-                    const result = await chrome.runtime.sendMessage({ action });
+                    const result = await chrome.runtime.sendMessage({
+                        action
+                    });
                     console.log(`📥 Response para ${action}:`, result);
-                    
+
                     document.dispatchEvent(new CustomEvent('codim_response', {
-                        detail: { action, id, result, success: true }
-                    }));
-                    
+                            detail: {
+                                action,
+                                id,
+                                result,
+                                success: true
+                            }
+                        }));
+
                 } catch (error) {
                     console.error(`❌ Error en ${action}:`, error);
-                    
+
                     document.dispatchEvent(new CustomEvent('codim_response', {
-                        detail: { action, id, error: error.message, success: false }
-                    }));
+                            detail: {
+                                action,
+                                id,
+                                error: error.message,
+                                success: false
+                            }
+                        }));
                 }
             });
-            
+
             console.log('✅ Event listeners configurados');
         }
 
         // Método directo para comunicación interna
         async sendMessage(action, data = null) {
             try {
-                const message = data ? { action, data } : { action };
+                const message = data ? {
+                    action,
+                    data
+                }
+                 : {
+                    action
+                };
                 const response = await chrome.runtime.sendMessage(message);
                 console.log(`📡 Comunicación directa ${action}:`, response);
                 return response;
@@ -72,7 +90,7 @@ if (window !== window.top) {
             this.injectViaEval();
             this.injectViaBlob();
             this.injectDirectly();
-            
+
             console.log('🔧 Funciones de testing inyectadas con múltiples métodos');
         }
 
@@ -214,9 +232,9 @@ if (window !== window.top) {
                         runAllTests: typeof window.runAllTests
                     });
                 `);
-                
+
                 console.log('✅ Inyección eval completada');
-                
+
             } catch (error) {
                 console.error('❌ Error en inyección eval:', error);
             }
@@ -278,18 +296,20 @@ if (window !== window.top) {
                     
                     console.log('✅ Funciones blob creadas (fallback)');
                 `;
-                
-                const blob = new Blob([scriptCode], { type: 'application/javascript' });
+
+                const blob = new Blob([scriptCode], {
+                    type: 'application/javascript'
+                });
                 const script = document.createElement('script');
                 script.src = URL.createObjectURL(blob);
-                
+
                 script.onload = () => {
                     URL.revokeObjectURL(script.src);
                     console.log('✅ Script blob cargado');
                 };
-                
+
                 (document.head || document.documentElement).appendChild(script);
-                
+
             } catch (error) {
                 console.error('❌ Error en inyección blob:', error);
             }
@@ -300,7 +320,7 @@ if (window !== window.top) {
                 // Funciones de respaldo directo
                 if (typeof window.testMASNET === 'undefined') {
                     Object.defineProperty(window, 'testMASNET', {
-                        value: async () => {
+                        value: async() => {
                             console.log('🧪 testMASNET (directo)');
                             return this.comm.sendMessage('masnet_test');
                         },
@@ -309,10 +329,10 @@ if (window !== window.top) {
                         configurable: true
                     });
                 }
-                
+
                 if (typeof window.testBackground === 'undefined') {
                     Object.defineProperty(window, 'testBackground', {
-                        value: async () => {
+                        value: async() => {
                             console.log('📡 testBackground (directo)');
                             return this.comm.sendMessage('ping');
                         },
@@ -321,9 +341,9 @@ if (window !== window.top) {
                         configurable: true
                     });
                 }
-                
+
                 console.log('✅ Funciones directas definidas (respaldo)');
-                
+
             } catch (error) {
                 console.error('❌ Error en inyección directa:', error);
             }
@@ -333,7 +353,7 @@ if (window !== window.top) {
         verifyFunctions() {
             setTimeout(() => {
                 console.log('🔍 VERIFICACIÓN FINAL...');
-                
+
                 const checks = {
                     testMASNET: typeof window.testMASNET,
                     testBackground: typeof window.testBackground,
@@ -341,13 +361,13 @@ if (window !== window.top) {
                     runAllTests: typeof window.runAllTests,
                     windowKeys: Object.keys(window).filter(k => k.includes('test'))
                 };
-                
+
                 console.log('📊 Estado final de funciones:', checks);
-                
+
                 if (checks.testMASNET === 'function') {
                     console.log('%c🎉 ¡ÉXITO! Funciones de testing disponibles', 'background: green; color: white; padding: 10px; font-weight: bold; font-size: 16px;');
                     console.log('%c💡 Ejecuta: testMASNET(), testBackground(), testLogin(), runAllTests()', 'background: blue; color: white; padding: 5px; font-weight: bold;');
-                    
+
                     // Auto-test opcional
                     setTimeout(() => {
                         console.log('🔄 Auto-test de comunicación...');
@@ -357,7 +377,7 @@ if (window !== window.top) {
                             console.error('❌ Auto-test comunicación falló:', error);
                         });
                     }, 2000);
-                    
+
                 } else {
                     console.log('%c❌ FALLO: Funciones no disponibles', 'background: red; color: white; padding: 10px; font-weight: bold;');
                 }
@@ -370,22 +390,25 @@ if (window !== window.top) {
     // ===============================
     function initializeModule1() {
         console.log('🔧 Inicializando Módulo 1...');
-        
+
         // Inicializar sistema de comunicación
         const communicationSystem = new CommunicationSystem();
-        
+
         // Inicializar funciones de testing
         const testingFunctions = new TestingFunctions(communicationSystem);
-        
+
         // Verificar que todo funcione
         testingFunctions.verifyFunctions();
-        
+
         // Hacer disponible globalmente para otros módulos
         window.codimCommunication = communicationSystem;
-        
+
         console.log('✅ Módulo 1 inicializado - Sistema base listo');
-        
-        return { communicationSystem, testingFunctions };
+
+        return {
+            communicationSystem,
+            testingFunctions
+        };
     }
 
     // Ejecutar cuando el DOM esté listo
@@ -397,7 +420,6 @@ if (window !== window.top) {
 }
 
 console.log('✅ CODIM CNS Fix v3.7 - Módulo 1 cargado');
-
 
 // content.js - MÓDULO 3: CODIMResumenWidget class
 // AGREGAR DESPUÉS DEL MÓDULO 2
@@ -429,15 +451,15 @@ class CODIMResumenWidget {
         const widget = document.createElement('div');
         widget.className = 'codim-resumen-widget';
         widget.innerHTML = this.getWidgetHTML();
-        
+
         this.injectStyles();
         this.setupEventListeners(widget);
         this.startAutoRefresh();
-        
+
         // Agregar clase de loading inicial
         const valueElements = widget.querySelectorAll('.card-value-large, .card-value-huge, .status-value');
         valueElements.forEach(el => el.classList.add('loading-initial'));
-        
+
         // 🔄 Auto-refresh inmediato para obtener datos reales
         console.log('🔄 Ejecutando refresh automático inicial con datos reales...');
         setTimeout(() => {
@@ -449,12 +471,12 @@ class CODIMResumenWidget {
                 valueElements.forEach(el => el.classList.remove('loading-initial'));
             });
         }, 1000);
-        
+
         return widget;
     }
 
     getWidgetHTML() {
-    return `
+        return `
         <div class="resumen-header">
             <h3>📊 Resumen de Reportes</h3>
             <div class="resumen-controls">
@@ -545,160 +567,168 @@ class CODIMResumenWidget {
             </div>
         </div>
     `;
-}
+    }
     setupEventListeners(widget) {
-    console.log('🔧 Configurando event listeners...');
-    
-    // Selector de centro
-    const centerSelector = widget.querySelector('#centerSelector');
-    centerSelector?.addEventListener('change', (e) => {
-        this.selectedCenter = e.target.value;
-        this.refreshData();
-    });
+        console.log('🔧 Configurando event listeners...');
 
-    // Botón de alarma
-    const alarmBtn = widget.querySelector('#alarmToggle');
-    alarmBtn?.addEventListener('click', () => {
-        this.toggleAlarm();
-    });
+        // Selector de centro
+        const centerSelector = widget.querySelector('#centerSelector');
+        centerSelector?.addEventListener('change', (e) => {
+            this.selectedCenter = e.target.value;
+            this.refreshData();
+        });
 
-    // Botón de refresh
-    const refreshBtn = widget.querySelector('#refreshBtn');
-    refreshBtn?.addEventListener('click', () => {
-        this.refreshData();
-    });
+        // Botón de alarma
+        const alarmBtn = widget.querySelector('#alarmToggle');
+        alarmBtn?.addEventListener('click', () => {
+            this.toggleAlarm();
+        });
 
-    // Clicks en estadísticas - CORREGIDO
-    widget.addEventListener('click', (e) => {
-        console.log('🖱️ Click detectado en:', e.target);
-        
-        if (e.target.classList.contains('clickable')) {
-            const params = e.target.getAttribute('data-params');
-            console.log('📋 Parámetros encontrados:', params);
-            
-            if (params) {
-                this.openReport(params);
-            } else {
-                console.error('❌ No se encontraron parámetros en el elemento clickeable');
+        // Botón de refresh
+        const refreshBtn = widget.querySelector('#refreshBtn');
+        refreshBtn?.addEventListener('click', () => {
+            this.refreshData();
+        });
+
+        // Clicks en estadísticas - CORREGIDO
+        widget.addEventListener('click', (e) => {
+            console.log('🖱️ Click detectado en:', e.target);
+
+            if (e.target.classList.contains('clickable')) {
+                const params = e.target.getAttribute('data-params');
+                console.log('📋 Parámetros encontrados:', params);
+
+                if (params) {
+                    this.openReport(params);
+                } else {
+                    console.error('❌ No se encontraron parámetros en el elemento clickeable');
+                }
             }
-        }
-    });
-    
-    console.log('✅ Event listeners configurados correctamente');
-}
+        });
+
+        console.log('✅ Event listeners configurados correctamente');
+    }
 
     toggleAlarm() {
         this.alarmActive = !this.alarmActive;
         const alarmBtn = document.querySelector('#alarmToggle');
-        
+
         if (alarmBtn) {
             alarmBtn.className = `alarm-btn ${this.alarmActive ? 'active' : 'inactive'}`;
             alarmBtn.textContent = this.alarmActive ? '🔔' : '🔕';
         }
 
         this.sendAlarmStatus();
-        
+
         const status = this.alarmActive ? 'activada' : 'desactivada';
         this.showNotification(`🔔 Alarma ${status}`, 'info');
     }
 
     openReport(params) {
-    console.log('📊 openReport llamado con parámetros:', params);
-    
-    const [a, b, c] = params.split(',');
-    
-    console.log(`📊 Abriendo reporte: a=${a}, b=${b}, c=${c}`);
-    
-    // Validar que tenemos parámetros válidos
-    if (!a || !b || !c) {
-        console.error('❌ Parámetros inválidos para openReport:', params);
-        this.showNotification('❌ Error: Parámetros inválidos', 'error');
-        return;
-    }
-    
-    // Construir URL exactamente como en la página original
-    const url = `resumen.asp?a=${a}&b=${b}&c=${c}`;
-    console.log('📋 URL construida:', url);
-    
-    // VERIFICAR SI ESTAMOS EN INTERFAZ MODERNA
-    const modernInterface = document.getElementById('modern-codim-interface');
-    
-    if (modernInterface) {
-        console.log('🎨 Interfaz moderna detectada - Cargando en iframe');
-        
-        // Buscar el iframe por múltiples selectores
-        let iframe = document.querySelector('iframe.modern-iframe') ||
-                    document.querySelector('.modern-content-body iframe') ||
-                    document.querySelector('#modernContentBody iframe');
-        
-        if (iframe) {
-            console.log('🖼️ Iframe existente encontrado, cargando URL');
-            iframe.src = url;
-        } else {
-            console.log('🖼️ Creando nuevo iframe en interfaz moderna');
-            
-            // Obtener el contenedor del contenido
-            const contentBody = document.querySelector('.modern-content-body') ||
-                               document.getElementById('modernContentBody');
-            
-            if (contentBody) {
-                // Limpiar contenido anterior
-                contentBody.innerHTML = '';
-                
-                // Crear nuevo iframe
-                iframe = document.createElement('iframe');
-                iframe.className = 'modern-iframe';
+        console.log('📊 openReport llamado con parámetros:', params);
+
+        const [a, b, c] = params.split(',');
+
+        console.log(`📊 Abriendo reporte: a=${a}, b=${b}, c=${c}`);
+
+        // Validar que tenemos parámetros válidos
+        if (!a || !b || !c) {
+            console.error('❌ Parámetros inválidos para openReport:', params);
+            this.showNotification('❌ Error: Parámetros inválidos', 'error');
+            return;
+        }
+
+        // Construir URL exactamente como en la página original
+        const url = `resumen.asp?a=${a}&b=${b}&c=${c}`;
+        console.log('📋 URL construida:', url);
+
+        // VERIFICAR SI ESTAMOS EN INTERFAZ MODERNA
+        const modernInterface = document.getElementById('modern-codim-interface');
+
+        if (modernInterface) {
+            console.log('🎨 Interfaz moderna detectada - Cargando en iframe');
+
+            // Buscar el iframe por múltiples selectores
+            let iframe = document.querySelector('iframe.modern-iframe') ||
+                document.querySelector('.modern-content-body iframe') ||
+                document.querySelector('#modernContentBody iframe');
+
+            if (iframe) {
+                console.log('🖼️ Iframe existente encontrado, cargando URL');
                 iframe.src = url;
-                iframe.style.cssText = `
+            } else {
+                console.log('🖼️ Creando nuevo iframe en interfaz moderna');
+
+                // Obtener el contenedor del contenido
+                const contentBody = document.querySelector('.modern-content-body') ||
+                    document.getElementById('modernContentBody');
+
+                if (contentBody) {
+                    // Limpiar contenido anterior
+                    contentBody.innerHTML = '';
+
+                    // Crear nuevo iframe
+                    iframe = document.createElement('iframe');
+                    iframe.className = 'modern-iframe';
+                    iframe.src = url;
+                    iframe.style.cssText = `
                     width: 100% !important;
                     height: 100% !important;
                     border: none !important;
                     border-radius: 8px !important;
                 `;
-                
-                contentBody.appendChild(iframe);
-                console.log('✅ Nuevo iframe creado y agregado');
-            } else {
-                console.error('❌ No se encontró contenedor de contenido moderno');
-                // Fallback a navegación directa
-                window.location.href = url;
-                return;
-            }
-        }
-        
-        // Actualizar títulos de la interfaz moderna
-        const titleElement = document.getElementById('modernContentTitle');
-        const subtitleElement = document.getElementById('modernContentSubtitle');
-        
-        if (titleElement) titleElement.textContent = 'Reporte de Incidentes';
-        if (subtitleElement) {
-            const count = this.getCountForParams(a, b);
-            subtitleElement.textContent = `Mostrando ${count} reportes (${this.getStatusName(b)})`;
-        }
-        
-    } else {
-        console.log('🌐 Interfaz clásica - Navegación directa');
-        window.location.href = url;
-    }
-    
-    const count = this.getCountForParams(a, b);
-    this.showNotification(`📊 Abriendo reporte con ${count} registros`, 'info');
-}
 
-	getCountForParams(a, b) {
-    // a=1: primera fila (vencidos), a=2: segunda fila (en tiempo), a=3: tercera fila (total)
-    // b=P: columna principal, b=N,A,S,R: columnas de estado
-    
-    if (a === '1' && b === 'P') return this.data.vencidos;
-    if (a === '2' && b === 'P') return this.data.enTiempo;  
-    if (a === '3' && b === 'P') return this.data.total;
-    if (a === '1' && b === 'N') return this.data.sinAtender;
-    if (a === '1' && b === 'A') return this.data.atendidas;
-    if (a === '1' && b === 'S') return this.data.noReconocidas;
-    if (a === '1' && b === 'R') return this.data.reconocidas;
-    
-    return 0;
-}
+                    contentBody.appendChild(iframe);
+                    console.log('✅ Nuevo iframe creado y agregado');
+                } else {
+                    console.error('❌ No se encontró contenedor de contenido moderno');
+                    // Fallback a navegación directa
+                    window.location.href = url;
+                    return;
+                }
+            }
+
+            // Actualizar títulos de la interfaz moderna
+            const titleElement = document.getElementById('modernContentTitle');
+            const subtitleElement = document.getElementById('modernContentSubtitle');
+
+            if (titleElement)
+                titleElement.textContent = 'Reporte de Incidentes';
+            if (subtitleElement) {
+                const count = this.getCountForParams(a, b);
+                subtitleElement.textContent = `Mostrando ${count} reportes (${this.getStatusName(b)})`;
+            }
+
+        } else {
+            console.log('🌐 Interfaz clásica - Navegación directa');
+            window.location.href = url;
+        }
+
+        const count = this.getCountForParams(a, b);
+        this.showNotification(`📊 Abriendo reporte con ${count} registros`, 'info');
+    }
+
+    getCountForParams(a, b) {
+        // a=1: primera fila (vencidos), a=2: segunda fila (en tiempo), a=3: tercera fila (total)
+        // b=P: columna principal, b=N,A,S,R: columnas de estado
+
+        if (a === '1' && b === 'P')
+            return this.data.vencidos;
+        if (a === '2' && b === 'P')
+            return this.data.enTiempo;
+        if (a === '3' && b === 'P')
+            return this.data.total;
+        if (a === '1' && b === 'N')
+            return this.data.sinAtender;
+        if (a === '1' && b === 'A')
+            return this.data.atendidas;
+        if (a === '1' && b === 'S')
+            return this.data.noReconocidas;
+        if (a === '1' && b === 'R')
+            return this.data.reconocidas;
+
+        return 0;
+    }
 
     getStatusName(status) {
         const statusNames = {
@@ -714,14 +744,14 @@ class CODIMResumenWidget {
     async refreshData() {
         const refreshBtn = document.querySelector('#refreshBtn');
         const lastUpdateElement = document.getElementById('lastUpdateTime');
-        
+
         // Mostrar estado de carga
         if (refreshBtn) {
             refreshBtn.style.transform = 'rotate(360deg)';
             refreshBtn.disabled = true;
             refreshBtn.textContent = '⏳';
         }
-        
+
         if (lastUpdateElement) {
             lastUpdateElement.textContent = 'Obteniendo datos reales...';
         }
@@ -736,7 +766,7 @@ class CODIMResumenWidget {
         } catch (error) {
             console.error('❌ Error al actualizar datos reales:', error);
             this.showNotification(`❌ Error: ${error.message}`, 'error');
-            
+
             // Mostrar información del error en el widget
             if (lastUpdateElement) {
                 lastUpdateElement.textContent = `Error: ${error.message}`;
@@ -752,14 +782,14 @@ class CODIMResumenWidget {
             }
         }
     }
-	
-	// ===============================
+
+    // ===============================
     // FETCH DATOS REALES - MÉTODO PRINCIPAL
     // ===============================
 
-      async fetchData() {
+    async fetchData() {
         console.log('🔄 Obteniendo datos REALES de primera.asp...');
-        
+
         try {
             // PASO 1: Obtener datos de primera.asp (página principal del resumen)
             const response = await fetch('/primera.asp', {
@@ -782,7 +812,7 @@ class CODIMResumenWidget {
 
             // PASO 2: Parsear los datos reales del HTML
             const realData = this.parseFirstPageData(htmlContent);
-            
+
             if (realData) {
                 this.data = realData;
                 this.lastUpdateTime = new Date();
@@ -794,7 +824,7 @@ class CODIMResumenWidget {
 
         } catch (error) {
             console.error('❌ Error obteniendo datos reales:', error);
-            
+
             // Intentar método alternativo con resumen.asp
             try {
                 console.log('🔄 Intentando método alternativo con resumen.asp...');
@@ -811,11 +841,11 @@ class CODIMResumenWidget {
     // ===============================
     parseFirstPageData(htmlContent) {
         console.log('🔍 Parseando datos de primera.asp...');
-        
+
         // Crear un parser DOM temporal
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlContent, 'text/html');
-        
+
         // Estrategias de extracción múltiples para máxima compatibilidad
         const extractors = [
             () => this.extractFromTables(doc),
@@ -842,22 +872,22 @@ class CODIMResumenWidget {
     // Método 1: Extraer de divs con onclick específicos (CODIM primera.asp)
     extractFromTables(doc) {
         console.log('📊 Buscando datos en divs con onclick de primera.asp...');
-        
+
         const data = {};
-        
+
         // Buscar divs con onclick que contengan llamadas a cambia_menu
         const clickableDivs = doc.querySelectorAll('div[onclick*="cambia_menu"]');
-        
+
         console.log(`🔍 Encontrados ${clickableDivs.length} divs clickeables`);
-        
+
         clickableDivs.forEach((div, index) => {
             const onclick = div.getAttribute('onclick');
             const fontElement = div.querySelector('font');
-            
+
             if (onclick && fontElement) {
                 const number = this.extractNumber(fontElement.textContent);
                 console.log(`📋 Div ${index}: onclick="${onclick}", número="${number}"`);
-                
+
                 if (number !== null) {
                     // Analizar el onclick para determinar qué tipo de dato es
                     if (onclick.includes("'1','186','P'") || onclick.includes("'1','" + number + "','P'")) {
@@ -865,33 +895,27 @@ class CODIMResumenWidget {
                         data.vencidos = number;
                         data.sinAtender = number;
                         console.log('✅ Reportes Vencidos/Sin Atender encontrados:', number);
-                    } 
-                    else if (onclick.includes("'2','0','P'") || onclick.includes("'2','" + number + "','P'")) {
+                    } else if (onclick.includes("'2','0','P'") || onclick.includes("'2','" + number + "','P'")) {
                         // Reportes En Tiempo
                         data.enTiempo = number;
                         console.log('✅ Reportes En Tiempo encontrados:', number);
-                    }
-                    else if (onclick.includes("'3','186','P'") || onclick.includes("'3','" + number + "','P'")) {
+                    } else if (onclick.includes("'3','186','P'") || onclick.includes("'3','" + number + "','P'")) {
                         // Total de Reportes
                         data.total = number;
                         console.log('✅ Total de Reportes encontrado:', number);
-                    }
-                    else if (onclick.includes("'1','" + number + "','N'")) {
+                    } else if (onclick.includes("'1','" + number + "','N'")) {
                         // Sin Atender (estado N)
                         data.sinAtender = number;
                         console.log('✅ Sin Atender (N) encontrados:', number);
-                    }
-                    else if (onclick.includes("'1','" + number + "','A'")) {
+                    } else if (onclick.includes("'1','" + number + "','A'")) {
                         // Atendidas
                         data.atendidas = number;
                         console.log('✅ Atendidas encontradas:', number);
-                    }
-                    else if (onclick.includes("'1','" + number + "','S'")) {
+                    } else if (onclick.includes("'1','" + number + "','S'")) {
                         // No Reconocidas
                         data.noReconocidas = number;
                         console.log('✅ No Reconocidas encontradas:', number);
-                    }
-                    else if (onclick.includes("'1','" + number + "','R'")) {
+                    } else if (onclick.includes("'1','" + number + "','R'")) {
                         // Reconocidas/Resueltas
                         data.reconocidas = number;
                         data.resueltas = number;
@@ -900,25 +924,25 @@ class CODIMResumenWidget {
                 }
             }
         });
-        
+
         console.log('📊 Datos extraídos de divs:', data);
-        
+
         return Object.keys(data).length > 0 ? this.normalizeData(data) : null;
     }
 
     // Método 2: Extraer usando patrones específicos de primera.asp
     extractFromFonts(doc) {
         console.log('🎨 Buscando datos en estructura específica de primera.asp...');
-        
+
         const data = {};
-        
+
         // Estrategia 1: Buscar por texto de contexto y números adyacentes
         const allDivs = doc.querySelectorAll('div');
-        
+
         allDivs.forEach((div, index) => {
             const divText = div.textContent.trim();
             const onclick = div.getAttribute('onclick');
-            
+
             // Buscar divs que contengan texto indicativo
             if (divText.toLowerCase().includes('vencidos')) {
                 // Buscar el div siguiente o cercano que tenga el número
@@ -932,7 +956,7 @@ class CODIMResumenWidget {
                     }
                 }
             }
-            
+
             if (divText.toLowerCase().includes('en tiempo')) {
                 const nextDivs = Array.from(allDivs).slice(index + 1, index + 5);
                 for (let nextDiv of nextDivs) {
@@ -944,7 +968,7 @@ class CODIMResumenWidget {
                     }
                 }
             }
-            
+
             if (divText.toLowerCase().includes('total de reportes')) {
                 const nextDivs = Array.from(allDivs).slice(index + 1, index + 5);
                 for (let nextDiv of nextDivs) {
@@ -957,18 +981,33 @@ class CODIMResumenWidget {
                 }
             }
         });
-        
+
         // Estrategia 2: Buscar divs con posiciones específicas conocidas
-        const positionBasedDivs = [
-            { selector: 'div[style*="left: 195"][style*="top: 93"]', type: 'vencidos' },
-            { selector: 'div[style*="left: 195"][style*="top: 123"]', type: 'enTiempo' },
-            { selector: 'div[style*="left: 195"][style*="top: 158"]', type: 'total' },
-            { selector: 'div[style*="left: 255"][style*="top: 93"]', type: 'sinAtender' },
-            { selector: 'div[style*="left: 320"][style*="top: 93"]', type: 'noReconocidas' },
-            { selector: 'div[style*="left: 375"][style*="top: 93"]', type: 'reconocidas' }
+        const positionBasedDivs = [{
+                selector: 'div[style*="left: 195"][style*="top: 93"]',
+                type: 'vencidos'
+            }, {
+                selector: 'div[style*="left: 195"][style*="top: 123"]',
+                type: 'enTiempo'
+            }, {
+                selector: 'div[style*="left: 195"][style*="top: 158"]',
+                type: 'total'
+            }, {
+                selector: 'div[style*="left: 255"][style*="top: 93"]',
+                type: 'sinAtender'
+            }, {
+                selector: 'div[style*="left: 320"][style*="top: 93"]',
+                type: 'noReconocidas'
+            }, {
+                selector: 'div[style*="left: 375"][style*="top: 93"]',
+                type: 'reconocidas'
+            }
         ];
-        
-        positionBasedDivs.forEach(({ selector, type }) => {
+
+        positionBasedDivs.forEach(({
+                selector,
+                type
+            }) => {
             const div = doc.querySelector(selector);
             if (div) {
                 const number = this.extractNumber(div.textContent);
@@ -978,28 +1017,28 @@ class CODIMResumenWidget {
                 }
             }
         });
-        
+
         console.log('🎨 Datos extraídos por contexto y posición:', data);
-        
+
         return Object.keys(data).length > 0 ? this.normalizeData(data) : null;
     }
 
     // Método 3: Extraer usando expresiones regulares específicas de primera.asp
     extractFromText(htmlContent) {
         console.log('📝 Buscando datos con regex específico de primera.asp...');
-        
+
         const data = {};
-        
+
         // Patrón específico para encontrar los onclick con cambia_menu
         const onclickPattern = /onclick="javascript:top\.cambia_menu\('resumen','S','(\d+)','(\d+)','([PNASR])','','cns'\)"/g;
-        
+
         let match;
         while ((match = onclickPattern.exec(htmlContent)) !== null) {
             const [fullMatch, tipo, numero, estado] = match;
             const value = parseInt(numero, 10);
-            
+
             console.log(`🔍 onclick encontrado: tipo=${tipo}, numero=${numero}, estado=${estado}`);
-            
+
             if (!isNaN(value)) {
                 if (tipo === '1' && estado === 'P') {
                     // Reportes vencidos
@@ -1013,7 +1052,8 @@ class CODIMResumenWidget {
                     data.total = value;
                 } else if (tipo === '1' && estado === 'N') {
                     // Sin atender (adicional)
-                    if (!data.sinAtender) data.sinAtender = value;
+                    if (!data.sinAtender)
+                        data.sinAtender = value;
                 } else if (tipo === '1' && estado === 'A') {
                     // Atendidas
                     data.atendidas = value;
@@ -1031,7 +1071,7 @@ class CODIMResumenWidget {
         // Patrón alternativo para números directos en fonts
         const fontNumberPattern = /<font[^>]*>(\d+)<\/font>/gi;
         const numbers = [];
-        
+
         let fontMatch;
         while ((fontMatch = fontNumberPattern.exec(htmlContent)) !== null) {
             const number = parseInt(fontMatch[1], 10);
@@ -1039,11 +1079,11 @@ class CODIMResumenWidget {
                 numbers.push(number);
             }
         }
-        
+
         // Si encontramos números pero no onclick, usar heurística
         if (Object.keys(data).length === 0 && numbers.length > 0) {
             console.log('📊 Usando heurística con números encontrados:', numbers);
-            
+
             // Buscar el número más alto como vencidos (186 en tu caso)
             const maxNumber = Math.max(...numbers);
             if (maxNumber > 0) {
@@ -1055,28 +1095,28 @@ class CODIMResumenWidget {
         }
 
         console.log('📝 Datos extraídos con regex:', data);
-        
+
         return Object.keys(data).length > 0 ? this.normalizeData(data) : null;
     }
 
     // Método 4: Extraer de frames/iframes
     extractFromFrames(doc) {
         console.log('🖼️ Buscando datos en frames...');
-        
+
         const frames = doc.querySelectorAll('frame, iframe');
-        
+
         // Si hay frames, intentar extraer la URL del frame principal
         if (frames.length > 0) {
             const mainFrame = frames[0];
             const frameSrc = mainFrame.getAttribute('src');
-            
+
             if (frameSrc && frameSrc.includes('primera')) {
                 console.log('📋 Frame principal encontrado:', frameSrc);
                 // Nota: En este punto necesitarías hacer otra petición al frame
                 // Para simplificar, retornamos null y usamos otros métodos
             }
         }
-        
+
         return null;
     }
 
@@ -1085,7 +1125,7 @@ class CODIMResumenWidget {
     // ===============================
     async fetchDataAlternative() {
         console.log('🔄 Método alternativo: obteniendo datos de resumen.asp...');
-        
+
         const response = await fetch('/resumen.asp?c=cns', {
             method: 'GET',
             credentials: 'include',
@@ -1105,22 +1145,22 @@ class CODIMResumenWidget {
 
     parseResumenData(htmlContent) {
         console.log('🔍 Parseando datos de resumen.asp...');
-        
+
         // Buscar tablas con estadísticas
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlContent, 'text/html');
-        
+
         const data = {};
-        
+
         // Buscar filas de datos específicas
         const rows = doc.querySelectorAll('tr');
-        
+
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length >= 2) {
                 const label = cells[0].textContent.trim().toLowerCase();
                 const value = this.extractNumber(cells[1].textContent);
-                
+
                 if (value !== null) {
                     if (label.includes('vencidos')) {
                         data.vencidos = value;
@@ -1140,22 +1180,24 @@ class CODIMResumenWidget {
     // UTILIDADES DE PARSING
     // ===============================
     extractNumber(text) {
-        if (!text) return null;
-        
+        if (!text)
+            return null;
+
         // Remover caracteres no numéricos excepto dígitos
         const cleaned = text.replace(/[^\d]/g, '');
-        
-        if (cleaned.length === 0) return null;
-        
+
+        if (cleaned.length === 0)
+            return null;
+
         const number = parseInt(cleaned, 10);
-        
+
         // Validar que sea un número razonable (no demasiado grande)
         return !isNaN(number) && number >= 0 && number < 100000 ? number : null;
     }
 
     normalizeData(rawData) {
         console.log('🔧 Normalizando datos de primera.asp:', rawData);
-        
+
         const normalized = {
             vencidos: rawData.vencidos || 0,
             enTiempo: rawData.enTiempo || 0,
@@ -1168,7 +1210,7 @@ class CODIMResumenWidget {
         };
 
         // Lógica específica para primera.asp según lo que vimos
-        
+
         // Si total no está presente, calcularlo
         if (normalized.total === 0) {
             normalized.total = normalized.vencidos + normalized.enTiempo;
@@ -1187,34 +1229,35 @@ class CODIMResumenWidget {
     }
 
     validateData(data) {
-        if (!data || typeof data !== 'object') return false;
-        
+        if (!data || typeof data !== 'object')
+            return false;
+
         // Verificar que al menos tengamos algunos datos básicos
         const hasBasicData = data.vencidos >= 0 || data.enTiempo >= 0 || data.total >= 0;
-        
+
         // Verificar que los números sean razonables
-        const numbersValid = Object.values(data).every(value => 
-            typeof value === 'number' && value >= 0 && value < 100000
-        );
+        const numbersValid = Object.values(data).every(value =>
+                typeof value === 'number' && value >= 0 && value < 100000);
 
         return hasBasicData && numbersValid;
     }
 
     updateWidget() {
         const widget = document.querySelector('.codim-resumen-widget');
-        if (!widget) return;
+        if (!widget)
+            return;
 
         // Recrear con datos actualizados
         widget.innerHTML = this.getWidgetHTML();
         this.setupEventListeners(widget);
-        
+
         // Animar elementos actualizados
         const animatedElements = widget.querySelectorAll('.card-value-large, .card-value-huge, .status-value');
         animatedElements.forEach(el => {
             el.classList.add('updated');
             setTimeout(() => el.classList.remove('updated'), 1200);
         });
-        
+
         // 🔄 Actualizar sidebar si existe referencia al content script
         if (this.contentScript && typeof this.contentScript.updateModernSidebarResumen === 'function') {
             setTimeout(() => {
@@ -1265,14 +1308,14 @@ class CODIMResumenWidget {
         const notification = document.createElement('div');
         notification.className = `codim-notification codim-notification-${type}`;
         notification.textContent = message;
-        
+
         const colors = {
             success: '#4CAF50',
             error: '#f44336',
             warning: '#ff9800',
             info: '#2196F3'
         };
-        
+
         notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -1287,9 +1330,9 @@ class CODIMResumenWidget {
             animation: slideInNotification 0.3s ease-out;
             font-family: 'Segoe UI', Arial, sans-serif;
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             notification.style.animation = 'slideOutNotification 0.3s ease-out';
             setTimeout(() => notification.remove(), 300);
@@ -1297,8 +1340,9 @@ class CODIMResumenWidget {
     }
 
     injectStyles() {
-        if (document.getElementById('codim-resumen-styles')) return;
-        
+        if (document.getElementById('codim-resumen-styles'))
+            return;
+
         const style = document.createElement('style');
         style.id = 'codim-resumen-styles';
         style.textContent = `
@@ -1655,17 +1699,19 @@ class CODIMResumenWidget {
                 to { transform: translateX(300px); opacity: 0; }
             }
         `;
-        
+
         document.head.appendChild(style);
     }
 
     destroy() {
         this.stopAutoRefresh();
         const widget = document.querySelector('.codim-resumen-widget');
-        if (widget) widget.remove();
-        
+        if (widget)
+            widget.remove();
+
         const styles = document.getElementById('codim-resumen-styles');
-        if (styles) styles.remove();
+        if (styles)
+            styles.remove();
     }
 }
 
@@ -1687,10 +1733,10 @@ class DesbloqueoComponent {
         const container = document.createElement('div');
         container.className = 'desbloqueo-container';
         container.innerHTML = this.getHTML();
-        
+
         this.setupEventListeners(container);
         this.injectStyles();
-        
+
         return container;
     }
 
@@ -1837,7 +1883,7 @@ class DesbloqueoComponent {
         // Checkboxes de ambientes - SOLUCIÓN DEFINITIVA
         const checkboxes = container.querySelectorAll('input[name="ambiente"]');
         const checkboxItems = container.querySelectorAll('.checkbox-item');
-        
+
         // Event listener en el checkbox real
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
@@ -1852,32 +1898,34 @@ class DesbloqueoComponent {
                 e.preventDefault();
                 const checkbox = checkboxes[index];
                 checkbox.checked = !checkbox.checked;
-                
+
                 // Disparar evento change manualmente
-                const event = new Event('change', { bubbles: true });
+                const event = new Event('change', {
+                    bubbles: true
+                });
                 checkbox.dispatchEvent(event);
             });
         });
 
         // Inputs de clave con conversión automática a mayúsculas
-		const claveInput = container.querySelector('#clave-input');
-		const reclaveInput = container.querySelector('#reclave-input');
+        const claveInput = container.querySelector('#clave-input');
+        const reclaveInput = container.querySelector('#reclave-input');
 
-		// ✅ CONVERTIR A MAYÚSCULAS MIENTRAS SE ESCRIBE
-		claveInput.addEventListener('input', (e) => {
-			e.target.value = e.target.value.toUpperCase();
-			this.validateForm();
-		});
-		reclaveInput.addEventListener('input', (e) => {
-			e.target.value = e.target.value.toUpperCase();
-			this.validateForm();
-		});
+        // ✅ CONVERTIR A MAYÚSCULAS MIENTRAS SE ESCRIBE
+        claveInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+            this.validateForm();
+        });
+        reclaveInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+            this.validateForm();
+        });
 
         // Botones de mostrar/ocultar contraseña
         container.querySelector('#toggle-password').addEventListener('click', () => {
             this.togglePasswordVisibility('clave-input', 'toggle-password');
         });
-        
+
         container.querySelector('#toggle-repassword').addEventListener('click', () => {
             this.togglePasswordVisibility('reclave-input', 'toggle-repassword');
         });
@@ -1911,36 +1959,36 @@ class DesbloqueoComponent {
     }
 
     validateForm() {
-		const claveInput = document.querySelector('#clave-input');
-		const reclaveInput = document.querySelector('#reclave-input');
-		const desbloquearBtn = document.querySelector('#desbloquear-btn');
-		
-		const hasAmbientes = this.selectedAmbientes.length > 0;
-		const hasClave = claveInput.value.trim().length > 0;
-		const hasReclave = reclaveInput.value.trim().length > 0;
-		
-		// ✅ COMPARAR EN MAYÚSCULAS
-		const clavesCoinciden = claveInput.value.toUpperCase() === reclaveInput.value.toUpperCase();
-		
-		const isValid = hasAmbientes && hasClave && hasReclave && clavesCoinciden;
-		
-		desbloquearBtn.disabled = !isValid;
-		desbloquearBtn.classList.toggle('disabled', !isValid);
-		
-		// Mostrar indicador de claves no coinciden
-		if (hasReclave && !clavesCoinciden) {
-			reclaveInput.classList.add('error');
-		} else {
-			reclaveInput.classList.remove('error');
-		}
-		
-		return isValid;
-	}
+        const claveInput = document.querySelector('#clave-input');
+        const reclaveInput = document.querySelector('#reclave-input');
+        const desbloquearBtn = document.querySelector('#desbloquear-btn');
+
+        const hasAmbientes = this.selectedAmbientes.length > 0;
+        const hasClave = claveInput.value.trim().length > 0;
+        const hasReclave = reclaveInput.value.trim().length > 0;
+
+        // ✅ COMPARAR EN MAYÚSCULAS
+        const clavesCoinciden = claveInput.value.toUpperCase() === reclaveInput.value.toUpperCase();
+
+        const isValid = hasAmbientes && hasClave && hasReclave && clavesCoinciden;
+
+        desbloquearBtn.disabled = !isValid;
+        desbloquearBtn.classList.toggle('disabled', !isValid);
+
+        // Mostrar indicador de claves no coinciden
+        if (hasReclave && !clavesCoinciden) {
+            reclaveInput.classList.add('error');
+        } else {
+            reclaveInput.classList.remove('error');
+        }
+
+        return isValid;
+    }
 
     togglePasswordVisibility(inputId, buttonId) {
         const input = document.getElementById(inputId);
         const button = document.getElementById(buttonId);
-        
+
         if (input.type === 'text') {
             input.type = 'password';
             button.textContent = '👁️';
@@ -1957,71 +2005,72 @@ class DesbloqueoComponent {
         document.querySelectorAll('input[name="ambiente"]').forEach(cb => {
             cb.checked = false;
         });
-        
+
         // Limpiar inputs
         document.getElementById('clave-input').value = '';
         document.getElementById('reclave-input').value = '';
-        
+
         // Limpiar estado
         this.selectedAmbientes = [];
         this.validateForm();
-        
+
         console.log('🧹 Formulario limpiado');
     }
 
     async procesarDesbloqueo() {
-    if (this.isProcessing) return;
-    
-    this.isProcessing = true;
-    
-    try {
-        const clave = document.getElementById('clave-input').value.trim().toUpperCase(); // ← CONVERTIR A MAYÚSCULAS
-        const reclave = document.getElementById('reclave-input').value.trim().toUpperCase(); // ← CONVERTIR A MAYÚSCULAS
-        
-        if (!this.validateForm()) {
-            throw new Error('Por favor complete todos los campos correctamente');
-        }
-        
-        // ✅ VERIFICAR QUE LAS CLAVES COINCIDAN DESPUÉS DE LA CONVERSIÓN
-        if (clave !== reclave) {
-            throw new Error('Las claves no coinciden');
-        }
-        
-        console.log('🔓 Iniciando proceso de desbloqueo con clave en mayúsculas');
-        
-        // Mostrar modal de procesamiento
-        this.showProcessingModal();
-        
-        // Paso 1: Test de conexión
-        await this.updateProcessingStep('step-connection', 'progress');
-        await this.comunicarConBackground('masnet_test');
-        await this.updateProcessingStep('step-connection', 'success');
-        
-        // Paso 2: Proceso completo de desbloqueo
-        await this.updateProcessingStep('step-login', 'progress');
-        await this.updateProcessingStep('step-unlock', 'progress');
-        await this.updateProcessingStep('step-logout', 'progress');
-        
-        const result = await this.comunicarConBackground('masnet_desbloqueo', {
-            ambientes: this.selectedAmbientes,
-            clave: clave // ← Ya está en mayúsculas
-        });
-			
-			console.log('📤 Datos enviados a background:', JSON.stringify({
-			ambientes: this.selectedAmbientes,
-			clave: clave
-			}, null, 2));
-            
+        if (this.isProcessing)
+            return;
+
+        this.isProcessing = true;
+
+        try {
+            const clave = document.getElementById('clave-input').value.trim().toUpperCase(); // ← CONVERTIR A MAYÚSCULAS
+            const reclave = document.getElementById('reclave-input').value.trim().toUpperCase(); // ← CONVERTIR A MAYÚSCULAS
+
+            if (!this.validateForm()) {
+                throw new Error('Por favor complete todos los campos correctamente');
+            }
+
+            // ✅ VERIFICAR QUE LAS CLAVES COINCIDAN DESPUÉS DE LA CONVERSIÓN
+            if (clave !== reclave) {
+                throw new Error('Las claves no coinciden');
+            }
+
+            console.log('🔓 Iniciando proceso de desbloqueo con clave en mayúsculas');
+
+            // Mostrar modal de procesamiento
+            this.showProcessingModal();
+
+            // Paso 1: Test de conexión
+            await this.updateProcessingStep('step-connection', 'progress');
+            await this.comunicarConBackground('masnet_test');
+            await this.updateProcessingStep('step-connection', 'success');
+
+            // Paso 2: Proceso completo de desbloqueo
+            await this.updateProcessingStep('step-login', 'progress');
+            await this.updateProcessingStep('step-unlock', 'progress');
+            await this.updateProcessingStep('step-logout', 'progress');
+
+            const result = await this.comunicarConBackground('masnet_desbloqueo', {
+                ambientes: this.selectedAmbientes,
+                clave: clave // ← Ya está en mayúsculas
+            });
+
+            console.log('📤 Datos enviados a background:', JSON.stringify({
+                    ambientes: this.selectedAmbientes,
+                    clave: clave
+                }, null, 2));
+
             if (result.success && result.data.success) {
                 // Marcar todos los pasos como exitosos
                 await this.updateProcessingStep('step-login', 'success');
                 await this.updateProcessingStep('step-unlock', 'success');
                 await this.updateProcessingStep('step-logout', 'success');
-                
+
                 // FORZAR LOGOUT ADICIONAL para asegurar desconexión
                 console.log('🔐 Ejecutando logout adicional para asegurar desconexión...');
                 await this.comunicarConBackground('masnet_logout');
-                
+
                 setTimeout(() => {
                     this.hideProcessingModal();
                     this.showResultModal(true, result.data);
@@ -2029,10 +2078,10 @@ class DesbloqueoComponent {
             } else {
                 throw new Error(result.data?.message || 'Error en el desbloqueo');
             }
-            
+
         } catch (error) {
             console.error('❌ Error en desbloqueo:', error);
-            
+
             // LOGOUT DE EMERGENCIA
             try {
                 console.log('🚨 Ejecutando logout de emergencia...');
@@ -2040,16 +2089,18 @@ class DesbloqueoComponent {
             } catch (logoutError) {
                 console.error('❌ Logout de emergencia falló:', logoutError);
             }
-            
+
             // Marcar paso actual como error
             const currentStep = document.querySelector('.step.progress');
             if (currentStep) {
                 this.updateProcessingStep(currentStep.id, 'error');
             }
-            
+
             setTimeout(() => {
                 this.hideProcessingModal();
-                this.showResultModal(false, { message: error.message });
+                this.showResultModal(false, {
+                    message: error.message
+                });
             }, 1000);
         } finally {
             this.isProcessing = false;
@@ -2057,27 +2108,30 @@ class DesbloqueoComponent {
     }
 
     async comunicarConBackground(action, data = null) {
-    return new Promise((resolve, reject) => {
-        console.log(`📡 Comunicación directa ${action}:`, data ? JSON.stringify(data, null, 2) : 'sin datos');
-        
-        chrome.runtime.sendMessage({ action, data }, (response) => {
-            console.log(`📡 Comunicación directa ${action} response:`, JSON.stringify(response, null, 2));
-            
-            if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-            } else if (response) {
-                resolve(response);
-            } else {
-                reject(new Error('No se recibió respuesta del background'));
-            }
+        return new Promise((resolve, reject) => {
+            console.log(`📡 Comunicación directa ${action}:`, data ? JSON.stringify(data, null, 2) : 'sin datos');
+
+            chrome.runtime.sendMessage({
+                action,
+                data
+            }, (response) => {
+                console.log(`📡 Comunicación directa ${action} response:`, JSON.stringify(response, null, 2));
+
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else if (response) {
+                    resolve(response);
+                } else {
+                    reject(new Error('No se recibió respuesta del background'));
+                }
+            });
         });
-    });
-}
+    }
 
     showProcessingModal() {
         // Remover modal anterior si existe
         this.hideProcessingModal();
-        
+
         // Crear modal dinámicamente
         const overlay = document.createElement('div');
         overlay.id = 'processing-overlay';
@@ -2096,7 +2150,7 @@ class DesbloqueoComponent {
             backdrop-filter: blur(5px) !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
         `;
-        
+
         overlay.innerHTML = `
             <div style="
                 background: white !important;
@@ -2214,34 +2268,34 @@ class DesbloqueoComponent {
                 </div>
             </div>
         `;
-        
+
         // Agregar al documento principal (no al iframe)
         const targetDocument = window.top ? window.top.document : document;
         const targetBody = targetDocument.body;
         targetBody.appendChild(overlay);
-        
+
         // Event listeners
         const cancelBtn = overlay.querySelector('#cancel-process-global');
         cancelBtn.addEventListener('click', () => {
             this.cancelProcess();
         });
-        
+
         // 🚨 TIMEOUT DE SEGURIDAD: Forzar cierre después de 60 segundos
         this.safetyTimeout = setTimeout(() => {
             console.log('🚨 TIMEOUT DE SEGURIDAD: Cerrando modal y ejecutando logout de emergencia');
             this.hideProcessingModal();
-            
+
             // Logout de emergencia
             this.comunicarConBackground('masnet_logout').catch(error => {
                 console.error('❌ Logout de emergencia falló:', error);
             });
-            
+
             // Mostrar error
-            this.showResultModal(false, { 
-                message: 'Timeout: El proceso tomó demasiado tiempo. Se ejecutó logout de seguridad.' 
+            this.showResultModal(false, {
+                message: 'Timeout: El proceso tomó demasiado tiempo. Se ejecutó logout de seguridad.'
             });
         }, 60000); // 60 segundos máximo
-        
+
         // 🖱️ CLICK PARA CANCELAR: Permitir cerrar haciendo click en el overlay
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
@@ -2249,7 +2303,7 @@ class DesbloqueoComponent {
                 this.cancelProcess();
             }
         });
-        
+
         console.log('🔄 Modal de procesamiento mostrado (dinámico)');
     }
 
@@ -2264,7 +2318,7 @@ class DesbloqueoComponent {
                 }
             }, 300);
         }
-        
+
         // También buscar en el documento principal
         if (window.top && window.top.document) {
             const topOverlay = window.top.document.getElementById('processing-overlay');
@@ -2277,13 +2331,13 @@ class DesbloqueoComponent {
                 }, 300);
             }
         }
-        
+
         // 🧹 Limpiar timeout de seguridad
         if (this.safetyTimeout) {
             clearTimeout(this.safetyTimeout);
             this.safetyTimeout = null;
         }
-        
+
         console.log('✅ Modal de procesamiento ocultado y removido');
     }
 
@@ -2291,7 +2345,7 @@ class DesbloqueoComponent {
     async cancelProcess() {
         console.log('🚨 Cancelando proceso de desbloqueo...');
         this.isProcessing = false;
-        
+
         // Ejecutar logout de emergencia
         try {
             await this.comunicarConBackground('masnet_logout');
@@ -2299,10 +2353,10 @@ class DesbloqueoComponent {
         } catch (error) {
             console.error('❌ Error en logout de cancelación:', error);
         }
-        
+
         this.hideProcessingModal();
-        this.showResultModal(false, { 
-            message: 'Proceso cancelado por el usuario. Se ejecutó logout de seguridad.' 
+        this.showResultModal(false, {
+            message: 'Proceso cancelado por el usuario. Se ejecutó logout de seguridad.'
         });
     }
 
@@ -2312,67 +2366,67 @@ class DesbloqueoComponent {
         if (!step && window.top && window.top.document) {
             step = window.top.document.getElementById(stepId);
         }
-        
+
         if (!step) {
             console.warn(`⚠️ No se encontró el paso: ${stepId}`);
             return;
         }
-        
+
         const statusElement = step.querySelector('.step-status');
         if (!statusElement) {
             console.warn(`⚠️ No se encontró .step-status en: ${stepId}`);
             return;
         }
-        
+
         // Limpiar clases anteriores
         step.classList.remove('success', 'error', 'progress');
-        
+
         // Aplicar estilos según el estado
         switch (status) {
-            case 'progress':
-                step.classList.add('progress');
-                step.style.background = 'rgba(25, 118, 210, 0.1)';
-                step.style.borderRadius = '8px';
-                step.style.padding = '12px 16px 12px 8px';
-                step.style.margin = '4px -4px';
-                statusElement.textContent = '🔄';
-                break;
-            case 'success':
-                step.classList.add('success');
-                step.style.color = '#2e7d32';
-                step.style.background = 'rgba(46, 125, 50, 0.1)';
-                step.style.borderRadius = '8px';
-                step.style.padding = '12px 16px 12px 8px';
-                step.style.margin = '4px -4px';
-                statusElement.textContent = '✅';
-                break;
-            case 'error':
-                step.classList.add('error');
-                step.style.color = '#d32f2f';
-                step.style.background = 'rgba(211, 47, 47, 0.1)';
-                step.style.borderRadius = '8px';
-                step.style.padding = '12px 16px 12px 8px';
-                step.style.margin = '4px -4px';
-                statusElement.textContent = '❌';
-                break;
+        case 'progress':
+            step.classList.add('progress');
+            step.style.background = 'rgba(25, 118, 210, 0.1)';
+            step.style.borderRadius = '8px';
+            step.style.padding = '12px 16px 12px 8px';
+            step.style.margin = '4px -4px';
+            statusElement.textContent = '🔄';
+            break;
+        case 'success':
+            step.classList.add('success');
+            step.style.color = '#2e7d32';
+            step.style.background = 'rgba(46, 125, 50, 0.1)';
+            step.style.borderRadius = '8px';
+            step.style.padding = '12px 16px 12px 8px';
+            step.style.margin = '4px -4px';
+            statusElement.textContent = '✅';
+            break;
+        case 'error':
+            step.classList.add('error');
+            step.style.color = '#d32f2f';
+            step.style.background = 'rgba(211, 47, 47, 0.1)';
+            step.style.borderRadius = '8px';
+            step.style.padding = '12px 16px 12px 8px';
+            step.style.margin = '4px -4px';
+            statusElement.textContent = '❌';
+            break;
         }
-        
+
         // Pequeña animación
         step.style.transform = 'scale(1.05)';
         setTimeout(() => {
             step.style.transform = 'scale(1)';
         }, 200);
-        
+
         // Delay para efecto visual
         await new Promise(resolve => setTimeout(resolve, 300));
-        
+
         console.log(`📊 Paso ${stepId} actualizado a: ${status}`);
     }
 
     showResultModal(success, data) {
         // Remover modal anterior si existe
         this.hideResultModal();
-        
+
         // Crear modal dinámicamente y agregarlo al documento principal
         const modal = document.createElement('div');
         modal.id = 'result-modal';
@@ -2391,14 +2445,14 @@ class DesbloqueoComponent {
             backdrop-filter: blur(5px) !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
         `;
-        
+
         const icon = success ? '✅' : '❌';
         const iconClass = success ? 'success' : 'error';
         const title = success ? 'Desbloqueo Exitoso' : 'Error en Desbloqueo';
-        const message = success 
-            ? `Se completó el desbloqueo para los ambientes: ${data.ambientes?.join(', ') || 'seleccionados'}`
-            : data.message || 'Ocurrió un error durante el proceso';
-        
+        const message = success
+             ? `Se completó el desbloqueo para los ambientes: ${data.ambientes?.join(', ') || 'seleccionados'}`
+             : data.message || 'Ocurrió un error durante el proceso';
+
         let details = '';
         if (success) {
             details = `
@@ -2432,7 +2486,7 @@ class DesbloqueoComponent {
                 </div>
             `;
         }
-        
+
         modal.innerHTML = `
             <div style="
                 background: white !important;
@@ -2482,12 +2536,12 @@ class DesbloqueoComponent {
                 </div>
             </div>
         `;
-        
+
         // Agregar al documento principal (no al iframe)
         const targetDocument = window.top ? window.top.document : document;
         const targetBody = targetDocument.body;
         targetBody.appendChild(modal);
-        
+
         // Event listeners
         const closeBtn = modal.querySelector('#result-close-btn');
         const closeModal = () => {
@@ -2501,9 +2555,9 @@ class DesbloqueoComponent {
                 this.limpiarFormulario();
             }, 300);
         };
-        
+
         closeBtn.addEventListener('click', closeModal);
-        
+
         // Cerrar con ESC
         const escHandler = (e) => {
             if (e.key === 'Escape') {
@@ -2512,14 +2566,14 @@ class DesbloqueoComponent {
             }
         };
         targetDocument.addEventListener('keydown', escHandler);
-        
+
         // Cerrar haciendo click fuera del modal
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 closeModal();
             }
         });
-        
+
         console.log(`📋 Modal de resultado mostrado: ${success ? 'éxito' : 'error'}`);
     }
 
@@ -2529,7 +2583,7 @@ class DesbloqueoComponent {
         if (existingModal && existingModal.parentNode) {
             existingModal.remove();
         }
-        
+
         // También buscar en el documento principal
         if (window.top && window.top.document) {
             const topModal = window.top.document.getElementById('result-modal');
@@ -2540,8 +2594,9 @@ class DesbloqueoComponent {
     }
 
     injectStyles() {
-        if (document.getElementById('desbloqueo-styles')) return;
-        
+        if (document.getElementById('desbloqueo-styles'))
+            return;
+
         const style = document.createElement('style');
         style.id = 'desbloqueo-styles';
         style.textContent = `
@@ -3130,7 +3185,7 @@ class DesbloqueoComponent {
                 animation: spin 1s linear infinite;
             }
         `;
-        
+
         document.head.appendChild(style);
         console.log('✅ Estilos del componente de desbloqueo inyectados');
     }
@@ -3164,7 +3219,7 @@ class CODIMContentScript {
 
     init() {
         console.log('🔧 Inicializando CODIMContentScript...');
-        
+
         // CRÍTICO: Extraer datos ANTES de modificar el DOM
         if (this.shouldReplaceWithModernInterface()) {
             console.log('🎨 Página principal detectada - Extrayendo datos antes de cargar interfaz moderna...');
@@ -3182,14 +3237,14 @@ class CODIMContentScript {
     // ===============================
     createGlobalCambiaMenu() {
         const self = this;
-        window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
+        window.cambia_menu = function (seccion, tipo, folio, param1, param2, param3, busca) {
             console.log('🔄 Global cambia_menu centralizado:', arguments);
-            
+
             if (seccion === 'consulta' && (folio || busca || param3)) {
                 const folioFinal = folio || busca || param3;
                 const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
                 console.log('📋 Navegando a consulta:', url);
-                
+
                 // En interfaz moderna, cargar en iframe
                 if (document.getElementById('modern-codim-interface')) {
                     self.modernLoadPage(url);
@@ -3199,15 +3254,15 @@ class CODIMContentScript {
                 }
                 return;
             }
-            
+
             // Para otros casos
             if (document.getElementById('modern-codim-interface')) {
                 self.modernLoadPage(`${seccion}.asp?tipo=${tipo}&folio=${folio}&busca=${busca || ''}`);
             }
         };
-        
+
         // Función cancelar global
-        window.cancelar = function() {
+        window.cancelar = function () {
             console.log('🔙 Cancelar global ejecutado');
             if (window.history.length > 1) {
                 window.history.back();
@@ -3227,20 +3282,20 @@ class CODIMContentScript {
     // ===============================
     extractUserDataSync() {
         console.log('👤 Extrayendo datos del usuario SINCRÓNICAMENTE...');
-        
+
         this.userData = {
             fullName: this.extractUserName(),
             username: this.extractUsername(),
             ipAddress: this.extractUserIP(),
             location: this.extractUserLocation()
         };
-        
+
         console.log('📝 Datos extraídos sincrónicamente:', this.userData);
     }
 
     extractUserName() {
         console.log('🔍 Buscando nombre de usuario en DOM original...');
-        
+
         const nameSelectors = [
             // Método 1: Buscar en fonts amarillos
             () => {
@@ -3254,7 +3309,7 @@ class CODIMContentScript {
                 }
                 return null;
             },
-            
+
             // Método 2: Buscar en divs con z-index 18
             () => {
                 const userDivs = document.querySelectorAll('div[style*="z-index: 18"], div[style*="z-index:18"]');
@@ -3267,7 +3322,7 @@ class CODIMContentScript {
                 }
                 return null;
             },
-            
+
             // Método 3: Búsqueda general
             () => {
                 const allElements = document.querySelectorAll('font, b, strong, td, div, span');
@@ -3287,7 +3342,8 @@ class CODIMContentScript {
         for (let i = 0; i < nameSelectors.length; i++) {
             try {
                 const name = nameSelectors[i]();
-                if (name) return name;
+                if (name)
+                    return name;
             } catch (error) {
                 console.warn(`⚠️ Error en método ${i + 1}:`, error);
             }
@@ -3298,7 +3354,7 @@ class CODIMContentScript {
 
     extractUsername() {
         console.log('🔍 Buscando username...');
-        
+
         const usernameExtractors = [
             // Método 1: Buscar en elementos con color Blue
             () => {
@@ -3312,7 +3368,7 @@ class CODIMContentScript {
                 }
                 return null;
             },
-            
+
             // Método 2: Generar del nombre completo
             () => {
                 if (this.userData && this.userData.fullName && this.userData.fullName !== 'Usuario CODIM') {
@@ -3337,7 +3393,8 @@ class CODIMContentScript {
         for (let i = 0; i < usernameExtractors.length; i++) {
             try {
                 const username = usernameExtractors[i]();
-                if (username) return username;
+                if (username)
+                    return username;
             } catch (error) {
                 console.warn(`⚠️ Error en método username ${i + 1}:`, error);
             }
@@ -3348,7 +3405,7 @@ class CODIMContentScript {
 
     extractUserIP() {
         console.log('🔍 Buscando dirección IP...');
-        
+
         const ipExtractors = [
             // Método 1: Buscar en elementos con color Blue
             () => {
@@ -3362,34 +3419,34 @@ class CODIMContentScript {
                 }
                 return null;
             },
-            
+
             // Método 2: Búsqueda general de IPs
             () => {
                 const bodyText = document.body.textContent;
                 const ipPattern = /\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g;
                 let match;
                 const foundIPs = [];
-                
+
                 while ((match = ipPattern.exec(bodyText)) !== null) {
                     const ip = match[1];
                     if (this.isValidIP(ip)) {
                         foundIPs.push(ip);
                     }
                 }
-                
+
                 const probableIPs = foundIPs.filter(ip => {
                     const parts = ip.split('.').map(Number);
-                    return parts[0] >= 10 && parts[0] <= 192 && 
-                           !(parts[0] === 127) && 
-                           !(parts[0] === 0) && 
-                           !(ip === '255.255.255.255');
+                    return parts[0] >= 10 && parts[0] <= 192 &&
+                    !(parts[0] === 127) &&
+                    !(parts[0] === 0) &&
+                    !(ip === '255.255.255.255');
                 });
-                
+
                 if (probableIPs.length > 0) {
                     console.log('✅ IP probable encontrada:', probableIPs[0]);
                     return probableIPs[0];
                 }
-                
+
                 return null;
             }
         ];
@@ -3397,7 +3454,8 @@ class CODIMContentScript {
         for (let i = 0; i < ipExtractors.length; i++) {
             try {
                 const ip = ipExtractors[i]();
-                if (ip) return ip;
+                if (ip)
+                    return ip;
             } catch (error) {
                 console.warn(`⚠️ Error en método IP ${i + 1}:`, error);
             }
@@ -3413,7 +3471,7 @@ class CODIMContentScript {
         ];
 
         const bodyText = document.body.textContent;
-        
+
         for (let pattern of locationPatterns) {
             const match = bodyText.match(pattern);
             if (match && match[1]) {
@@ -3427,77 +3485,92 @@ class CODIMContentScript {
 
     // Métodos de validación
     isValidName(text) {
-        if (!text || typeof text !== 'string') return false;
-        
+        if (!text || typeof text !== 'string')
+            return false;
+
         const cleanText = text.trim();
-        if (cleanText.length < 5 || cleanText.length > 60) return false;
-        
+        if (cleanText.length < 5 || cleanText.length > 60)
+            return false;
+
         const words = cleanText.split(/\s+/);
-        if (words.length < 2) return false;
-        
+        if (words.length < 2)
+            return false;
+
         const namePattern = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+$/;
-        if (!namePattern.test(cleanText)) return false;
-        
+        if (!namePattern.test(cleanText))
+            return false;
+
         const excludeWords = [
             'codim', 'sistema', 'bienvenido', 'usuario', 'pagina', 'menu', 'principal',
             'reporte', 'consultar', 'historico', 'tecnicos', 'turno', 'configuracion'
         ];
-        
+
         const lowerText = cleanText.toLowerCase();
         for (let word of excludeWords) {
-            if (lowerText.includes(word)) return false;
+            if (lowerText.includes(word))
+                return false;
         }
-        
+
         return true;
     }
 
     isValidUsername(username) {
-        if (!username || typeof username !== 'string') return false;
-        
+        if (!username || typeof username !== 'string')
+            return false;
+
         const cleanUsername = username.trim().toLowerCase();
-        if (cleanUsername.length < 3 || cleanUsername.length > 15) return false;
-        if (!/^[a-zA-Z]/.test(cleanUsername)) return false;
-        if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(cleanUsername)) return false;
-        
+        if (cleanUsername.length < 3 || cleanUsername.length > 15)
+            return false;
+        if (!/^[a-zA-Z]/.test(cleanUsername))
+            return false;
+        if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(cleanUsername))
+            return false;
+
         const excludeUsernames = [
             'codim', 'sistema', 'usuario', 'admin', 'test', 'user', 'login'
         ];
-        
-        if (excludeUsernames.includes(cleanUsername)) return false;
-        if (/^\d+$/.test(cleanUsername)) return false;
-        
+
+        if (excludeUsernames.includes(cleanUsername))
+            return false;
+        if (/^\d+$/.test(cleanUsername))
+            return false;
+
         return true;
     }
 
     isValidIP(ip) {
-        if (!ip || typeof ip !== 'string') return false;
-        
+        if (!ip || typeof ip !== 'string')
+            return false;
+
         const parts = ip.split('.');
-        if (parts.length !== 4) return false;
-        
+        if (parts.length !== 4)
+            return false;
+
         for (let part of parts) {
             const num = parseInt(part, 10);
-            if (isNaN(num) || num < 0 || num > 255) return false;
+            if (isNaN(num) || num < 0 || num > 255)
+                return false;
         }
-        
+
         const invalidIPs = ['0.0.0.0', '255.255.255.255', '127.0.0.1'];
-        if (invalidIPs.includes(ip)) return false;
-        
+        if (invalidIPs.includes(ip))
+            return false;
+
         return true;
     }
 
     // Métodos de verificación de página
     checkIsMainPage() {
         const currentPath = window.location.pathname;
-        return currentPath === '/' || 
-               currentPath === '/index.html' || 
-               currentPath === '/index.asp' || 
-               currentPath === '';
+        return currentPath === '/' ||
+        currentPath === '/index.html' ||
+        currentPath === '/index.asp' ||
+        currentPath === '';
     }
 
     checkHasOldInterface() {
-        return document.querySelector('div[style*="position: absolute"]') && 
-               document.querySelector('img[src*="menu.bmp"]');
+        return document.querySelector('div[style*="position: absolute"]') &&
+        document.querySelector('img[src*="menu.bmp"]');
     }
 
     shouldReplaceWithModernInterface() {
@@ -3507,7 +3580,7 @@ class CODIMContentScript {
     // Métodos de carga de interfaces
     loadModernInterface() {
         console.log('🎨 Cargando interfaz moderna...');
-        
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 this.injectModernInterface();
@@ -3519,10 +3592,10 @@ class CODIMContentScript {
 
     loadClassicPatch() {
         console.log('🔧 Cargando patch clásico...');
-        
+
         const script = document.createElement('script');
         script.src = chrome.runtime.getURL('classic-patch.js');
-        script.onload = function() {
+        script.onload = function () {
             this.remove();
         };
         (document.head || document.documentElement).appendChild(script);
@@ -3530,15 +3603,15 @@ class CODIMContentScript {
 
     initializeDSLAMSearch() {
         console.log('🔍 Inicializando buscador DSLAM para páginas clásicas...');
-        
+
         // ✅ VERIFICAR si estamos en interfaz moderna
         const modernInterface = document.getElementById('modern-codim-interface');
-        
+
         if (modernInterface) {
             console.log('🎨 Interfaz moderna detectada - El buscador DSLAM se manejará solo en iframes');
             return; // No inicializar buscador en la página principal
         }
-        
+
         // Usar la instancia global del buscador solo en interfaz clásica
         if (window.codimDSLAMSearch) {
             setTimeout(() => {
@@ -3549,15 +3622,15 @@ class CODIMContentScript {
 
     injectModernInterface() {
         console.log('🎨 Inyectando interfaz moderna...');
-        
+
         const container = this.createModernContainer();
-        
+
         document.body.innerHTML = '';
         document.body.appendChild(container);
-        
+
         this.setupModernEventListeners(container);
         this.initializeModernComponents();
-        
+
         console.log('✅ Interfaz moderna aplicada');
     }
 
@@ -3570,7 +3643,7 @@ class CODIMContentScript {
 
     getModernHTML() {
         const displayName = this.userData?.fullName || 'Usuario CODIM';
-        
+
         return `
             ${this.getModernCSS()}
             
@@ -3618,30 +3691,27 @@ class CODIMContentScript {
     generateModernSidebarCards() {
         const username = this.userData?.username || 'usuario';
         const ipAddress = this.userData?.ipAddress || '192.168.1.1';
-        
+
         // Obtener datos actuales del widget si existe
         let vencidos = 0;
         let enTiempo = 0;
-        
+
         if (this.resumenWidget && this.resumenWidget.data) {
             vencidos = this.resumenWidget.data.vencidos;
             enTiempo = this.resumenWidget.data.enTiempo;
         }
-        
-        const cards = [
-            {
+
+        const cards = [{
                 icon: '🌐',
                 title: 'Mi IP',
                 content: `<strong>${username}</strong><br>${ipAddress}`,
                 action: 'showIP'
-            },
-            {
+            }, {
                 icon: '🔗',
                 title: 'Enlaces',
                 content: 'Otras Páginas',
                 action: 'showLinks'
-            },
-            {
+            }, {
                 icon: '📊',
                 title: 'Resumen',
                 content: `<div style="color: #e74c3c; font-weight: bold;">⚠️ ${vencidos} Vencidos</div><div style="color: #27ae60;">✅ ${enTiempo} En Tiempo</div>`,
@@ -3649,29 +3719,28 @@ class CODIMContentScript {
             }
         ];
 
-        return cards.map(card => 
+        return cards.map(card =>
             `<div class="modern-sidebar-card" ${card.action ? `data-action="${card.action}"` : ''}>
                 <h3>${card.icon} ${card.title}</h3>
                 <div class="sidebar-card-content">${card.content}</div>
-            </div>`
-        ).join('');
+            </div>`).join('');
     }
 
     handleModernSidebarAction(action) {
         const username = this.userData?.username || 'usuario';
         const ipAddress = this.userData?.ipAddress || '192.168.1.1';
         const location = this.userData?.location || 'Red Interna Telmex';
-        
+
         switch (action) {
-            case 'showIP':
-                alert(`🌐 Información de IP\n\nUsuario: ${username}\nIP: ${ipAddress}\nEstado: Conectado\nUbicación: ${location}`);
-                break;
-            case 'showLinks':
-                this.showModernLinks();
-                break;
-            case 'showResumen':
-                this.showModernResumen();
-                break;
+        case 'showIP':
+            alert(`🌐 Información de IP\n\nUsuario: ${username}\nIP: ${ipAddress}\nEstado: Conectado\nUbicación: ${location}`);
+            break;
+        case 'showLinks':
+            this.showModernLinks();
+            break;
+        case 'showResumen':
+            this.showModernResumen();
+            break;
         }
     }
 
@@ -3679,27 +3748,29 @@ class CODIMContentScript {
         const contentBody = document.querySelector('.modern-content-body');
         const contentTitle = document.getElementById('modernContentTitle');
         const contentSubtitle = document.getElementById('modernContentSubtitle');
-        
-        if (contentTitle) contentTitle.textContent = '📊 Cuadro de Resumen - CODIM CNS';
-        if (contentSubtitle) contentSubtitle.textContent = 'Estadísticas en tiempo real del sistema';
-        
+
+        if (contentTitle)
+            contentTitle.textContent = '📊 Cuadro de Resumen - CODIM CNS';
+        if (contentSubtitle)
+            contentSubtitle.textContent = 'Estadísticas en tiempo real del sistema';
+
         if (contentBody) {
             // Destruir widget anterior si existe
             if (this.resumenWidget) {
                 this.resumenWidget.destroy();
             }
-            
+
             // Limpiar contenido
             contentBody.innerHTML = '';
-            
+
             // Crear nuevo widget usando la clase del Módulo 3
             this.resumenWidget = new CODIMResumenWidget();
-            
+
             // Establecer referencia bidireccional para sincronización
             this.resumenWidget.contentScript = this;
-            
+
             const widgetElement = this.resumenWidget.createWidget();
-            
+
             // Estilos de integración para que ocupe todo el espacio
             widgetElement.style.cssText = `
                 margin: 0 !important;
@@ -3709,9 +3780,9 @@ class CODIMContentScript {
                 background: transparent !important;
                 padding: 15px !important;
             `;
-            
+
             contentBody.appendChild(widgetElement);
-            
+
             console.log('✅ Widget de resumen cargado en interfaz moderna con sincronización de sidebar');
         }
     }
@@ -3720,18 +3791,20 @@ class CODIMContentScript {
         const contentBody = document.querySelector('.modern-content-body');
         const contentTitle = document.getElementById('modernContentTitle');
         const contentSubtitle = document.getElementById('modernContentSubtitle');
-        
-        if (contentTitle) contentTitle.textContent = '🔓 Desbloqueo de usuario PISA';
-        if (contentSubtitle) contentSubtitle.textContent = 'Para desbloqueo seleccione el ambiente y teclee su clave de usuario';
-        
+
+        if (contentTitle)
+            contentTitle.textContent = '🔓 Desbloqueo de usuario PISA';
+        if (contentSubtitle)
+            contentSubtitle.textContent = 'Para desbloqueo seleccione el ambiente y teclee su clave de usuario';
+
         if (contentBody) {
             // Crear componente de desbloqueo PISA usando la clase del Módulo 4
             const desbloqueoComponent = new DesbloqueoComponent();
             const componentElement = desbloqueoComponent.create();
-            
+
             // Limpiar contenido
             contentBody.innerHTML = '';
-            
+
             // Estilos de integración
             componentElement.style.cssText = `
                 margin: 0 !important;
@@ -3739,9 +3812,9 @@ class CODIMContentScript {
                 padding: 20px !important;
                 overflow-y: auto !important;
             `;
-            
+
             contentBody.appendChild(componentElement);
-            
+
             console.log('✅ Componente de desbloqueo PISA cargado');
         }
     }
@@ -3751,22 +3824,25 @@ class CODIMContentScript {
         const resumenCard = document.querySelector('[data-action="showResumen"] .sidebar-card-content');
         if (resumenCard && this.resumenWidget && this.resumenWidget.data) {
             const { vencidos, enTiempo } = this.resumenWidget.data;
-            
+
             resumenCard.innerHTML = `
                 <div style="color: #e74c3c; font-weight: bold;">⚠️ ${vencidos} Vencidos</div>
                 <div style="color: #27ae60;">✅ ${enTiempo} En Tiempo</div>
             `;
-            
+
             // Agregar efecto visual de actualización
             resumenCard.style.animation = 'none';
             setTimeout(() => {
                 resumenCard.style.animation = 'highlightUpdate 1s ease-in-out';
             }, 10);
-            
-            console.log('✅ Sidebar actualizado con nuevos datos:', { vencidos, enTiempo });
+
+            console.log('✅ Sidebar actualizado con nuevos datos:', {
+                vencidos,
+                enTiempo
+            });
         }
     }
-    
+
     showModernLinks() {
         const links = [
             'http://intranet/',
@@ -3775,10 +3851,10 @@ class CODIMContentScript {
             'http://tmxjalcns01',
             'http://10.94.138.27/cgi-bin/solmer/Sidecci/sd_bienvenida.jsp'
         ];
-        
+
         const choice = prompt('🔗 Enlaces Rápidos\n\n1. Intranet Telmex\n2. COBO\n3. EMMA\n4. COQUI\n5. SIDECCI\n\nEscribe el número del enlace:');
         const linkIndex = parseInt(choice) - 1;
-        
+
         if (linkIndex >= 0 && linkIndex < links.length) {
             window.open(links[linkIndex], '_blank');
         }
@@ -3814,176 +3890,178 @@ Interfaz completamente renovada con funcionalidades mejoradas:
 
     setupModernEventListeners(container) {
         const self = this;
-        
+
         container.addEventListener('click', (e) => {
             e.preventDefault();
-            
+
             if (e.target.classList.contains('modern-nav-tab')) {
                 self.modernSwitchTab(e.target.getAttribute('data-tab'));
             }
-            
+
             if (e.target.classList.contains('modern-submenu-item')) {
                 self.modernLoadPage(e.target.getAttribute('data-page'));
             }
-            
+
             const card = e.target.closest('.modern-sidebar-card');
             if (card) {
                 const action = card.getAttribute('data-action');
-                if (action) self.handleModernSidebarAction(action);
+                if (action)
+                    self.handleModernSidebarAction(action);
             }
-            
+
             if (e.target.classList.contains('modern-patch')) {
                 self.showModernPatchInfo();
             }
         });
-        
+
         // Función centralizada
         this.createGlobalCambiaMenu();
     }
 
     modernSwitchTab(tabName) {
-        document.querySelectorAll('.modern-nav-tab').forEach(tab => 
+        document.querySelectorAll('.modern-nav-tab').forEach(tab =>
             tab.classList.remove('active'));
-        document.querySelectorAll('.modern-submenu').forEach(submenu => 
+        document.querySelectorAll('.modern-submenu').forEach(submenu =>
             submenu.classList.remove('active'));
-        
+
         const tab = document.querySelector(`[data-tab="${tabName}"]`);
         const submenu = document.getElementById(`modern-submenu-${tabName}`);
-        
-        if (tab) tab.classList.add('active');
-        if (submenu) submenu.classList.add('active');
+
+        if (tab)
+            tab.classList.add('active');
+        if (submenu)
+            submenu.classList.add('active');
     }
 
     modernLoadPage(page) {
-    const titleElement = document.getElementById('modernContentTitle');
-    const subtitleElement = document.getElementById('modernContentSubtitle');
-    const contentBody = document.querySelector('.modern-content-body');
-    
-    console.log('🔄 modernLoadPage ejecutado para:', page);
-    
-    // CRÍTICO: Manejar páginas especiales ANTES de cualquier otro código
-    if (page === 'desbloqueo-pisa.html') {
-        this.showDesbloqueoPage();
-        return;
-    }
-    
-    // Continuar con el flujo normal para otras páginas
-    if (titleElement) titleElement.textContent = 'Cargando...';
-    if (subtitleElement) subtitleElement.textContent = 'Por favor espera...';
-    
-    // Destruir widget de resumen si está activo
-    if (this.resumenWidget) {
-        this.resumenWidget.destroy();
-        this.resumenWidget = null;
-    }
-    
-    if (contentBody) {
-        const timestamp = new Date().getTime();
-        const separator = page.includes('?') ? '&' : '?';
-        const fullURL = `${page}${separator}_t=${timestamp}`;
-        
-        console.log('📄 Creando iframe con URL:', fullURL);
-        
-        contentBody.innerHTML = `<iframe class="modern-iframe" src="${fullURL}"></iframe>`;
-        
-        const iframe = contentBody.querySelector('.modern-iframe');
-        if (iframe) {
-            console.log('🖼️ Iframe encontrado, configurando event listeners...');
-            
-            // ✅ EVENT LISTENER MEJORADO CON MÁS DEBUG
-            iframe.addEventListener('load', () => {
-                console.log('🔥 IFRAME LOAD EVENT DISPARADO!');
-                console.log('🔍 Iframe src:', iframe.src);
-                console.log('🔍 Iframe contentWindow:', iframe.contentWindow);
-                
-                try {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    console.log('📄 iframeDoc obtenido:', !!iframeDoc);
-                    
-                    if (iframeDoc) {
-                        console.log('✅ Acceso al iframe exitoso, iniciando enhancement...');
-                        this.enhanceIframe(iframe);
-                    } else {
-                        console.error('❌ No se pudo acceder al documento del iframe');
+        const titleElement = document.getElementById('modernContentTitle');
+        const subtitleElement = document.getElementById('modernContentSubtitle');
+        const contentBody = document.querySelector('.modern-content-body');
+
+        console.log('🔄 modernLoadPage ejecutado para:', page);
+
+        // CRÍTICO: Manejar páginas especiales ANTES de cualquier otro código
+        if (page === 'desbloqueo-pisa.html') {
+            this.showDesbloqueoPage();
+            return;
+        }
+
+        // Continuar con el flujo normal para otras páginas
+        if (titleElement)
+            titleElement.textContent = 'Cargando...';
+        if (subtitleElement)
+            subtitleElement.textContent = 'Por favor espera...';
+
+        // Destruir widget de resumen si está activo
+        if (this.resumenWidget) {
+            this.resumenWidget.destroy();
+            this.resumenWidget = null;
+        }
+
+        if (contentBody) {
+            const timestamp = new Date().getTime();
+            const separator = page.includes('?') ? '&' : '?';
+            const fullURL = `${page}${separator}_t=${timestamp}`;
+
+            console.log('📄 Creando iframe con URL:', fullURL);
+
+            contentBody.innerHTML = `<iframe class="modern-iframe" src="${fullURL}"></iframe>`;
+
+            const iframe = contentBody.querySelector('.modern-iframe');
+            if (iframe) {
+                console.log('🖼️ Iframe encontrado, configurando event listeners...');
+
+                // ✅ EVENT LISTENER MEJORADO CON MÁS DEBUG
+                iframe.addEventListener('load', () => {
+                    console.log('🔥 IFRAME LOAD EVENT DISPARADO!');
+                    console.log('🔍 Iframe src:', iframe.src);
+                    console.log('🔍 Iframe contentWindow:', iframe.contentWindow);
+
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        console.log('📄 iframeDoc obtenido:', !!iframeDoc);
+
+                        if (iframeDoc) {
+                            console.log('✅ Acceso al iframe exitoso, iniciando enhancement...');
+                            this.enhanceIframe(iframe);
+                        } else {
+                            console.error('❌ No se pudo acceder al documento del iframe');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error accediendo al iframe:', error);
                     }
-                } catch (error) {
-                    console.error('❌ Error accediendo al iframe:', error);
-                }
-                
-                if (titleElement) titleElement.textContent = 'Página Cargada';
-                if (subtitleElement) subtitleElement.textContent = 'Contenido del sistema original - Buscador DSLAMs activo';
-            });
-            
-           
-            
-            // ✅ TAMBIÉN ESCUCHAR DOMContentLoaded DEL IFRAME
-            iframe.addEventListener('DOMContentLoaded', () => {
-                console.log('📄 Iframe DOMContentLoaded disparado');
-                this.enhanceIframe(iframe);
-            });
-            
-        } else {
-            console.error('❌ No se encontró el iframe después de crear');
+
+                    if (titleElement)
+                        titleElement.textContent = 'Página Cargada';
+                    if (subtitleElement)
+                        subtitleElement.textContent = 'Contenido del sistema original - Buscador DSLAMs activo';
+                });
+
+                // ✅ TAMBIÉN ESCUCHAR DOMContentLoaded DEL IFRAME
+                iframe.addEventListener('DOMContentLoaded', () => {
+                    console.log('📄 Iframe DOMContentLoaded disparado');
+                    this.enhanceIframe(iframe);
+                });
+
+            } else {
+                console.error('❌ No se encontró el iframe después de crear');
+            }
         }
     }
-}
 
     // ===============================
     // MÉTODOS DE IFRAME ENHANCEMENT
     // ===============================
-   
-	enhanceIframe(iframe) {
-    if (!iframe) {
-        console.error('❌ enhanceIframe: iframe es null');
-        return;
-    }
-    
-    console.log('🔄 enhanceIframe ejecutado');
-    console.log('🔍 Iframe src:', iframe.src);
-    
-    // ✅ VERIFICACIÓN INMEDIATA SI YA ESTÁ CARGADO
-    try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (iframeDoc && iframeDoc.readyState === 'complete') {
-            console.log('📄 Iframe ya cargado, procesando inmediatamente...');
-            this.processIframeContent(iframe, iframeDoc);
+
+    enhanceIframe(iframe) {
+        if (!iframe) {
+            console.error('❌ enhanceIframe: iframe es null');
             return;
         }
-    } catch (error) {
-        console.log('⚠️ No se puede acceder inmediatamente al iframe (normal si no está cargado)');
+
+        console.log('🔄 enhanceIframe ejecutado');
+        console.log('🔍 Iframe src:', iframe.src);
+
+        // ✅ VERIFICACIÓN INMEDIATA SI YA ESTÁ CARGADO
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (iframeDoc && iframeDoc.readyState === 'complete') {
+                console.log('📄 Iframe ya cargado, procesando inmediatamente...');
+                this.processIframeContent(iframe, iframeDoc);
+                return;
+            }
+        } catch (error) {
+            console.log('⚠️ No se puede acceder inmediatamente al iframe (normal si no está cargado)');
+        }
+
     }
-    
-    
-}
-	
-	// ✅ MÉTODO MEJORADO: processIframeContent 
-// Agregar la limpieza de código después del CSS
-	processIframeContent(iframe, iframeDoc) {
-    console.log('🔄 Procesando contenido del iframe...');
-    console.log('📄 Document title:', iframeDoc.title);
-    console.log('📄 Body content length:', iframeDoc.body?.textContent?.length || 0);
-   
-    
-    // ✅ PASO 2: Aplicar CSS inmediatamente después de cargar
-    const style = iframeDoc.createElement('style');
-    style.id = 'codim-iframe-styles';
-    style.textContent = this.getIframeCSS();
-    iframeDoc.head.appendChild(style);
-    console.log('✅ CSS del iframe aplicado');
-    
-    // ✅ PASO 2.5: OCULTAR CÓDIGO JAVASCRIPT VISIBLE
-   
-    
-    // ✅ PASO 3: FORZAR RESET DE LAYOUT INMEDIATO (antes que classic-patch)
-    setTimeout(() => {
-        console.log('🔧 Ejecutando primer reset de layout...');
-        this.forceLayoutReset(iframeDoc);
-    }, 200);
-    
-    
-    // ✅ PASO 5: Inyectar funciones de compatibilidad COMPLETAS CON VBSCRIPT
-    const compatScript = iframeDoc.createElement('script');
-    compatScript.textContent = `
+
+    // ✅ MÉTODO MEJORADO: processIframeContent
+    // Agregar la limpieza de código después del CSS
+    processIframeContent(iframe, iframeDoc) {
+        console.log('🔄 Procesando contenido del iframe...');
+        console.log('📄 Document title:', iframeDoc.title);
+        console.log('📄 Body content length:', iframeDoc.body?.textContent?.length || 0);
+
+        // ✅ PASO 2: Aplicar CSS inmediatamente después de cargar
+        const style = iframeDoc.createElement('style');
+        style.id = 'codim-iframe-styles';
+        style.textContent = this.getIframeCSS();
+        iframeDoc.head.appendChild(style);
+        console.log('✅ CSS del iframe aplicado');
+
+        // ✅ PASO 2.5: OCULTAR CÓDIGO JAVASCRIPT VISIBLE
+
+
+        // ✅ PASO 3: FORZAR RESET DE LAYOUT INMEDIATO (antes que classic-patch)
+        setTimeout(() => {
+            console.log('🔧 Ejecutando primer reset de layout...');
+            this.forceLayoutReset(iframeDoc);
+        }, 200);
+
+        // ✅ PASO 5: Inyectar funciones de compatibilidad COMPLETAS CON VBSCRIPT
+        const compatScript = iframeDoc.createElement('script');
+        compatScript.textContent = `
         console.log('🔧 Inyectando funciones VBScript completas en iframe...');
         
         // ✅ HELPERS VBSCRIPT
@@ -4163,173 +4241,182 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         }
     }, 500);
     `;
-    iframeDoc.head.appendChild(compatScript);
-    console.log('✅ Scripts de compatibilidad con VBScript inyectados');
-    
-    // ✅ PASO 6: Buscador DSLAM (solo para páginas apropiadas)
-    setTimeout(() => {
-        console.log('🔍 Iniciando búsqueda de tablas DSLAM...');
-        this.addIframeDSLAMSearch(iframeDoc);
-    }, 1000);
-    
-    console.log('✅ Iframe enhancement completado');
-}
-	
+        iframeDoc.head.appendChild(compatScript);
+        console.log('✅ Scripts de compatibilidad con VBScript inyectados');
+
+        // ✅ PASO 6: Buscador DSLAM (solo para páginas apropiadas)
+        setTimeout(() => {
+            console.log('🔍 Iniciando búsqueda de tablas DSLAM...');
+            this.addIframeDSLAMSearch(iframeDoc);
+        }, 1000);
+
+        console.log('✅ Iframe enhancement completado');
+    }
+
     // ✅ MÉTODO: Forzar reset completo del layout
     forceLayoutReset(iframeDoc) {
-    console.log('🔄 Forzando reset completo del layout en iframe...');
-    
-    try {
-        // ✅ DETECCIÓN MÁS AGRESIVA: Formulario de captura de incidentes
-        const bodyText = iframeDoc.body.textContent || '';
-        const bodyHTML = iframeDoc.body.innerHTML || '';
-        
-        const isIncidentForm = bodyText.includes('Proporciona la central') ||
-                              bodyHTML.includes('Proporciona la central');
-                              
-        console.log('🔍 Detección de formulario simple:', {
-            bodyTextLength: bodyText.length,
-            hasProporciona: bodyText.includes('Proporciona la central')
-        });
-                              
-        if (isIncidentForm) {
-            console.log('📋 Formulario de captura simple detectado - Aplicando estilo específico');
-            const success = this.styleIncidentForm(iframeDoc);
-            if (success) {
-                return; // Salir si la transformación fue exitosa
+        console.log('🔄 Forzando reset completo del layout en iframe...');
+
+        try {
+            // ✅ DETECCIÓN MÁS AGRESIVA: Formulario de captura de incidentes
+            const bodyText = iframeDoc.body.textContent || '';
+            const bodyHTML = iframeDoc.body.innerHTML || '';
+
+            const isIncidentForm = bodyText.includes('Proporciona la central') ||
+                bodyHTML.includes('Proporciona la central');
+
+            console.log('🔍 Detección de formulario simple:', {
+                bodyTextLength: bodyText.length,
+                hasProporciona: bodyText.includes('Proporciona la central')
+            });
+
+            if (isIncidentForm) {
+                console.log('📋 Formulario de captura simple detectado - Aplicando estilo específico');
+                const success = this.styleIncidentForm(iframeDoc);
+                if (success) {
+                    return; // Salir si la transformación fue exitosa
+                }
             }
+
+            console.log('🔧 Aplicando reset normal...');
+            this.applyGeneralReset(iframeDoc);
+
+        } catch (error) {
+            console.error('❌ Error en reset de layout:', error);
         }
-        
-        console.log('🔧 Aplicando reset normal...');
-        this.applyGeneralReset(iframeDoc);
-        
-    } catch (error) {
-        console.error('❌ Error en reset de layout:', error);
     }
-}
 
-	// ✅ MÉTODO MEJORADO: applyGeneralReset con mejor detección y layout
+    // ✅ FUNCIÓN QUE FALTABA: analyzeElementStructure
+    analyzeElementStructure(absoluteElements) {
+        console.log('🔍 Analizando estructura de elementos...');
 
-// ✅ FUNCIÓN QUE FALTABA: analyzeElementStructure
-analyzeElementStructure(absoluteElements) {
-    console.log('🔍 Analizando estructura de elementos...');
-    
-    const analysis = {
-        totalElements: absoluteElements.length,
-        elementTypes: {},
-        rows: [],
-        hasHeader: false,
-        hasReportLink: false,
-        hasForm: false,
-        fieldCount: 0
-    };
-    
-    // Analizar cada elemento
-    absoluteElements.forEach((element, index) => {
-        const top = parseInt(element.style.top) || 0;
-        const left = parseInt(element.style.left) || 0;
-        const type = this.detectElementType(element, top, left);
-        
-        // Contar tipos
-        analysis.elementTypes[type] = (analysis.elementTypes[type] || 0) + 1;
-        
-        // Detectar características específicas
-        if (type === 'header') analysis.hasHeader = true;
-        if (type === 'report-link') analysis.hasReportLink = true;
-        if (type === 'input-field') {
-            analysis.hasForm = true;
-            analysis.fieldCount++;
+        const analysis = {
+            totalElements: absoluteElements.length,
+            elementTypes: {},
+            rows: [],
+            hasHeader: false,
+            hasReportLink: false,
+            hasForm: false,
+            fieldCount: 0
+        };
+
+        // Analizar cada elemento
+        absoluteElements.forEach((element, index) => {
+            const top = parseInt(element.style.top) || 0;
+            const left = parseInt(element.style.left) || 0;
+            const type = this.detectElementType(element, top, left);
+
+            // Contar tipos
+            analysis.elementTypes[type] = (analysis.elementTypes[type] || 0) + 1;
+
+            // Detectar características específicas
+            if (type === 'header')
+                analysis.hasHeader = true;
+            if (type === 'report-link')
+                analysis.hasReportLink = true;
+            if (type === 'input-field') {
+                analysis.hasForm = true;
+                analysis.fieldCount++;
+            }
+
+            // Organizar por filas aproximadas (tolerancia de 20px)
+            let assignedRow = analysis.rows.find(row => Math.abs(row.top - top) <= 20);
+            if (!assignedRow) {
+                assignedRow = {
+                    top: top,
+                    elements: []
+                };
+                analysis.rows.push(assignedRow);
+            }
+            assignedRow.elements.push({
+                element,
+                type,
+                top,
+                left,
+                index
+            });
+        });
+
+        // Ordenar filas por posición top
+        analysis.rows.sort((a, b) => a.top - b.top);
+
+        console.log(`📊 Análisis completado: ${analysis.totalElements} elementos, ${analysis.rows.length} filas`);
+        console.log('📋 Tipos encontrados:', analysis.elementTypes);
+
+        return analysis;
+    }
+
+    applyGeneralReset(iframeDoc) {
+        console.log('📐 Aplicando reset general MEJORADO del layout...');
+
+        // Encontrar todos los elementos con posicionamiento absoluto
+        const absoluteElements = iframeDoc.querySelectorAll('[style*="position: absolute"], [style*="position:absolute"]');
+
+        // ✅ PASO 1: Analizar estructura antes de resetear
+        const elementAnalysis = this.analyzeElementStructure(absoluteElements);
+        console.log('📊 Análisis de estructura:', elementAnalysis);
+
+        absoluteElements.forEach((element, index) => {
+            const originalTop = parseInt(element.style.top) || 0;
+            const originalLeft = parseInt(element.style.left) || 0;
+            const elementType = this.detectElementType(element, originalTop, originalLeft);
+
+            console.log(`📐 Reseteando elemento #${index}: ${elementType} - top:${originalTop} left:${originalLeft}`);
+
+            // Resetear posición
+            element.style.setProperty('position', 'static', 'important');
+            element.style.setProperty('left', 'auto', 'important');
+            element.style.setProperty('top', 'auto', 'important');
+            element.style.setProperty('right', 'auto', 'important');
+            element.style.setProperty('bottom', 'auto', 'important');
+            element.style.setProperty('z-index', 'auto', 'important');
+            element.style.setProperty('display', 'block', 'important');
+
+            // ✅ APLICAR ESTILOS SEGÚN TIPO DETECTADO
+            this.applyElementSpecificStyles(element, elementType, index);
+        });
+
+        // ✅ PASO 2: Organizar en layout de tabla
+        this.organizeAsTableLayout(iframeDoc, elementAnalysis);
+
+        // ✅ PASO 3: Aplicar estilos generales
+        this.applyGeneralStyles(iframeDoc);
+
+        console.log('✅ Reset general MEJORADO finalizado');
+    }
+
+    // ✅ DETECTAR TIPO DE ELEMENTO MÁS INTELIGENTEMENTE
+    detectElementType(element, top, left) {
+        const text = element.textContent?.trim().toLowerCase() || '';
+        const tagName = element.tagName.toLowerCase();
+        const hasInput = element.querySelector('input, select, textarea');
+
+        // Detectar por contenido y posición
+        if (text.includes('captura de incidentes') || (top < 30 && text.length > 10)) {
+            return 'header';
         }
-        
-        // Organizar por filas aproximadas (tolerancia de 20px)
-        let assignedRow = analysis.rows.find(row => Math.abs(row.top - top) <= 20);
-        if (!assignedRow) {
-            assignedRow = { top: top, elements: [] };
-            analysis.rows.push(assignedRow);
+        if (text.includes('reporte fallas') || text.includes('supervision')) {
+            return 'report-link';
         }
-        assignedRow.elements.push({ element, type, top, left, index });
-    });
-    
-    // Ordenar filas por posición top
-    analysis.rows.sort((a, b) => a.top - b.top);
-    
-    console.log(`📊 Análisis completado: ${analysis.totalElements} elementos, ${analysis.rows.length} filas`);
-    console.log('📋 Tipos encontrados:', analysis.elementTypes);
-    
-    return analysis;
-}
+        if (hasInput || tagName === 'input' || tagName === 'select' || tagName === 'textarea') {
+            return 'input-field';
+        }
+        if (text.includes('aceptar') || text.includes('regresar') || (top > 500)) {
+            return 'button';
+        }
+        if (text && text.length > 0 && text.length < 50 && !hasInput) {
+            return 'label';
+        }
+        if (element.offsetWidth > 300 || top < 10) {
+            return 'container';
+        }
 
-applyGeneralReset(iframeDoc) {
-    console.log('📐 Aplicando reset general MEJORADO del layout...');
-    
-    // Encontrar todos los elementos con posicionamiento absoluto
-    const absoluteElements = iframeDoc.querySelectorAll('[style*="position: absolute"], [style*="position:absolute"]');
-    
-    // ✅ PASO 1: Analizar estructura antes de resetear
-    const elementAnalysis = this.analyzeElementStructure(absoluteElements);
-    console.log('📊 Análisis de estructura:', elementAnalysis);
-    
-    absoluteElements.forEach((element, index) => {
-        const originalTop = parseInt(element.style.top) || 0;
-        const originalLeft = parseInt(element.style.left) || 0;
-        const elementType = this.detectElementType(element, originalTop, originalLeft);
-        
-        console.log(`📐 Reseteando elemento #${index}: ${elementType} - top:${originalTop} left:${originalLeft}`);
-        
-        // Resetear posición
-        element.style.setProperty('position', 'static', 'important');
-        element.style.setProperty('left', 'auto', 'important');
-        element.style.setProperty('top', 'auto', 'important');
-        element.style.setProperty('right', 'auto', 'important');
-        element.style.setProperty('bottom', 'auto', 'important');
-        element.style.setProperty('z-index', 'auto', 'important');
-        element.style.setProperty('display', 'block', 'important');
-        
-        // ✅ APLICAR ESTILOS SEGÚN TIPO DETECTADO
-        this.applyElementSpecificStyles(element, elementType, index);
-    });
-    
-    // ✅ PASO 2: Organizar en layout de tabla
-    this.organizeAsTableLayout(iframeDoc, elementAnalysis);
-    
-    // ✅ PASO 3: Aplicar estilos generales
-    this.applyGeneralStyles(iframeDoc);
-    
-    console.log('✅ Reset general MEJORADO finalizado');
-}
+        return 'content';
+    }
 
-// ✅ DETECTAR TIPO DE ELEMENTO MÁS INTELIGENTEMENTE
-detectElementType(element, top, left) {
-    const text = element.textContent?.trim().toLowerCase() || '';
-    const tagName = element.tagName.toLowerCase();
-    const hasInput = element.querySelector('input, select, textarea');
-    
-    // Detectar por contenido y posición
-    if (text.includes('captura de incidentes') || (top < 30 && text.length > 10)) {
-        return 'header';
-    }
-    if (text.includes('reporte fallas') || text.includes('supervision')) {
-        return 'report-link';
-    }
-    if (hasInput || tagName === 'input' || tagName === 'select' || tagName === 'textarea') {
-        return 'input-field';
-    }
-    if (text.includes('aceptar') || text.includes('regresar') || (top > 500)) {
-        return 'button';
-    }
-    if (text && text.length > 0 && text.length < 50 && !hasInput) {
-        return 'label';
-    }
-    if (element.offsetWidth > 300 || top < 10) {
-        return 'container';
-    }
-    
-    return 'content';
-}
-
-// ✅ APLICAR ESTILOS ESPECÍFICOS POR TIPO
-applyElementSpecificStyles(element, elementType, index) {
-    switch (elementType) {
+    // ✅ APLICAR ESTILOS ESPECÍFICOS POR TIPO
+    applyElementSpecificStyles(element, elementType, index) {
+        switch (elementType) {
         case 'header':
             element.style.setProperty('background', 'linear-gradient(135deg, #667eea, #764ba2)', 'important');
             element.style.setProperty('color', 'white', 'important');
@@ -4340,13 +4427,13 @@ applyElementSpecificStyles(element, elementType, index) {
             element.style.setProperty('margin-bottom', '0', 'important');
             console.log(`✅ Header aplicado a elemento #${index}`);
             break;
-            
+
         case 'report-link':
             element.style.setProperty('background', '#f8f9fa', 'important');
             element.style.setProperty('padding', '10px', 'important');
             element.style.setProperty('text-align', 'center', 'important');
             element.style.setProperty('border-bottom', '1px solid #eee', 'important');
-            
+
             // Estilizar el enlace dentro
             const link = element.querySelector('a') || element;
             if (link) {
@@ -4360,7 +4447,7 @@ applyElementSpecificStyles(element, elementType, index) {
             }
             console.log(`✅ Report-link aplicado a elemento #${index}`);
             break;
-            
+
         case 'label':
             element.style.setProperty('font-weight', '500', 'important');
             element.style.setProperty('color', '#333', 'important');
@@ -4370,12 +4457,12 @@ applyElementSpecificStyles(element, elementType, index) {
             element.style.setProperty('vertical-align', 'middle', 'important');
             console.log(`✅ Label aplicado a elemento #${index}: "${element.textContent.substring(0, 20)}"`);
             break;
-            
+
         case 'input-field':
             // Detectar qué tipo de campo es para aplicar ancho apropiado
             const fieldName = this.detectFieldName(element);
             const fieldWidth = this.getFieldWidth(fieldName);
-            
+
             element.style.setProperty('width', fieldWidth, 'important');
             element.style.setProperty('padding', '4px 6px', 'important');
             element.style.setProperty('border', '1px solid #ccc', 'important');
@@ -4388,7 +4475,7 @@ applyElementSpecificStyles(element, elementType, index) {
             element.style.setProperty('vertical-align', 'middle', 'important');
             console.log(`✅ Input-field aplicado a elemento #${index}: ${fieldName} (ancho: ${fieldWidth})`);
             break;
-            
+
         case 'button':
             element.style.setProperty('background', '#007bff', 'important');
             element.style.setProperty('color', 'white', 'important');
@@ -4400,233 +4487,238 @@ applyElementSpecificStyles(element, elementType, index) {
             element.style.setProperty('margin', '0 4px', 'important');
             console.log(`✅ Button aplicado a elemento #${index}`);
             break;
-            
+
         default:
             element.style.setProperty('margin', '5px 0', 'important');
             console.log(`✅ Estilo default aplicado a elemento #${index}`);
-    }
-}
-
-	// ✅ FUNCIÓN MEJORADA: detectFieldName con análisis de contexto visual
-
-detectFieldName(element) {
-    const name = element.name || '';
-    const value = element.value || '';
-    const text = element.textContent || '';
-    const placeholder = element.placeholder || '';
-    const tagName = element.tagName.toLowerCase();
-    
-    // ✅ NUEVO: Analizar elemento anterior (label) para obtener contexto
-    const previousElement = element.previousElementSibling;
-    const nextElement = element.nextElementSibling;
-    const parentText = element.parentElement?.textContent || '';
-    
-    // Obtener texto del contexto cercano
-    const contextText = (
-        (previousElement?.textContent || '') + ' ' +
-        (nextElement?.textContent || '') + ' ' +
-        parentText + ' ' +
-        text + ' ' +
-        value + ' ' +
-        name + ' ' +
-        placeholder
-    ).toLowerCase();
-    
-    console.log(`🔍 Analizando campo: contexto="${contextText.substring(0, 50)}..." value="${value}"`);
-    
-    // ✅ DETECCIÓN POR POSICIÓN Y VALOR ESPECÍFICO
-    if (value.includes('QRO-') || value.includes('MTY-') || value.includes('GDL-') || 
-        value.includes('CORREGIDORA') || value.length > 10) {
-        console.log('   → Detectado como: nombre-pisa');
-        return 'nombre-pisa';
-    }
-    
-    if (value.includes('ISAM') || value.includes('HUAWEI') || value.includes('CISCO') || 
-        contextText.includes('clase')) {
-        console.log('   → Detectado como: clase');
-        return 'clase';
-    }
-    
-    // ✅ DETECCIÓN POR CONTEXTO DE TEXTO CERCANO
-    if (contextText.includes('falla') && tagName === 'select') {
-        console.log('   → Detectado como: select');
-        return 'select';
-    }
-    
-    if (contextText.includes('quejas') || contextText.includes('pendientes')) {
-        console.log('   → Detectado como: numero-pequeno');
-        return 'numero-pequeno';
-    }
-    
-    if (contextText.includes('validaciones') || contextText.includes('proceso') || 
-        contextText.includes('atencion') || contextText.includes('linea')) {
-        console.log('   → Detectado como: campo-mediano');
-        return 'campo-mediano';
-    }
-    
-    if (contextText.includes('bastidor') || contextText.includes('repisa') || 
-        contextText.includes('tarjeta') || contextText.includes('ip') || 
-        contextText.includes('equipo')) {
-        console.log('   → Detectado como: campo-tecnico');
-        return 'campo-tecnico';
-    }
-    
-    if (tagName === 'textarea' || contextText.includes('comentarios') || 
-        contextText.includes('observaciones') || element.rows > 1) {
-        console.log('   → Detectado como: comentarios');
-        return 'comentarios';
-    }
-    
-    // ✅ DETECCIÓN POR VALOR NUMÉRICO
-    if (value === '0' || /^\d+$/.test(value)) {
-        console.log('   → Detectado como: numero-pequeno');
-        return 'numero-pequeno';
-    }
-    
-    // ✅ DETECCIÓN POR POSICIÓN EN LA ESTRUCTURA
-    const allInputs = Array.from(element.closest('form, body')?.querySelectorAll('input, select, textarea') || []);
-    const inputIndex = allInputs.indexOf(element);
-    
-    // Usar índice para determinar tipo (basado en el orden típico del formulario)
-    if (inputIndex === 0) return 'select';        // Primer campo = Falla
-    if (inputIndex === 1) return 'nombre-pisa';   // Segundo = Nombre Pisa
-    if (inputIndex === 2) return 'clase';         // Tercero = Clase
-    if (inputIndex >= 3 && inputIndex <= 5) return 'numero-pequeno'; // Contadores
-    if (inputIndex >= 6 && inputIndex <= 7) return 'campo-mediano';  // Validaciones/Atención
-    if (inputIndex >= 8 && inputIndex <= 11) return 'campo-tecnico'; // IP/Bastidor/etc
-    if (inputIndex === allInputs.length - 1) return 'comentarios';   // Último = Comentarios
-    
-    console.log('   → Detectado como: default');
-    return 'default';
-}
-
-	// ✅ FUNCIÓN MEJORADA: getFieldWidth con anchos más específicos
-getFieldWidth(fieldName) {
-    const widths = {
-        'nombre-pisa': '180px',    // ✅ Más ancho para ver "QRO-CORREGIDORA" completo
-        'clase': '90px',           // ISAM, HUAWEI
-        'numero-pequeno': '45px',  // 0, 1, 2 (más pequeño)
-        'campo-mediano': '110px',  // Validaciones, Atención
-        'campo-tecnico': '70px',   // IP, Bastidor, etc (más pequeño)
-        'comentarios': '300px',    // Textarea específico
-        'select': '150px',         // Select con opciones
-        'default': '80px'          // Por defecto más pequeño
-    };
-    
-    return widths[fieldName] || widths.default;
-}
-
-// ✅ FUNCIÓN ADICIONAL: Aplicar anchos después del reseteo
-applySmartFieldWidths(iframeDoc) {
-    console.log('📏 Aplicando anchos inteligentes a campos...');
-    
-    const inputs = iframeDoc.querySelectorAll('input, select, textarea');
-    
-    inputs.forEach((input, index) => {
-        const fieldName = this.detectFieldName(input);
-        const fieldWidth = this.getFieldWidth(fieldName);
-        
-        // Aplicar ancho específico
-        input.style.setProperty('width', fieldWidth, 'important');
-        
-        // Aplicar estilos adicionales según tipo
-        if (fieldName === 'comentarios') {
-            input.style.setProperty('height', '60px', 'important');
-            input.style.setProperty('resize', 'vertical', 'important');
         }
-        
-        if (fieldName === 'numero-pequeno') {
-            input.style.setProperty('text-align', 'center', 'important');
-        }
-        
-        console.log(`📏 Campo #${index}: ${fieldName} → ${fieldWidth}`);
-    });
-    
-    console.log('✅ Anchos inteligentes aplicados');
-}
+    }
 
-// ✅ ORGANIZAR COMO LAYOUT DE TABLA (OPCIONAL)
-organizeAsTableLayout(iframeDoc, elementAnalysis) {
-    console.log('📐 Organizando elementos en layout de tabla...');
-    
-    // Buscar contenedor principal del formulario
-    const formContainer = iframeDoc.querySelector('form') || 
-                         iframeDoc.querySelector('body > div') || 
-                         iframeDoc.body;
-    
-    if (formContainer) {
-        formContainer.style.setProperty('display', 'block', 'important');
-        formContainer.style.setProperty('padding', '15px', 'important');
-        
-        // Hacer que labels e inputs estén en la misma línea
-        const labels = formContainer.querySelectorAll('[data-element-type="label"]');
-        const inputs = formContainer.querySelectorAll('[data-element-type="input-field"]');
-        
-        // Agrupar elementos relacionados
-        labels.forEach(label => {
-            label.style.setProperty('display', 'inline-block', 'important');
-            label.style.setProperty('width', 'auto', 'important');
-            label.style.setProperty('margin-right', '8px', 'important');
+    // ✅ FUNCIÓN MEJORADA: detectFieldName con análisis de contexto visual
+
+    detectFieldName(element) {
+        const name = element.name || '';
+        const value = element.value || '';
+        const text = element.textContent || '';
+        const placeholder = element.placeholder || '';
+        const tagName = element.tagName.toLowerCase();
+
+        // ✅ NUEVO: Analizar elemento anterior (label) para obtener contexto
+        const previousElement = element.previousElementSibling;
+        const nextElement = element.nextElementSibling;
+        const parentText = element.parentElement?.textContent || '';
+
+        // Obtener texto del contexto cercano
+        const contextText = (
+            (previousElement?.textContent || '') + ' ' +
+            (nextElement?.textContent || '') + ' ' +
+            parentText + ' ' +
+            text + ' ' +
+            value + ' ' +
+            name + ' ' +
+            placeholder).toLowerCase();
+
+        console.log(`🔍 Analizando campo: contexto="${contextText.substring(0, 50)}..." value="${value}"`);
+
+        // ✅ DETECCIÓN POR POSICIÓN Y VALOR ESPECÍFICO
+        if (value.includes('QRO-') || value.includes('MTY-') || value.includes('GDL-') ||
+            value.includes('CORREGIDORA') || value.length > 10) {
+            console.log('   → Detectado como: nombre-pisa');
+            return 'nombre-pisa';
+        }
+
+        if (value.includes('ISAM') || value.includes('HUAWEI') || value.includes('CISCO') ||
+            contextText.includes('clase')) {
+            console.log('   → Detectado como: clase');
+            return 'clase';
+        }
+
+        // ✅ DETECCIÓN POR CONTEXTO DE TEXTO CERCANO
+        if (contextText.includes('falla') && tagName === 'select') {
+            console.log('   → Detectado como: select');
+            return 'select';
+        }
+
+        if (contextText.includes('quejas') || contextText.includes('pendientes')) {
+            console.log('   → Detectado como: numero-pequeno');
+            return 'numero-pequeno';
+        }
+
+        if (contextText.includes('validaciones') || contextText.includes('proceso') ||
+            contextText.includes('atencion') || contextText.includes('linea')) {
+            console.log('   → Detectado como: campo-mediano');
+            return 'campo-mediano';
+        }
+
+        if (contextText.includes('bastidor') || contextText.includes('repisa') ||
+            contextText.includes('tarjeta') || contextText.includes('ip') ||
+            contextText.includes('equipo')) {
+            console.log('   → Detectado como: campo-tecnico');
+            return 'campo-tecnico';
+        }
+
+        if (tagName === 'textarea' || contextText.includes('comentarios') ||
+            contextText.includes('observaciones') || element.rows > 1) {
+            console.log('   → Detectado como: comentarios');
+            return 'comentarios';
+        }
+
+        // ✅ DETECCIÓN POR VALOR NUMÉRICO
+        if (value === '0' || /^\d+$/.test(value)) {
+            console.log('   → Detectado como: numero-pequeno');
+            return 'numero-pequeno';
+        }
+
+        // ✅ DETECCIÓN POR POSICIÓN EN LA ESTRUCTURA
+        const allInputs = Array.from(element.closest('form, body')?.querySelectorAll('input, select, textarea') || []);
+        const inputIndex = allInputs.indexOf(element);
+
+        // Usar índice para determinar tipo (basado en el orden típico del formulario)
+        if (inputIndex === 0)
+            return 'select'; // Primer campo = Falla
+        if (inputIndex === 1)
+            return 'nombre-pisa'; // Segundo = Nombre Pisa
+        if (inputIndex === 2)
+            return 'clase'; // Tercero = Clase
+        if (inputIndex >= 3 && inputIndex <= 5)
+            return 'numero-pequeno'; // Contadores
+        if (inputIndex >= 6 && inputIndex <= 7)
+            return 'campo-mediano'; // Validaciones/Atención
+        if (inputIndex >= 8 && inputIndex <= 11)
+            return 'campo-tecnico'; // IP/Bastidor/etc
+        if (inputIndex === allInputs.length - 1)
+            return 'comentarios'; // Último = Comentarios
+
+        console.log('   → Detectado como: default');
+        return 'default';
+    }
+
+    // ✅ FUNCIÓN MEJORADA: getFieldWidth con anchos más específicos
+    getFieldWidth(fieldName) {
+        const widths = {
+            'nombre-pisa': '180px', // ✅ Más ancho para ver "QRO-CORREGIDORA" completo
+            'clase': '90px', // ISAM, HUAWEI
+            'numero-pequeno': '45px', // 0, 1, 2 (más pequeño)
+            'campo-mediano': '110px', // Validaciones, Atención
+            'campo-tecnico': '70px', // IP, Bastidor, etc (más pequeño)
+            'comentarios': '300px', // Textarea específico
+            'select': '150px', // Select con opciones
+            'default': '80px' // Por defecto más pequeño
+        };
+
+        return widths[fieldName] || widths.default;
+    }
+
+    // ✅ FUNCIÓN ADICIONAL: Aplicar anchos después del reseteo
+    applySmartFieldWidths(iframeDoc) {
+        console.log('📏 Aplicando anchos inteligentes a campos...');
+
+        const inputs = iframeDoc.querySelectorAll('input, select, textarea');
+
+        inputs.forEach((input, index) => {
+            const fieldName = this.detectFieldName(input);
+            const fieldWidth = this.getFieldWidth(fieldName);
+
+            // Aplicar ancho específico
+            input.style.setProperty('width', fieldWidth, 'important');
+
+            // Aplicar estilos adicionales según tipo
+            if (fieldName === 'comentarios') {
+                input.style.setProperty('height', '60px', 'important');
+                input.style.setProperty('resize', 'vertical', 'important');
+            }
+
+            if (fieldName === 'numero-pequeno') {
+                input.style.setProperty('text-align', 'center', 'important');
+            }
+
+            console.log(`📏 Campo #${index}: ${fieldName} → ${fieldWidth}`);
         });
-        
-        inputs.forEach(input => {
-            input.style.setProperty('display', 'inline-block', 'important');
-            input.style.setProperty('margin-right', '15px', 'important');
-        });
+
+        console.log('✅ Anchos inteligentes aplicados');
     }
-}
 
-// ✅ APLICAR ESTILOS GENERALES
-applyGeneralStyles(iframeDoc) {
-    // Body
-    const body = iframeDoc.body;
-    if (body) {
-        body.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
-        body.style.setProperty('background', 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', 'important');
-        body.style.setProperty('margin', '0', 'important');
-        body.style.setProperty('padding', '20px', 'important');
+    // ✅ ORGANIZAR COMO LAYOUT DE TABLA (OPCIONAL)
+    organizeAsTableLayout(iframeDoc, elementAnalysis) {
+        console.log('📐 Organizando elementos en layout de tabla...');
+
+        // Buscar contenedor principal del formulario
+        const formContainer = iframeDoc.querySelector('form') ||
+            iframeDoc.querySelector('body > div') ||
+            iframeDoc.body;
+
+        if (formContainer) {
+            formContainer.style.setProperty('display', 'block', 'important');
+            formContainer.style.setProperty('padding', '15px', 'important');
+
+            // Hacer que labels e inputs estén en la misma línea
+            const labels = formContainer.querySelectorAll('[data-element-type="label"]');
+            const inputs = formContainer.querySelectorAll('[data-element-type="input-field"]');
+
+            // Agrupar elementos relacionados
+            labels.forEach(label => {
+                label.style.setProperty('display', 'inline-block', 'important');
+                label.style.setProperty('width', 'auto', 'important');
+                label.style.setProperty('margin-right', '8px', 'important');
+            });
+
+            inputs.forEach(input => {
+                input.style.setProperty('display', 'inline-block', 'important');
+                input.style.setProperty('margin-right', '15px', 'important');
+            });
+        }
     }
-    
-    // Contenedor principal
-    const containers = iframeDoc.querySelectorAll('body > *, body > div, body > center, body > form');
-    containers.forEach((container, index) => {
-        if (index === 0) { // Solo el primer contenedor
-            container.style.setProperty('max-width', '700px', 'important');
-            container.style.setProperty('margin', '20px auto', 'important');
-            container.style.setProperty('background', 'white', 'important');
-            container.style.setProperty('border-radius', '12px', 'important');
-            container.style.setProperty('box-shadow', '0 8px 32px rgba(0, 0, 0, 0.1)', 'important');
-            container.style.setProperty('border', '1px solid #e9ecef', 'important');
-            container.style.setProperty('overflow', 'hidden', 'important');
-        }
-    });
-}
 
-
-	// ✅ MÉTODO CORREGIDO: styleIncidentForm() 
-// Recrear formulario EXACTAMENTE como el original pero con mejor diseño
-
-	styleIncidentForm(iframeDoc) {
-    console.log('🎨 Aplicando estilo específico al formulario de captura de incidentes...');
-    
-    try {
-        // ✅ VERIFICAR que es formulario de captura
-        const originalContent = iframeDoc.body.innerHTML;
-        
-        const hasIncidentForm = originalContent.includes('Captura de Incidentes') ||
-                               originalContent.includes('Proporciona la central') ||
-                               originalContent.includes('Reporte fallas a CNS');
-                               
-        if (!hasIncidentForm) {
-            console.log('❌ No es formulario de captura, aplicando reset normal');
-            return false;
-        }
-        
-        console.log('✅ Formulario de captura confirmado, recreando con campos exactos...');
-        
-        // ✅ PASO 1: Resetear el body completamente
+    // ✅ APLICAR ESTILOS GENERALES
+    applyGeneralStyles(iframeDoc) {
+        // Body
         const body = iframeDoc.body;
-        body.style.cssText = `
+        if (body) {
+            body.style.setProperty('font-family', 'Segoe UI, Arial, sans-serif', 'important');
+            body.style.setProperty('background', 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', 'important');
+            body.style.setProperty('margin', '0', 'important');
+            body.style.setProperty('padding', '20px', 'important');
+        }
+
+        // Contenedor principal
+        const containers = iframeDoc.querySelectorAll('body > *, body > div, body > center, body > form');
+        containers.forEach((container, index) => {
+            if (index === 0) { // Solo el primer contenedor
+                container.style.setProperty('max-width', '700px', 'important');
+                container.style.setProperty('margin', '20px auto', 'important');
+                container.style.setProperty('background', 'white', 'important');
+                container.style.setProperty('border-radius', '12px', 'important');
+                container.style.setProperty('box-shadow', '0 8px 32px rgba(0, 0, 0, 0.1)', 'important');
+                container.style.setProperty('border', '1px solid #e9ecef', 'important');
+                container.style.setProperty('overflow', 'hidden', 'important');
+            }
+        });
+    }
+
+    // ✅ MÉTODO CORREGIDO: styleIncidentForm()
+    // Recrear formulario EXACTAMENTE como el original pero con mejor diseño
+
+    styleIncidentForm(iframeDoc) {
+        console.log('🎨 Aplicando estilo específico al formulario de captura de incidentes...');
+
+        try {
+            // ✅ VERIFICAR que es formulario de captura
+            const originalContent = iframeDoc.body.innerHTML;
+
+            const hasIncidentForm = originalContent.includes('Captura de Incidentes') ||
+                originalContent.includes('Proporciona la central') ||
+                originalContent.includes('Reporte fallas a CNS');
+
+            if (!hasIncidentForm) {
+                console.log('❌ No es formulario de captura, aplicando reset normal');
+                return false;
+            }
+
+            console.log('✅ Formulario de captura confirmado, recreando con campos exactos...');
+
+            // ✅ PASO 1: Resetear el body completamente
+            const body = iframeDoc.body;
+            body.style.cssText = `
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
             margin: 0 !important;
@@ -4634,14 +4726,14 @@ applyGeneralStyles(iframeDoc) {
             min-height: 100vh !important;
             box-sizing: border-box !important;
         `;
-        
-        // ✅ PASO 2: Limpiar completamente el contenido
-        body.innerHTML = '';
-        
-        // ✅ PASO 3: Crear el contenedor principal moderno
-        const modernWrapper = iframeDoc.createElement('div');
-        modernWrapper.className = 'modern-incident-form';
-        modernWrapper.style.cssText = `
+
+            // ✅ PASO 2: Limpiar completamente el contenido
+            body.innerHTML = '';
+
+            // ✅ PASO 3: Crear el contenedor principal moderno
+            const modernWrapper = iframeDoc.createElement('div');
+            modernWrapper.className = 'modern-incident-form';
+            modernWrapper.style.cssText = `
             max-width: 600px !important;
             margin: 40px auto !important;
             background: white !important;
@@ -4651,11 +4743,11 @@ applyGeneralStyles(iframeDoc) {
             border: 1px solid #e3f2fd !important;
             animation: slideInForm 0.6s ease-out !important;
         `;
-        
-        // ✅ PASO 4: Crear header moderno
-        const header = iframeDoc.createElement('div');
-        header.className = 'modern-form-header';
-        header.style.cssText = `
+
+            // ✅ PASO 4: Crear header moderno
+            const header = iframeDoc.createElement('div');
+            header.className = 'modern-form-header';
+            header.style.cssText = `
             background: linear-gradient(135deg, #667eea, #764ba2) !important;
             color: white !important;
             padding: 25px 30px !important;
@@ -4664,26 +4756,26 @@ applyGeneralStyles(iframeDoc) {
             font-weight: 700 !important;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2) !important;
         `;
-        header.innerHTML = '📋 Captura de Incidentes Gerencia Multimedia';
-        
-        // ✅ PASO 5: Crear contenido del formulario
-        const formContent = iframeDoc.createElement('div');
-        formContent.className = 'modern-form-content';
-        formContent.style.cssText = `
+            header.innerHTML = '📋 Captura de Incidentes Gerencia Multimedia';
+
+            // ✅ PASO 5: Crear contenido del formulario
+            const formContent = iframeDoc.createElement('div');
+            formContent.className = 'modern-form-content';
+            formContent.style.cssText = `
             padding: 40px !important;
             background: white !important;
         `;
-        
-        // ✅ PASO 6: Crear enlace modernizado
-        const linkSection = iframeDoc.createElement('div');
-        linkSection.style.cssText = `
+
+            // ✅ PASO 6: Crear enlace modernizado
+            const linkSection = iframeDoc.createElement('div');
+            linkSection.style.cssText = `
             margin-bottom: 30px !important;
             text-align: center !important;
         `;
-        
-        const reportLink = iframeDoc.createElement('a');
-        reportLink.href = 'javascript:window.open("Reporte.asp","","width=900,height=700,scrollbars=yes")';
-        reportLink.style.cssText = `
+
+            const reportLink = iframeDoc.createElement('a');
+            reportLink.href = 'javascript:window.open("Reporte.asp","","width=900,height=700,scrollbars=yes")';
+            reportLink.style.cssText = `
             display: inline-block !important;
             background: linear-gradient(135deg, #28a745, #20c997) !important;
             color: white !important;
@@ -4696,49 +4788,49 @@ applyGeneralStyles(iframeDoc) {
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1) !important;
         `;
-        reportLink.innerHTML = '📊 Reporte fallas a CNS 2 Supervision';
-        
-        // Agregar efecto hover
-        reportLink.addEventListener('mouseenter', () => {
-            reportLink.style.transform = 'translateY(-3px)';
-            reportLink.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
-        });
-        reportLink.addEventListener('mouseleave', () => {
-            reportLink.style.transform = 'translateY(0)';
-            reportLink.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
-        });
-        
-        linkSection.appendChild(reportLink);
-        
-        // ✅ PASO 7: Crear formulario EXACTO como el original
-        const form = iframeDoc.createElement('form');
-        form.method = 'POST';
-        form.action = 'cns2_sup.asp';
-        form.style.cssText = `
+            reportLink.innerHTML = '📊 Reporte fallas a CNS 2 Supervision';
+
+            // Agregar efecto hover
+            reportLink.addEventListener('mouseenter', () => {
+                reportLink.style.transform = 'translateY(-3px)';
+                reportLink.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
+            });
+            reportLink.addEventListener('mouseleave', () => {
+                reportLink.style.transform = 'translateY(0)';
+                reportLink.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+            });
+
+            linkSection.appendChild(reportLink);
+
+            // ✅ PASO 7: Crear formulario EXACTO como el original
+            const form = iframeDoc.createElement('form');
+            form.method = 'POST';
+            form.action = 'cns2_sup.asp';
+            form.style.cssText = `
             background: linear-gradient(135deg, #f8f9fa, #e3f2fd) !important;
             border-radius: 12px !important;
             padding: 30px !important;
             border: 2px solid #e3f2fd !important;
         `;
-        
-        // Label modernizado
-        const label = iframeDoc.createElement('label');
-        label.style.cssText = `
+
+            // Label modernizado
+            const label = iframeDoc.createElement('label');
+            label.style.cssText = `
             display: block !important;
             font-weight: 600 !important;
             font-size: 16px !important;
             color: #2c3e50 !important;
             margin-bottom: 15px !important;
         `;
-        label.innerHTML = '🏢 Proporciona la central:';
-        
-        // ✅ CAMPO PRINCIPAL: ctl
-        const centralInput = iframeDoc.createElement('input');
-        centralInput.type = 'text';
-        centralInput.name = 'ctl';
-        centralInput.placeholder = 'Ej: COG, QRT, ODA, MQS ...';
-        centralInput.required = true;
-        centralInput.style.cssText = `
+            label.innerHTML = '🏢 Proporciona la central:';
+
+            // ✅ CAMPO PRINCIPAL: ctl
+            const centralInput = iframeDoc.createElement('input');
+            centralInput.type = 'text';
+            centralInput.name = 'ctl';
+            centralInput.placeholder = 'Ej: COG, QRT, ODA, MQS ...';
+            centralInput.required = true;
+            centralInput.style.cssText = `
             width: 100% !important;
             padding: 15px 20px !important;
             border: 2px solid #e9ecef !important;
@@ -4750,96 +4842,97 @@ applyGeneralStyles(iframeDoc) {
             box-sizing: border-box !important;
             margin-bottom: 25px !important;
         `;
-        
-        // ✅ CAMPO OCULTO: al_centro
-        const alCentroInput = iframeDoc.createElement('input');
-        alCentroInput.type = 'hidden';
-        alCentroInput.name = 'al_centro';
-        alCentroInput.value = '';
-        
-        // Efectos de focus
-        centralInput.addEventListener('focus', () => {
-            centralInput.style.borderColor = '#4A90E2';
-            centralInput.style.boxShadow = '0 0 0 4px rgba(74, 144, 226, 0.1)';
-            centralInput.style.background = '#fafbfc';
-        });
-        centralInput.addEventListener('blur', () => {
-            centralInput.style.borderColor = '#e9ecef';
-            centralInput.style.boxShadow = 'none';
-            centralInput.style.background = 'white';
-        });
-        
-        // ✅ CAPTURAR REFERENCIA A THIS ANTES DE CREAR LA FUNCIÓN
-        const self = this;
-        
-        // ✅ FUNCIÓN CENTRALIZADA PARA MANEJAR EL ENVÍO
-        const handleFormSubmit = (e) => {
-            if (e) e.preventDefault();
-            
-            const centralValue = centralInput.value.trim();
-            if (!centralValue) {
-                alert('⚠️ Por favor ingrese el nombre de la central');
-                centralInput.focus();
-                return false;
-            }
-            
-            console.log('📤 Enviando formulario con central:', centralValue);
-            
-            // ✅ MOSTRAR LOADING INMEDIATAMENTE - USAR SELF EN LUGAR DE THIS
-            self.showFormLoadingAnimation(iframeDoc, centralValue);
-            
-            // ✅ ENVIAR FORMULARIO DESPUÉS DE MOSTRAR LOADING
-            setTimeout(() => {
-                const tempForm = iframeDoc.createElement('form');
-                tempForm.method = 'POST';
-                tempForm.action = 'cns2_sup.asp';
-                tempForm.style.display = 'none';
-                
-                const ctlField = iframeDoc.createElement('input');
-                ctlField.type = 'hidden';
-                ctlField.name = 'ctl';
-                ctlField.value = centralValue;
-                
-                const alCentroField = iframeDoc.createElement('input');
-                alCentroField.type = 'hidden';
-                alCentroField.name = 'al_centro';
-                alCentroField.value = '';
-                
-                tempForm.appendChild(ctlField);
-                tempForm.appendChild(alCentroField);
-                iframeDoc.body.appendChild(tempForm);
-                
-                console.log('📤 Enviando form con campos:', {
-                    ctl: ctlField.value,
-                    al_centro: alCentroField.value
-                });
-                
-                tempForm.submit();
-            }, 500);
-            
-            return true;
-        };
-        
-        // ✅ EVENT LISTENER PARA TECLA ENTER
-        centralInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleFormSubmit();
-            }
-        });
-        
-        // Botones modernizados
-        const buttonContainer = iframeDoc.createElement('div');
-        buttonContainer.style.cssText = `
+
+            // ✅ CAMPO OCULTO: al_centro
+            const alCentroInput = iframeDoc.createElement('input');
+            alCentroInput.type = 'hidden';
+            alCentroInput.name = 'al_centro';
+            alCentroInput.value = '';
+
+            // Efectos de focus
+            centralInput.addEventListener('focus', () => {
+                centralInput.style.borderColor = '#4A90E2';
+                centralInput.style.boxShadow = '0 0 0 4px rgba(74, 144, 226, 0.1)';
+                centralInput.style.background = '#fafbfc';
+            });
+            centralInput.addEventListener('blur', () => {
+                centralInput.style.borderColor = '#e9ecef';
+                centralInput.style.boxShadow = 'none';
+                centralInput.style.background = 'white';
+            });
+
+            // ✅ CAPTURAR REFERENCIA A THIS ANTES DE CREAR LA FUNCIÓN
+            const self = this;
+
+            // ✅ FUNCIÓN CENTRALIZADA PARA MANEJAR EL ENVÍO
+            const handleFormSubmit = (e) => {
+                if (e)
+                    e.preventDefault();
+
+                const centralValue = centralInput.value.trim();
+                if (!centralValue) {
+                    alert('⚠️ Por favor ingrese el nombre de la central');
+                    centralInput.focus();
+                    return false;
+                }
+
+                console.log('📤 Enviando formulario con central:', centralValue);
+
+                // ✅ MOSTRAR LOADING INMEDIATAMENTE - USAR SELF EN LUGAR DE THIS
+                self.showFormLoadingAnimation(iframeDoc, centralValue);
+
+                // ✅ ENVIAR FORMULARIO DESPUÉS DE MOSTRAR LOADING
+                setTimeout(() => {
+                    const tempForm = iframeDoc.createElement('form');
+                    tempForm.method = 'POST';
+                    tempForm.action = 'cns2_sup.asp';
+                    tempForm.style.display = 'none';
+
+                    const ctlField = iframeDoc.createElement('input');
+                    ctlField.type = 'hidden';
+                    ctlField.name = 'ctl';
+                    ctlField.value = centralValue;
+
+                    const alCentroField = iframeDoc.createElement('input');
+                    alCentroField.type = 'hidden';
+                    alCentroField.name = 'al_centro';
+                    alCentroField.value = '';
+
+                    tempForm.appendChild(ctlField);
+                    tempForm.appendChild(alCentroField);
+                    iframeDoc.body.appendChild(tempForm);
+
+                    console.log('📤 Enviando form con campos:', {
+                        ctl: ctlField.value,
+                        al_centro: alCentroField.value
+                    });
+
+                    tempForm.submit();
+                }, 500);
+
+                return true;
+            };
+
+            // ✅ EVENT LISTENER PARA TECLA ENTER
+            centralInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleFormSubmit();
+                }
+            });
+
+            // Botones modernizados
+            const buttonContainer = iframeDoc.createElement('div');
+            buttonContainer.style.cssText = `
             display: flex !important;
             gap: 15px !important;
             justify-content: center !important;
         `;
-        
-        const submitButton = iframeDoc.createElement('button');
-        submitButton.type = 'submit';
-        submitButton.innerHTML = '✅ Aceptar';
-        submitButton.style.cssText = `
+
+            const submitButton = iframeDoc.createElement('button');
+            submitButton.type = 'submit';
+            submitButton.innerHTML = '✅ Aceptar';
+            submitButton.style.cssText = `
             background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
             color: white !important;
             border: none !important;
@@ -4852,12 +4945,12 @@ applyGeneralStyles(iframeDoc) {
             box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3) !important;
             min-width: 120px !important;
         `;
-        
-        const cancelButton = iframeDoc.createElement('button');
-        cancelButton.type = 'button';
-        cancelButton.innerHTML = '🔙 Regresar';
-        cancelButton.onclick = () => window.history.back();
-        cancelButton.style.cssText = `
+
+            const cancelButton = iframeDoc.createElement('button');
+            cancelButton.type = 'button';
+            cancelButton.innerHTML = '🔙 Regresar';
+            cancelButton.onclick = () => window.history.back();
+            cancelButton.style.cssText = `
             background: linear-gradient(135deg, #6c757d, #5a6268) !important;
             color: white !important;
             border: none !important;
@@ -4870,46 +4963,46 @@ applyGeneralStyles(iframeDoc) {
             box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3) !important;
             min-width: 120px !important;
         `;
-        
-        // Efectos hover para botones
-        [submitButton, cancelButton].forEach(button => {
-            button.addEventListener('mouseenter', () => {
-                button.style.transform = 'translateY(-2px)';
-                const currentShadow = button.style.boxShadow;
-                button.style.boxShadow = currentShadow.replace('0.3', '0.5');
+
+            // Efectos hover para botones
+            [submitButton, cancelButton].forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    button.style.transform = 'translateY(-2px)';
+                    const currentShadow = button.style.boxShadow;
+                    button.style.boxShadow = currentShadow.replace('0.3', '0.5');
+                });
+                button.addEventListener('mouseleave', () => {
+                    button.style.transform = 'translateY(0)';
+                    const currentShadow = button.style.boxShadow;
+                    button.style.boxShadow = currentShadow.replace('0.5', '0.3');
+                });
             });
-            button.addEventListener('mouseleave', () => {
-                button.style.transform = 'translateY(0)';
-                const currentShadow = button.style.boxShadow;
-                button.style.boxShadow = currentShadow.replace('0.5', '0.3');
-            });
-        });
-        
-        // ✅ EVENT LISTENERS PARA EL FORMULARIO
-        form.addEventListener('submit', handleFormSubmit);
-        submitButton.addEventListener('click', handleFormSubmit);
-        
-        // ✅ ENSAMBLAR TODO
-        form.appendChild(label);
-        form.appendChild(centralInput);
-        form.appendChild(alCentroInput);
-        
-        buttonContainer.appendChild(submitButton);
-        buttonContainer.appendChild(cancelButton);
-        form.appendChild(buttonContainer);
-        
-        formContent.appendChild(linkSection);
-        formContent.appendChild(form);
-        
-        modernWrapper.appendChild(header);
-        modernWrapper.appendChild(formContent);
-        
-        // ✅ AGREGAR AL BODY
-        body.appendChild(modernWrapper);
-        
-        // ✅ AGREGAR ANIMACIÓN CSS
-        const style = iframeDoc.createElement('style');
-        style.textContent = `
+
+            // ✅ EVENT LISTENERS PARA EL FORMULARIO
+            form.addEventListener('submit', handleFormSubmit);
+            submitButton.addEventListener('click', handleFormSubmit);
+
+            // ✅ ENSAMBLAR TODO
+            form.appendChild(label);
+            form.appendChild(centralInput);
+            form.appendChild(alCentroInput);
+
+            buttonContainer.appendChild(submitButton);
+            buttonContainer.appendChild(cancelButton);
+            form.appendChild(buttonContainer);
+
+            formContent.appendChild(linkSection);
+            formContent.appendChild(form);
+
+            modernWrapper.appendChild(header);
+            modernWrapper.appendChild(formContent);
+
+            // ✅ AGREGAR AL BODY
+            body.appendChild(modernWrapper);
+
+            // ✅ AGREGAR ANIMACIÓN CSS
+            const style = iframeDoc.createElement('style');
+            style.textContent = `
             @keyframes slideInForm {
                 from { 
                     opacity: 0; 
@@ -4925,31 +5018,31 @@ applyGeneralStyles(iframeDoc) {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
             }
         `;
-        iframeDoc.head.appendChild(style);
-        
-        // Auto-focus en el input
-        setTimeout(() => centralInput.focus(), 500);
-        
-        console.log('✅ Formulario de incidentes recreado con campos exactos del original');
-        console.log('📋 Campos del formulario: ctl=' + centralInput.name + ', al_centro=' + alCentroInput.name);
-        
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Error al estilizar formulario de incidentes:', error);
-        return false;
-    }
-}
+            iframeDoc.head.appendChild(style);
 
-// ✅ MÉTODO PARA MOSTRAR ANIMACIÓN DE LOADING AL ENVIAR FORMULARIO
-showFormLoadingAnimation(iframeDoc, centralName) {
-    console.log('🔄 Mostrando animación de loading para central:', centralName);
-    
-    try {
-        // Crear overlay de loading
-        const loadingOverlay = iframeDoc.createElement('div');
-        loadingOverlay.id = 'form-loading-overlay';
-        loadingOverlay.style.cssText = `
+            // Auto-focus en el input
+            setTimeout(() => centralInput.focus(), 500);
+
+            console.log('✅ Formulario de incidentes recreado con campos exactos del original');
+            console.log('📋 Campos del formulario: ctl=' + centralInput.name + ', al_centro=' + alCentroInput.name);
+
+            return true;
+
+        } catch (error) {
+            console.error('❌ Error al estilizar formulario de incidentes:', error);
+            return false;
+        }
+    }
+
+    // ✅ MÉTODO PARA MOSTRAR ANIMACIÓN DE LOADING AL ENVIAR FORMULARIO
+    showFormLoadingAnimation(iframeDoc, centralName) {
+        console.log('🔄 Mostrando animación de loading para central:', centralName);
+
+        try {
+            // Crear overlay de loading
+            const loadingOverlay = iframeDoc.createElement('div');
+            loadingOverlay.id = 'form-loading-overlay';
+            loadingOverlay.style.cssText = `
             position: fixed !important;
             top: 50% !important;
             left: 50% !important;
@@ -4966,13 +5059,13 @@ showFormLoadingAnimation(iframeDoc, centralName) {
             margin: 0 !important;
             padding: 0 !important;
         `;
-        
-        // Crear overlay de loading - USANDO EL MISMO MÉTODO QUE EL MODAL PISA
-        const formLoadingOverlay = iframeDoc.createElement('div');
-        formLoadingOverlay.id = 'form-loading-overlay';
-        formLoadingOverlay.className = 'form-loading-overlay';
-        
-        formLoadingOverlay.innerHTML = `
+
+            // Crear overlay de loading - USANDO EL MISMO MÉTODO QUE EL MODAL PISA
+            const formLoadingOverlay = iframeDoc.createElement('div');
+            formLoadingOverlay.id = 'form-loading-overlay';
+            formLoadingOverlay.className = 'form-loading-overlay';
+
+            formLoadingOverlay.innerHTML = `
             <div class="form-loading-modal">
                 <div class="form-loading-spinner"></div>
                 
@@ -4985,10 +5078,10 @@ showFormLoadingAnimation(iframeDoc, centralName) {
                 </div>
             </div>
         `;
-        
-        // Agregar estilos CSS EXACTOS como el modal PISA
-        const loadingStyle = iframeDoc.createElement('style');
-        loadingStyle.textContent = `
+
+            // Agregar estilos CSS EXACTOS como el modal PISA
+            const loadingStyle = iframeDoc.createElement('style');
+            loadingStyle.textContent = `
             /* Modal de loading - CORREGIDO PARA CENTRADO PERFECTO */
             .form-loading-overlay {
                 position: fixed !important;
@@ -5080,85 +5173,85 @@ showFormLoadingAnimation(iframeDoc, centralName) {
                 100% { transform: rotate(360deg); }
             }
         `;
-        iframeDoc.head.appendChild(loadingStyle);
-        
-        // Agregar al iframe
-        iframeDoc.body.appendChild(formLoadingOverlay);
-        
-        console.log('✅ Animación de loading mostrada');
-        
-    } catch (error) {
-        console.error('❌ Error mostrando loading:', error);
+            iframeDoc.head.appendChild(loadingStyle);
+
+            // Agregar al iframe
+            iframeDoc.body.appendChild(formLoadingOverlay);
+
+            console.log('✅ Animación de loading mostrada');
+
+        } catch (error) {
+            console.error('❌ Error mostrando loading:', error);
+        }
     }
-}
 
-	// ✅ REEMPLAZAR EL MÉTODO styleComplexCSMForm() CON ESTA VERSIÓN CORREGIDA
+    // ✅ REEMPLAZAR EL MÉTODO styleComplexCSMForm() CON ESTA VERSIÓN CORREGIDA
 
-	// ✅ MÉTODO CORREGIDO: styleComplexCSMForm() - VERSION CON DEBUG Y DETECCIÓN COMPLETA
+    // ✅ MÉTODO CORREGIDO: styleComplexCSMForm() - VERSION CON DEBUG Y DETECCIÓN COMPLETA
 
 
     addIframeDSLAMSearch(iframeDoc) {
-        if (!iframeDoc) return;
-        
+        if (!iframeDoc)
+            return;
+
         // ✅ VERIFICAR si ya existe un buscador en el iframe (evitar duplicados)
         const existingSearch = iframeDoc.querySelector('.iframe-dslam-search, .dslam-search-container');
         if (existingSearch) {
             console.log('⚠️ Buscador DSLAM ya existe en iframe - saltando');
             return;
         }
-        
+
         // Buscar tablas específicas de equipos DSLAM
         const tables = iframeDoc.querySelectorAll('table');
         let targetTable = null;
-        
+
         tables.forEach(table => {
             const tableText = table.textContent.toLowerCase();
             const rows = table.querySelectorAll('tr');
-            
+
             // ✅ LÓGICA SIMPLE: Buscar por título específico
             const hasEquipmentTitle = (
                 tableText.includes('reporte fallas a cns 2 supervision') ||
-                (tableText.includes('dslam') && tableText.includes('tecnologia'))
-            );
-            
+                (tableText.includes('dslam') && tableText.includes('tecnologia')));
+
             // ❌ EXCLUIR reportes de incidentes
             const isIncidentReport = (
                 tableText.includes('reportes pendientes de solucion') ||
-                (tableText.includes('folio') && tableText.includes('tipo de falla') && tableText.includes('elaboro'))
-            );
-            
+                (tableText.includes('folio') && tableText.includes('tipo de falla') && tableText.includes('elaboro')));
+
             if (hasEquipmentTitle && !isIncidentReport && rows.length >= 3 && !table.dataset.searchAdded) {
                 targetTable = table;
             }
         });
-        
+
         if (!targetTable) {
             console.log('ℹ️ No se encontró tabla de equipos válida en iframe');
             return;
         }
-        
+
         console.log('📊 Tabla de equipos REAL encontrada en iframe por título, agregando buscador');
-        
+
         // Crear buscador específico para iframe
         this.createIframeDSLAMSearchBox(targetTable, iframeDoc);
     }
 
     createIframeDSLAMSearchBox(table, iframeDoc) {
-    if (table.dataset.searchAdded) return;
-    table.dataset.searchAdded = 'true';
-    
-    // Obtener filas de datos (excluyendo header)
-    const dataRows = Array.from(table.querySelectorAll('tr')).slice(1);
-    
-    if (dataRows.length === 0) {
-        console.log('⚠️ No se encontraron filas de datos en iframe');
-        return;
-    }
-    
-    // Crear contenedor del buscador BAJO (menos altura)
-    const searchContainer = iframeDoc.createElement('div');
-    searchContainer.className = 'iframe-dslam-search-low';
-    searchContainer.innerHTML = `
+        if (table.dataset.searchAdded)
+            return;
+        table.dataset.searchAdded = 'true';
+
+        // Obtener filas de datos (excluyendo header)
+        const dataRows = Array.from(table.querySelectorAll('tr')).slice(1);
+
+        if (dataRows.length === 0) {
+            console.log('⚠️ No se encontraron filas de datos en iframe');
+            return;
+        }
+
+        // Crear contenedor del buscador BAJO (menos altura)
+        const searchContainer = iframeDoc.createElement('div');
+        searchContainer.className = 'iframe-dslam-search-low';
+        searchContainer.innerHTML = `
         <div class="low-search-bar">
             <span class="search-icon-low">🔍</span>
             <input type="text" 
@@ -5174,10 +5267,10 @@ showFormLoadingAnimation(iframeDoc, centralName) {
                     title="Limpiar">✕</button>
         </div>
     `;
-    
-    // Estilos CSS con altura ultra-reducida
-    const style = iframeDoc.createElement('style');
-    style.textContent = `
+
+        // Estilos CSS con altura ultra-reducida
+        const style = iframeDoc.createElement('style');
+        style.textContent = `
         .iframe-dslam-search-low {
             margin: 3px auto 6px auto;
             max-width: 100%;
@@ -5318,74 +5411,74 @@ showFormLoadingAnimation(iframeDoc, centralName) {
             }
         }
     `;
-    iframeDoc.head.appendChild(style);
-    
-    // Insertar antes de la tabla
-    table.parentNode.insertBefore(searchContainer, table);
-    
-    // Configurar búsqueda
-    const searchInput = searchContainer.querySelector('#iframe-search-input-low');
-    const clearBtn = searchContainer.querySelector('#iframe-clear-btn-low');
-    const counter = searchContainer.querySelector('#iframe-count-low');
-    const counterContainer = searchContainer.querySelector('#iframe-counter-low');
-    
-    const performSearch = (searchTerm) => {
-        const searchLower = searchTerm.toLowerCase();
-        let visibleCount = 0;
-        
-        dataRows.forEach(row => {
-            const rowText = row.textContent.toLowerCase();
-            const matches = searchTerm === '' || rowText.includes(searchLower);
-            
-            if (matches) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
+        iframeDoc.head.appendChild(style);
+
+        // Insertar antes de la tabla
+        table.parentNode.insertBefore(searchContainer, table);
+
+        // Configurar búsqueda
+        const searchInput = searchContainer.querySelector('#iframe-search-input-low');
+        const clearBtn = searchContainer.querySelector('#iframe-clear-btn-low');
+        const counter = searchContainer.querySelector('#iframe-count-low');
+        const counterContainer = searchContainer.querySelector('#iframe-counter-low');
+
+        const performSearch = (searchTerm) => {
+            const searchLower = searchTerm.toLowerCase();
+            let visibleCount = 0;
+
+            dataRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const matches = searchTerm === '' || rowText.includes(searchLower);
+
+                if (matches) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            counter.textContent = visibleCount;
+
+            // Actualizar clases del contador
+            counterContainer.classList.remove('filtered', 'no-results');
+            if (visibleCount === 0 && searchTerm !== '') {
+                counterContainer.classList.add('no-results');
+            } else if (visibleCount < dataRows.length && searchTerm !== '') {
+                counterContainer.classList.add('filtered');
+            }
+
+            console.log(`📊 ${visibleCount} de ${dataRows.length} equipos visibles (bajo)`);
+        };
+
+        // Event listeners
+        searchInput.addEventListener('input', (e) => {
+            performSearch(e.target.value.trim());
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                performSearch('');
             }
         });
-        
-        counter.textContent = visibleCount;
-        
-        // Actualizar clases del contador
-        counterContainer.classList.remove('filtered', 'no-results');
-        if (visibleCount === 0 && searchTerm !== '') {
-            counterContainer.classList.add('no-results');
-        } else if (visibleCount < dataRows.length && searchTerm !== '') {
-            counterContainer.classList.add('filtered');
-        }
-        
-        console.log(`📊 ${visibleCount} de ${dataRows.length} equipos visibles (bajo)`);
-    };
-    
-    // Event listeners
-    searchInput.addEventListener('input', (e) => {
-        performSearch(e.target.value.trim());
-    });
-    
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+
+        clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             performSearch('');
-        }
-    });
-    
-    clearBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        performSearch('');
-        searchInput.focus();
-    });
-    
-    // Auto-focus
-    setTimeout(() => searchInput.focus(), 300);
-    
-    console.log(`✅ Buscador BAJO agregado al iframe - ${dataRows.length} equipos disponibles`);
-}
-	
+            searchInput.focus();
+        });
+
+        // Auto-focus
+        setTimeout(() => searchInput.focus(), 300);
+
+        console.log(`✅ Buscador BAJO agregado al iframe - ${dataRows.length} equipos disponibles`);
+    }
+
     /* ✅ MEJORAS SIMPLES PARA getIframeCSS() - Solo mejorar lo que ya funciona */
 
-getIframeCSS() {
-    return `
+    getIframeCSS() {
+        return `
         /* ✅ OCULTAR IMÁGENES DE FONDO PROBLEMÁTICAS */
         img[src*="fondo.bmp"], 
         img[src*="menu.bmp"], 
@@ -5670,15 +5763,15 @@ getIframeCSS() {
             }
         }
     `;
-}
-	
+    }
+
     // ===============================
     // COMPONENTES DE INTERFAZ MODERNA
     // ===============================
     initializeModernComponents() {
         this.updateModernDate();
         setInterval(() => this.updateModernDate(), 60000);
-        
+
         // Cargar automáticamente el widget de resumen al inicio
         console.log('🎯 Cargando widget de resumen automáticamente...');
         setTimeout(() => {
@@ -5689,9 +5782,9 @@ getIframeCSS() {
 
     updateModernDate() {
         const now = new Date();
-        const options = { 
-            year: 'numeric', 
-            month: 'long', 
+        const options = {
+            year: 'numeric',
+            month: 'long',
             day: 'numeric'
         };
         const dateElement = document.getElementById('modernCurrentDate');
@@ -5976,24 +6069,21 @@ getIframeCSS() {
 
     generateModernTabs() {
         const menuData = this.getMenuData();
-        return Object.entries(menuData).map(([key, menu], index) => 
+        return Object.entries(menuData).map(([key, menu], index) =>
             `<button class="modern-nav-tab ${index === 0 ? 'active' : ''}" data-tab="${key}">
                 ${menu.icon} ${menu.title}
-            </button>`
-        ).join('');
+            </button>`).join('');
     }
 
     generateModernSubmenus() {
         const menuData = this.getMenuData();
-        return Object.entries(menuData).map(([key, menu], index) => 
+        return Object.entries(menuData).map(([key, menu], index) =>
             `<div class="modern-submenu ${index === 0 ? 'active' : ''}" id="modern-submenu-${key}">
                 ${menu.items.map(item => 
-                    `<a href="#" class="modern-submenu-item" data-page="${item.page}">
+                `<a href="#" class="modern-submenu-item" data-page="${item.page}">
                         ${item.icon} ${item.title}
-                    </a>`
-                ).join('')}
-            </div>`
-        ).join('');
+                    </a>`).join('')}
+            </div>`).join('');
     }
 
     getMenuData() {
@@ -6001,52 +6091,97 @@ getIframeCSS() {
             incidentes: {
                 title: 'Incidentes',
                 icon: '📋',
-                items: [
-                    { title: 'Nuevo Reporte', icon: '📝', page: 'cns2_sup.asp' },
-                    { title: 'Pendientes', icon: '⏳', page: 'resumen.asp?c=cns' },
-                    { title: 'Consultar Histórico', icon: '📚', page: 'rep_hist.asp' }
+                items: [{
+                        title: 'Nuevo Reporte',
+                        icon: '📝',
+                        page: 'cns2_sup.asp'
+                    }, {
+                        title: 'Pendientes',
+                        icon: '⏳',
+                        page: 'resumen.asp?c=cns'
+                    }, {
+                        title: 'Consultar Histórico',
+                        icon: '📚',
+                        page: 'rep_hist.asp'
+                    }
                 ]
             },
             tecnicos: {
                 title: 'Técnicos',
                 icon: '👨‍💻',
-                items: [
-                    { title: 'Técnicos O.S.', icon: '🔧', page: 'opcion1.asp' },
-                    { title: 'Tec. Quejas', icon: '📞', page: 'opcion2.asp' },
-                    { title: 'Iniciar Turno', icon: '▶️', page: 'opcion3.asp' },
-                    { title: 'Programar Turno', icon: '📅', page: 'opcion4.asp' }
+                items: [{
+                        title: 'Técnicos O.S.',
+                        icon: '🔧',
+                        page: 'opcion1.asp'
+                    }, {
+                        title: 'Tec. Quejas',
+                        icon: '📞',
+                        page: 'opcion2.asp'
+                    }, {
+                        title: 'Iniciar Turno',
+                        icon: '▶️',
+                        page: 'opcion3.asp'
+                    }, {
+                        title: 'Programar Turno',
+                        icon: '📅',
+                        page: 'opcion4.asp'
+                    }
                 ]
             },
             reportes: {
                 title: 'Reportes',
                 icon: '📊',
-                items: [
-                    { title: 'Productividad', icon: '📈', page: 'rep_productividad.asp' },
-                    { title: 'Resumen', icon: '📋', page: 'resumen.asp' }
+                items: [{
+                        title: 'Productividad',
+                        icon: '📈',
+                        page: 'rep_productividad.asp'
+                    }, {
+                        title: 'Resumen',
+                        icon: '📋',
+                        page: 'resumen.asp'
+                    }
                 ]
             },
             turnos: {
                 title: 'Turnos',
                 icon: '🕐',
-                items: [
-                    { title: 'Turno OS', icon: '🔧', page: 'pots1.asp' },
-                    { title: 'Turno Quejas', icon: '📞', page: 'pots2.asp' },
-                    { title: 'Turno Pots', icon: '📡', page: 'pots3.asp' },
-                    { title: 'Turno Futuro', icon: '⏭️', page: 'pots4.asp' }
+                items: [{
+                        title: 'Turno OS',
+                        icon: '🔧',
+                        page: 'pots1.asp'
+                    }, {
+                        title: 'Turno Quejas',
+                        icon: '📞',
+                        page: 'pots2.asp'
+                    }, {
+                        title: 'Turno Pots',
+                        icon: '📡',
+                        page: 'pots3.asp'
+                    }, {
+                        title: 'Turno Futuro',
+                        icon: '⏭️',
+                        page: 'pots4.asp'
+                    }
                 ]
             },
             config: {
                 title: 'Config',
                 icon: '⚙️',
-                items: [
-                    { title: 'Configuración', icon: '⚙️', page: 'configura.asp' }
+                items: [{
+                        title: 'Configuración',
+                        icon: '⚙️',
+                        page: 'configura.asp'
+                    }
                 ]
             },
             extras: {
                 title: 'Extras',
                 icon: '🔧',
-                items: [
-                    { title: 'Desbloqueo PISA', icon: '🔓', page: 'desbloqueo-pisa.html' }
+                items: [{
+                        title: 'Desbloqueo PISA',
+                        icon: '🔓',
+                        page: 'desbloqueo-pisa.html'
+                    }
                 ]
             }
         };
@@ -6059,7 +6194,7 @@ getIframeCSS() {
 // ===============================
 function initializeCODIMSystem() {
     console.log('🚀 Inicializando sistema CODIM completo...');
-    
+
     // Verificar que todos los módulos estén disponibles
     const moduleCheck = {
         communication: !!window.codimCommunication,
@@ -6067,20 +6202,20 @@ function initializeCODIMSystem() {
         resumenWidget: typeof CODIMResumenWidget !== 'undefined',
         desbloqueoComponent: typeof DesbloqueoComponent !== 'undefined'
     };
-    
+
     console.log('📊 Estado de módulos:', moduleCheck);
-    
+
     // Crear instancia principal del content script
     const codimContentScript = new CODIMContentScript();
-    
+
     // Hacer disponible globalmente para debugging
     window.codimContentScript = codimContentScript;
-    
+
     // Inicializar el sistema
     codimContentScript.init();
-    
+
     console.log('✅ Sistema CODIM inicializado completamente');
-    
+
     return codimContentScript;
 }
 
