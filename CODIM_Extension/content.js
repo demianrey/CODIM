@@ -5591,6 +5591,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                     border-radius: 15px;
                     padding: 1rem;
                     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+					text-align: center;
                 }
                 
                 .modern-nav-tabs {
@@ -5598,6 +5599,8 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                     gap: 1rem;
                     margin-bottom: 1rem;
                     flex-wrap: wrap;
+                    justify-content: center;
+                    align-items: center;
                 }
                 
                 .modern-nav-tab {
@@ -5624,11 +5627,13 @@ Interfaz completamente renovada con funcionalidades mejoradas:
                 }
                 
                 .modern-submenu {
-                    display: none;
-                    flex-wrap: wrap;
-                    gap: 0.75rem;
-                    margin-top: 1rem;
-                }
+					display: none;
+					flex-wrap: wrap;
+					gap: 0.75rem;
+					margin-top: 1rem;
+					justify-content: center;
+					align-items: center;
+				}
                 
                 .modern-submenu.active {
                     display: flex;
