@@ -76,7 +76,6 @@ if (window !== window.top) {
         }
     }
 
-    
     // ===============================
     // INICIALIZACIÓN MÓDULO 1
     // ===============================
@@ -3733,6 +3732,64 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         style.id = 'codim-iframe-styles';
         style.textContent = this.getIframeCSS();
         iframeDoc.head.appendChild(style);
+        // ✅ NUEVO: Ocultar código JavaScript/VBScript visible como texto
+        setTimeout(() => {
+            console.log('🧹 Ocultando código visible como texto...');
+
+            const allElements = iframeDoc.querySelectorAll('*');
+            let hiddenCount = 0;
+
+            allElements.forEach((element) => {
+                const text = element.textContent || '';
+
+                // Detectar si contiene código visible
+                const hasVisibleCode = (
+                    text.includes('function valida_datos') ||
+                    text.includes('function valida') ||
+                    text.includes('document.envia_datos') ||
+                    text.includes('msgbox') ||
+                    text.includes('trim(document.') ||
+                    text.includes('varz = ') ||
+                    text.includes('cual_falla.value') ||
+                    text.includes('<script') ||
+                    text.includes('No puedes utilizar apostrofe'));
+
+                // Verificar que NO sea elemento importante
+                const isImportant = (
+                    element.tagName === 'INPUT' ||
+                    element.tagName === 'SELECT' ||
+                    element.tagName === 'TEXTAREA' ||
+                    element.tagName === 'BUTTON' ||
+                    element.tagName === 'FORM' ||
+                    element.tagName === 'TABLE' ||
+                    element.querySelector('input, select, textarea, button, form, table'));
+
+                // Ocultar si tiene código Y no es importante Y tiene texto suficiente
+                if (hasVisibleCode && !isImportant && text.trim().length > 15) {
+                    element.style.setProperty('display', 'none', 'important');
+                    element.style.setProperty('visibility', 'hidden', 'important');
+                    element.style.setProperty('position', 'absolute', 'important');
+                    element.style.setProperty('left', '-9999px', 'important');
+
+                    console.log(`🙈 Código oculto en ${element.tagName}`);
+                    hiddenCount++;
+                }
+            });
+
+            console.log(`✅ ${hiddenCount} elementos con código visible ocultos`);
+        }, 800);
+
+        // Repetir para código que se carga después
+        setTimeout(() => {
+            const codeElements = iframeDoc.querySelectorAll('*');
+            codeElements.forEach((el) => {
+                const txt = el.textContent || '';
+                if ((txt.includes('function valida_datos') || txt.includes('msgbox')) &&
+                    !el.querySelector('input, select, button')) {
+                    el.style.display = 'none';
+                }
+            });
+        }, 2000);
         console.log('✅ CSS del iframe aplicado');
 
         // ✅ PASO 2.5: OCULTAR CÓDIGO JAVASCRIPT VISIBLE
@@ -3911,20 +3968,6 @@ Interfaz completamente renovada con funcionalidades mejoradas:
         console.log('✅ Funciones VBScript completas inyectadas en iframe');
         console.log('✅ valida_datos disponible:', typeof window.valida_datos);
         console.log('✅ vertexto disponible:', typeof window.vertexto);
-		
-		setTimeout(function() {
-        console.log('🙈 Ocultando código JavaScript visible...');
-        var codeElements = document.querySelectorAll('div, span, p, td');
-        for (var i = 0; i < codeElements.length; i++) {
-            var text = codeElements[i].textContent;
-            if (text && (text.includes('function valida_datos') || text.includes('document.envia_datos'))) {
-                if (!codeElements[i].querySelector('input, select, button, a')) {
-                    codeElements[i].style.display = 'none';
-                    console.log('🙈 Elemento oculto:', codeElements[i].tagName);
-                }
-            }
-        }
-    }, 500);
     `;
         iframeDoc.head.appendChild(compatScript);
         console.log('✅ Scripts de compatibilidad con VBScript inyectados');

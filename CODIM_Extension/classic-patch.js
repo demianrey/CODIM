@@ -234,9 +234,6 @@
                 // 4. Limpiar imágenes problemáticas
                 this.cleanProblematicImages();
 
-                // ✅ NUEVO: Ocultar código JavaScript visible
-                this.hideVisibleJavaScript();
-
                 // 5. Mostrar notificación
                 this.showNotification(`Fix aplicado - ${fixedButtons} botones arreglados`);
 
@@ -422,30 +419,6 @@
                 }
 
                 console.log('✅ Funciones VBScript reemplazadas por JavaScript');
-            }
-
-            hideVisibleJavaScript() {
-                // Ocultar elementos que contienen código JavaScript visible
-                const codeElements = document.querySelectorAll('*');
-
-                codeElements.forEach(element => {
-                    const text = element.textContent || '';
-                    const isCodeElement = (
-                        text.includes('function valida_datos') ||
-                        text.includes('document.envia_datos') ||
-                        text.includes('Sub valida_datos') ||
-                        text.includes('document.write(') ||
-                        (text.includes('function') && text.includes('document.') && element.children.length === 0));
-
-                    if (isCodeElement && element.tagName !== 'SCRIPT') {
-                        element.style.display = 'none';
-                        element.style.visibility = 'hidden';
-                        element.style.position = 'absolute';
-                        element.style.left = '-9999px';
-                        element.style.top = '-9999px';
-                        console.log('🙈 Código JavaScript oculto:', element);
-                    }
-                });
             }
 
             validaDatos() {
