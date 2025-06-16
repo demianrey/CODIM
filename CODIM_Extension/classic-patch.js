@@ -28,49 +28,153 @@
         return false; // Continuar con patch
     }
     
-    // ✅ NUEVA VERIFICACIÓN ESPECÍFICA PARA IFRAMES
-    function shouldSkipClassicPatch() {
-        // ✅ 1. Si estamos en iframe, NO aplicar classic patch
-        if (window !== window.top) {
-            console.log('🖼️ Estamos en iframe - NO aplicar classic patch, se manejará desde content script');
-            return true;
-        }
+	function shouldSkipClassicPatch() {
+    // ✅ 1. Si estamos en iframe, SOLO aplicar funciones VBScript (sin estilos)
+    if (window !== window.top) {
+        console.log('🖼️ Estamos en iframe - aplicando SOLO funciones VBScript');
         
-        // ✅ 2. Si hay indicador de que el iframe está siendo manejado
-        if (window.CODIM_IFRAME_ENHANCED || document.documentElement.getAttribute('data-codim-enhanced')) {
-            console.log('🎯 Página marcada como manejada por content script - saltando classic patch');
-            return true;
-        }
-        
-        // ✅ 3. Si es formulario de captura de incidentes
-        const bodyText = document.body.textContent || '';
-        const isIncidentForm = bodyText.includes('Captura de Incidentes') || 
-                              bodyText.includes('Proporciona la central') ||
-                              document.querySelector('input[name*="central"]') ||
-                              bodyText.includes('Reporte fallas a CNS');
-                              
-        if (isIncidentForm) {
-            console.log('📋 Formulario de captura detectado - NO aplicar classic patch, se manejará desde iframe enhancement');
-            return true;
-        }
-        
-        // ✅ 4. Si es página de resultados de equipos DSLAM
-        const isDSLAMResults = bodyText.includes('Reporte Fallas a CNS 2 Supervision') ||
-                               (document.querySelector('table') && bodyText.includes('Dslam') && bodyText.includes('Tecnologia'));
-                               
-        if (isDSLAMResults) {
-            console.log('📊 Página de resultados DSLAM detectada - NO aplicar classic patch, se manejará desde iframe enhancement');
-            return true;
-        }
-        
-        // ✅ 5. Verificar interfaz moderna
-        if (checkForModernInterface()) {
-            return true;
-        }
-        
-        return false; // Continuar con patch
+        // ✅ APLICAR SOLO LAS FUNCIONES VBSCRIPT EN IFRAME
+        initVBScriptFunctionsOnly();
+        return true; // Saltar el resto del patch
     }
     
+    // ✅ 2. Si hay indicador de que el iframe está siendo manejado
+    if (window.CODIM_IFRAME_ENHANCED || document.documentElement.getAttribute('data-codim-enhanced')) {
+        console.log('🎯 Página marcada como manejada por content script - saltando classic patch');
+        return true;
+    }
+    
+    // ✅ 3. Verificar interfaz moderna
+    if (checkForModernInterface()) {
+        return true;
+    }
+    
+    return false; // Continuar con patch
+}
+	
+	function initVBScriptFunctionsOnly() {
+    console.log('🔧 Aplicando SOLO funciones VBScript en iframe...');
+    
+    // Helpers globales
+    window.trim = (str) => str ? str.replace(/^\s+|\s+$/g, '') : '';
+    window.len = (str) => str ? str.length : 0;
+    window.mid = (str, start, length) => str ? str.substring(start - 1, start - 1 + length) : '';
+    window.asc = (char) => char ? char.charCodeAt(0) : 0;
+    window.msgbox = (message) => alert(message);
+    
+    // ✅ FUNCIÓN valida_datos PARA IFRAME
+    window.valida_datos = function() {
+        console.log('🔍 Ejecutando validación en iframe...');
+        
+        const form = document.envia_datos || 
+                    document.forms.envia_datos || 
+                    document.forms[0] ||
+                    document.querySelector('form[name="envia_datos"]');
+        
+        if (!form) {
+            console.error('❌ No se encontró el formulario');
+            alert('Error: No se encontró el formulario');
+            return false;
+        }
+        
+        const fallaField = form.cual_falla || form.querySelector('[name="cual_falla"]');
+        
+        if (!fallaField) {
+            console.log('⚠️ Campo cual_falla no encontrado, enviando formulario...');
+            form.submit();
+            return true;
+        }
+        
+        const varz = window.trim(fallaField.value);
+        console.log('📋 Falla seleccionada:', varz);
+        
+        if (varz !== "00" && varz !== "") {
+            const obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
+            
+            if (!obsField) {
+                console.log('⚠️ Campo obsdslam no encontrado, enviando formulario...');
+                form.submit();
+                return true;
+            }
+            
+            const obsText = window.trim(obsField.value);
+            const cuenta = window.len(obsText);
+            
+            if (cuenta > 2) {
+                for (let i = 1; i <= cuenta; i++) {
+                    const letra = window.mid(obsText, i, 1);
+                    if (letra === "'" || window.asc(letra) === 10) {
+                        window.msgbox("En el Texto de OBS, Hay un Caracter Invalido.\nNo puedes utilizar apostrofe ni la tecla Enter.");
+                        return false;
+                    }
+                }
+                
+                const salvarField = form.salvar || form.querySelector('[name="salvar"]');
+                if (salvarField) {
+                    salvarField.value = "S";
+                }
+                
+                console.log('✅ Validación exitosa en iframe. Enviando formulario...');
+                form.submit();
+                return true;
+            } else {
+                window.msgbox("Es indispensable anotar comentarios.");
+                if (obsField.focus) obsField.focus();
+                return false;
+            }
+        } else {
+            window.msgbox("Favor de Seleccionar una Falla en el Catalogo.");
+            if (fallaField.focus) fallaField.focus();
+            return false;
+        }
+        
+        return false;
+    };
+    
+    // ✅ FUNCIÓN vertexto PARA IFRAME
+    window.vertexto = function() {
+        const form = document.envia_datos || 
+                    document.forms.envia_datos || 
+                    document.forms[0] ||
+                    document.querySelector('form[name="envia_datos"]');
+        
+        if (!form) return;
+        
+        const obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
+        if (!obsField) return;
+        
+        const obsText = window.trim(obsField.value);
+        const cuenta = window.len(obsText);
+        
+        if (cuenta > 0) {
+            const ultima = window.mid(obsText, cuenta, 1);
+            
+            if (ultima === "'") {
+                window.msgbox("Caracter Invalido.");
+                obsField.value = window.mid(obsField.value, 1, cuenta - 1);
+            } else if (window.asc(ultima) === 10) {
+                window.msgbox("Favor de NO utilizar la tecla Enter");
+                obsField.value = window.mid(obsField.value, 1, cuenta - 2);
+            } else if (cuenta > 30000) {
+                window.msgbox("Maximo puedes usar 30000 Caracteres.");
+                obsField.value = window.mid(obsField.value, 1, 30000);
+            }
+        }
+    };
+    
+    // Función cancelar
+    window.cancelar = function() {
+        console.log('🔙 Cancelar en iframe');
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = '/';
+        }
+    };
+    
+    console.log('✅ Funciones VBScript aplicadas SOLO en iframe');
+}
+	
     // ✅ VERIFICACIÓN INICIAL
     if (shouldSkipClassicPatch()) {
         return;
@@ -112,28 +216,31 @@
             }
 
             applyPatch() {
-                // 1. Reemplazar funciones VBScript
-                this.replaceVBScriptFunctions();
-                
-                // 2. Aplicar estilos según tipo de página (SOLO si no hay interfaz moderna)
-                if (!document.getElementById('modern-codim-interface')) {
-                    this.applyStyles();
-                }
-                
-                // 3. Arreglar botones problemáticos
-                const fixedButtons = this.fixAllButtons();
-                
-                // 4. Limpiar imágenes problemáticas
-                this.cleanProblematicImages();
-                
-                // 5. Mostrar notificación
-                this.showNotification(`Fix aplicado - ${fixedButtons} botones arreglados`);
-                
-                // 6. Limpiezas adicionales
-                this.scheduleAdditionalCleanups();
-                
-                console.log('✅ CODIM CNS Fix aplicado exitosamente');
-            }
+    // 1. Reemplazar funciones VBScript
+    this.replaceVBScriptFunctions();
+    
+    // 2. Aplicar estilos según tipo de página (SOLO si no hay interfaz moderna)
+    if (!document.getElementById('modern-codim-interface')) {
+        this.applyStyles();
+    }
+    
+    // 3. Arreglar botones problemáticos
+    const fixedButtons = this.fixAllButtons();
+    
+    // 4. Limpiar imágenes problemáticas
+    this.cleanProblematicImages();
+    
+    // ✅ NUEVO: Ocultar código JavaScript visible
+    this.hideVisibleJavaScript();
+    
+    // 5. Mostrar notificación
+    this.showNotification(`Fix aplicado - ${fixedButtons} botones arreglados`);
+    
+    // 6. Limpiezas adicionales
+    this.scheduleAdditionalCleanups();
+    
+    console.log('✅ CODIM CNS Fix aplicado exitosamente');
+}
 
             // ===============================
             // REEMPLAZO DE VBSCRIPT
@@ -148,11 +255,10 @@
     window.asc = (char) => char ? char.charCodeAt(0) : 0;
     window.msgbox = (message) => alert(message);
     
-    // ✅ CAMBIO CRÍTICO: Función valida_datos DIRECTA (no this.validaDatos)
-    window.valida_datos = () => {
+    // ✅ CORREGIDO: Function declaration en lugar de arrow function
+    window.valida_datos = function() {
         console.log('🔍 Ejecutando validación de datos (CORREGIDA)...');
         
-        // Buscar formulario de múltiples maneras
         const form = document.envia_datos || 
                     document.forms.envia_datos || 
                     document.forms[0] ||
@@ -166,7 +272,6 @@
         
         console.log('✅ Formulario encontrado:', form.name);
         
-        // Buscar campo de falla
         const fallaField = form.cual_falla || form.querySelector('[name="cual_falla"]');
         
         if (!fallaField) {
@@ -178,9 +283,7 @@
         const varz = window.trim(fallaField.value);
         console.log('📋 Falla seleccionada:', varz);
         
-        // Validación principal - EXACTA al VBScript original
         if (varz !== "00" && varz !== "") {
-            // Buscar campo de observaciones
             const obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
             
             if (!obsField) {
@@ -194,7 +297,6 @@
             console.log('📝 Observaciones length:', cuenta);
             
             if (cuenta > 2) {
-                // Validar caracteres prohibidos
                 for (let i = 1; i <= cuenta; i++) {
                     const letra = window.mid(obsText, i, 1);
                     if (letra === "'" || window.asc(letra) === 10) {
@@ -203,7 +305,6 @@
                     }
                 }
                 
-                // ✅ CRÍTICO: Marcar campo salvar como "S"
                 const salvarField = form.salvar || form.querySelector('[name="salvar"]');
                 if (salvarField) {
                     salvarField.value = "S";
@@ -213,7 +314,6 @@
                 console.log('✅ Validación exitosa. Enviando formulario...');
                 
                 try {
-                    // ✅ ENVÍO FORZADO
                     form.submit();
                     return true;
                 } catch (error) {
@@ -223,20 +323,20 @@
                 }
             } else {
                 window.msgbox("Es indispensable anotar comentarios.");
-                obsField.focus();
+                if (obsField.focus) obsField.focus();
                 return false;
             }
         } else {
             window.msgbox("Favor de Seleccionar una Falla en el Catalogo.");
-            fallaField.focus();
+            if (fallaField.focus) fallaField.focus();
             return false;
         }
         
         return false;
     };
     
-    // ✅ CAMBIO CRÍTICO: Función vertexto DIRECTA (no this.verTexto)
-    window.vertexto = () => {
+    // ✅ CORREGIDO: Function declaration en lugar de arrow function
+    window.vertexto = function() {
         const form = document.envia_datos || 
                     document.forms.envia_datos || 
                     document.forms[0] ||
@@ -266,7 +366,7 @@
         }
     };
 
-    // Funciones para manejo de ventanas emergentes - GLOBALES
+    // Resto del código igual...
     if (typeof window.ventana === 'undefined') {
         window.ventana = null;
     }
@@ -277,7 +377,6 @@
         }
         if (pagina && pagina !== "") {
             setTimeout(function() {
-                // Navegar en la misma ventana como IE
                 window.location.href = `ver_rep.asp?folio=${pagina}`;
             }, tarda || 100);
         }
@@ -286,7 +385,6 @@
     window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
         console.log('🔄 cambia_menu llamado:', arguments);
         
-        // Si es una consulta de folio - navegar en la misma ventana
         if (seccion === 'consulta' && (folio || busca || param3)) {
             const folioFinal = folio || busca || param3;
             const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
@@ -295,24 +393,20 @@
             return;
         }
         
-        // Para otros casos, usar el método original si existe
         if (typeof window.top?.cambia_menu === 'function') {
             window.top.cambia_menu.apply(window.top, arguments);
         }
     };
     
-    // Función cancelar para botones "Regresar"
     window.cancelar = function() {
         console.log('🔙 Función cancelar ejecutada');
         if (window.history.length > 1) {
             window.history.back();
         } else {
-            // Si no hay historial, ir a página principal
             window.location.href = '/';
         }
     };
 
-    // Asegurar que las funciones estén en el ámbito global correcto
     if (typeof window.top !== 'undefined') {
         window.top.cierra_opcion = window.cierra_opcion;
         window.top.cambia_menu = window.cambia_menu;
@@ -320,6 +414,31 @@
     }
     
     console.log('✅ Funciones VBScript reemplazadas por JavaScript');
+}
+
+		hideVisibleJavaScript() {
+    // Ocultar elementos que contienen código JavaScript visible
+    const codeElements = document.querySelectorAll('*');
+    
+    codeElements.forEach(element => {
+        const text = element.textContent || '';
+        const isCodeElement = (
+            text.includes('function valida_datos') ||
+            text.includes('document.envia_datos') ||
+            text.includes('Sub valida_datos') ||
+            text.includes('document.write(') ||
+            (text.includes('function') && text.includes('document.') && element.children.length === 0)
+        );
+        
+        if (isCodeElement && element.tagName !== 'SCRIPT') {
+            element.style.display = 'none';
+            element.style.visibility = 'hidden';
+            element.style.position = 'absolute';
+            element.style.left = '-9999px';
+            element.style.top = '-9999px';
+            console.log('🙈 Código JavaScript oculto:', element);
+        }
+    });
 }
 			
             validaDatos() {
@@ -479,20 +598,17 @@
                 this.markAsFixed(btn, '#4CAF50');
             }
 
-            fixVBScriptButton(btn) {
-    const originalOnclick = btn.onclick;
-    
+    fixVBScriptButton(btn) {
     btn.removeAttribute('onclick');
     
-    // ✅ NUEVA FUNCIÓN DE CLICK MÁS ROBUSTA
     btn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('📋 Ejecutando validación corregida desde botón VBScript...');
+        console.log('📋 Ejecutando validación desde botón VBScript...');
         
-        // ✅ EJECUTAR VALIDACIÓN CON CONTEXTO CORRECTO
         try {
+            // Llamar directamente a la función global
             const result = window.valida_datos();
             console.log('✅ Resultado validación:', result);
             return result;

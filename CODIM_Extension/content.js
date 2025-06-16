@@ -3958,7 +3958,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
 	
 	// ✅ MÉTODO MEJORADO: processIframeContent 
 // Agregar la limpieza de código después del CSS
-processIframeContent(iframe, iframeDoc) {
+	processIframeContent(iframe, iframeDoc) {
     console.log('🔄 Procesando contenido del iframe...');
     console.log('📄 Document title:', iframeDoc.title);
     console.log('📄 Body content length:', iframeDoc.body?.textContent?.length || 0);
@@ -3981,9 +3981,132 @@ processIframeContent(iframe, iframeDoc) {
     }, 200);
     
     
-    // ✅ PASO 5: Inyectar funciones de compatibilidad
+    // ✅ PASO 5: Inyectar funciones de compatibilidad COMPLETAS CON VBSCRIPT
     const compatScript = iframeDoc.createElement('script');
     compatScript.textContent = `
+        console.log('🔧 Inyectando funciones VBScript completas en iframe...');
+        
+        // ✅ HELPERS VBSCRIPT
+        window.trim = function(str) { return str ? str.replace(/^\\s+|\\s+$/g, '') : ''; };
+        window.len = function(str) { return str ? str.length : 0; };
+        window.mid = function(str, start, length) { return str ? str.substring(start - 1, start - 1 + length) : ''; };
+        window.asc = function(char) { return char ? char.charCodeAt(0) : 0; };
+        window.msgbox = function(message) { alert(message); };
+        
+        // ✅ FUNCIÓN VALIDA_DATOS COMPLETA
+        window.valida_datos = function() {
+            console.log('🔍 valida_datos ejecutada en iframe');
+            
+            var form = document.envia_datos || 
+                      document.forms.envia_datos || 
+                      document.forms[0] ||
+                      document.querySelector('form[name="envia_datos"]');
+            
+            if (!form) {
+                console.error('❌ No se encontró el formulario envia_datos');
+                alert('Error: No se encontró el formulario');
+                return false;
+            }
+            
+            console.log('✅ Formulario encontrado:', form.name);
+            
+            var fallaField = form.cual_falla || form.querySelector('[name="cual_falla"]');
+            
+            if (!fallaField) {
+                console.log('⚠️ Campo cual_falla no encontrado, enviando formulario directamente...');
+                form.submit();
+                return true;
+            }
+            
+            var varz = window.trim(fallaField.value);
+            console.log('📋 Falla seleccionada:', varz);
+            
+            // Validación principal - EXACTA al VBScript original
+            if (varz !== "00" && varz !== "") {
+                var obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
+                
+                if (!obsField) {
+                    console.log('⚠️ Campo obsdslam no encontrado, enviando formulario...');
+                    form.submit();
+                    return true;
+                }
+                
+                var obsText = window.trim(obsField.value);
+                var cuenta = window.len(obsText);
+                console.log('📝 Observaciones length:', cuenta);
+                
+                if (cuenta > 2) {
+                    // Validar caracteres prohibidos
+                    for (var i = 1; i <= cuenta; i++) {
+                        var letra = window.mid(obsText, i, 1);
+                        if (letra === "'" || window.asc(letra) === 10) {
+                            window.msgbox("En el Texto de OBS, Hay un Caracter Invalido.\\nNo puedes utilizar apostrofe ni la tecla Enter.");
+                            return false;
+                        }
+                    }
+                    
+                    // Marcar campo salvar como "S"
+                    var salvarField = form.salvar || form.querySelector('[name="salvar"]');
+                    if (salvarField) {
+                        salvarField.value = "S";
+                        console.log('✅ Campo salvar marcado como "S"');
+                    }
+                    
+                    console.log('✅ Validación exitosa. Enviando formulario...');
+                    
+                    try {
+                        form.submit();
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error al enviar:', error);
+                        alert('Error al enviar el formulario: ' + error.message);
+                        return false;
+                    }
+                } else {
+                    window.msgbox("Es indispensable anotar comentarios.");
+                    if (obsField.focus) obsField.focus();
+                    return false;
+                }
+            } else {
+                window.msgbox("Favor de Seleccionar una Falla en el Catalogo.");
+                if (fallaField.focus) fallaField.focus();
+                return false;
+            }
+            
+            return false;
+        };
+        
+        // ✅ FUNCIÓN VERTEXTO COMPLETA
+        window.vertexto = function() {
+            var form = document.envia_datos || 
+                      document.forms.envia_datos || 
+                      document.forms[0] ||
+                      document.querySelector('form[name="envia_datos"]');
+            
+            if (!form) return;
+            
+            var obsField = form.obsdslam || form.querySelector('[name="obsdslam"]');
+            if (!obsField) return;
+            
+            var obsText = window.trim(obsField.value);
+            var cuenta = window.len(obsText);
+            
+            if (cuenta > 0) {
+                var ultima = window.mid(obsText, cuenta, 1);
+                
+                if (ultima === "'") {
+                    window.msgbox("Caracter Invalido.");
+                    obsField.value = window.mid(obsField.value, 1, cuenta - 1);
+                } else if (window.asc(ultima) === 10) {
+                    window.msgbox("Favor de NO utilizar la tecla Enter");
+                    obsField.value = window.mid(obsField.value, 1, cuenta - 2);
+                } else if (cuenta > 30000) {
+                    window.msgbox("Maximo puedes usar 30000 Caracteres.");
+                    obsField.value = window.mid(obsField.value, 1, 30000);
+                }
+            }
+        };
+        
         // Funciones básicas para iframe
         if (typeof window.ventana === 'undefined') window.ventana = null;
         
@@ -4021,9 +4144,27 @@ processIframeContent(iframe, iframeDoc) {
         
         // MARCAR IFRAME COMO MANEJADO
         window.CODIM_IFRAME_ENHANCED = true;
+        
+        console.log('✅ Funciones VBScript completas inyectadas en iframe');
+        console.log('✅ valida_datos disponible:', typeof window.valida_datos);
+        console.log('✅ vertexto disponible:', typeof window.vertexto);
+		
+		setTimeout(function() {
+        console.log('🙈 Ocultando código JavaScript visible...');
+        var codeElements = document.querySelectorAll('div, span, p, td');
+        for (var i = 0; i < codeElements.length; i++) {
+            var text = codeElements[i].textContent;
+            if (text && (text.includes('function valida_datos') || text.includes('document.envia_datos'))) {
+                if (!codeElements[i].querySelector('input, select, button, a')) {
+                    codeElements[i].style.display = 'none';
+                    console.log('🙈 Elemento oculto:', codeElements[i].tagName);
+                }
+            }
+        }
+    }, 500);
     `;
     iframeDoc.head.appendChild(compatScript);
-    console.log('✅ Scripts de compatibilidad inyectados');
+    console.log('✅ Scripts de compatibilidad con VBScript inyectados');
     
     // ✅ PASO 6: Buscador DSLAM (solo para páginas apropiadas)
     setTimeout(() => {
@@ -4033,7 +4174,7 @@ processIframeContent(iframe, iframeDoc) {
     
     console.log('✅ Iframe enhancement completado');
 }
-
+	
     // ✅ MÉTODO: Forzar reset completo del layout
     forceLayoutReset(iframeDoc) {
     console.log('🔄 Forzando reset completo del layout en iframe...');
