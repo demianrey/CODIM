@@ -1,0 +1,764 @@
+<html>
+<head>
+<title>CODIM CNS</title>
+</head>
+
+<body>      		
+
+		<!-- <CUADRO PARA IMAGEN PRINCIPAL (INCLUYE MARCO MENU ) -->
+		<div style="position: absolute; top: 50; left: 5; z-index: 10">
+			<img border="0" src="menu.bmp" name="menux">
+		</div>
+		
+		<div id="letrero1" style="position: absolute; top: 49; left: 300; z-index: 10">
+			<img border="0" src="letrero1.gif" name="menu0">
+		</div> 
+
+		<!-- <CUADRO PARA LETRERO -->
+		<div style="position: absolute ;top: 2; left: 50; z-index: 10">
+			<img border="0" src="principal.gif">
+		</div> 
+
+		<!-- CUADRO PARA NOMBRE USUARIO -->
+		<div style="position: absolute; left: 120; top: 51; z-index: 18">
+			<table border = 0 width =190 height = 10><tr><td><font face="Trebuchet MS, helvetica"size="2" color="yellow"><b>Damian Reyes Hernandez             </b></font>&nbsp;</td></tr>
+			</table>
+		</div>
+
+		<!-- CUADRO PARA MARCO MENU -->
+		<p><div style="position: absolute; left: 235; top: 0; z-index: 10">
+			<span style="position: absolute; left: 0; top: 0">
+			<table border ="0" width ="590" height ="150"><tr><td><font face="helvetica" size="2" color="white"></font>&nbsp;</td></tr>
+			</table>
+			</span></div>
+		</p>
+		
+
+		<!-- MENU PRINCIPAL  -->					
+				<div onmouseout="javascript:cambiac('menu1','menu1a')" onmouseover="javascript:cambiab('menu1','menu1a')" onclick="javascript:selecciona('1')" style="cursor : hand; position: absolute; left: 270; top: 27; z-index: 10">
+					<img border="0" id="menu1" src="botona.bmp" width="110" height="25">
+				</div>
+				<div onmouseout="javascript:cambiac('menu1','menu1a')" onmouseover="javascript:cambiab('menu1','menu1a')" onclick="javascript:selecciona('1')" style="cursor : hand; position: absolute; left: 282; top: 31; z-index: 10">
+					<p id="menu1a" style="font-size:14;color:Blue;font-family:Century">Incidentes</p>
+				</div>				
+				
+
+		<!-- CUADRO PARA MARCO ADORNO-->
+
+		<p><div style="position: absolute; left: 0; top: 85; z-index: 10">
+			<span style="position: absolute; left: 0; top: 0">
+			<img border="0" id="adorno1" src="adorno1.bmp" name="adorno_1"></span>
+			</div>
+		</p>
+  
+		
+		<!-- CUADRO PARA MENU SECUNDARIO -->
+		<p><div style="position: absolute; left: 5; top: 145; z-index: 10">
+			<span style="position: absolute; left: 0; top: 0">
+			<img border="0" id="boton33" src="menu_secundario.bmp" name="boton_33">
+			</span></div>
+		</p>
+		
+		
+		<!-- MENU SECUNDARIO  -->				
+			<div id="opc1" style="visibility: hidden; cursor : hand; position: absolute; left: 290; top: 50; z-index: 10"> 								
+					<div onclick="javascript:cambia_menu('Nuevo Reporte','S')" style="cursor : hand; position: absolute; left: 20; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Nuevo Reporte
+						</font>
+					</div> 
+					<div style="position: absolute; left: 10; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Pendientes','S')" style="cursor : hand; position: absolute; left: 115; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Pendientes
+						</font>
+					</div> 
+					<div style="position: absolute; left: 105; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Consultar Historico','S')" style="cursor : hand; position: absolute; left: 195; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Consultar Historico
+						</font>
+					</div> 
+					<div style="position: absolute; left: 185; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>									
+			</div>				
+			<div id="opc2" style="visibility: hidden; cursor : hand; position: absolute; left: 290; top: 50; z-index: 10"> 								
+					<div onclick="javascript:cambia_menu('Tecnicos O.S.','')" style="cursor : hand; position: absolute; left: 20; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Tecnicos O.S.
+						</font>
+					</div> 
+					<div style="position: absolute; left: 10; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Tec. Quejas','')" style="cursor : hand; position: absolute; left: 115; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Tec. Quejas
+						</font>
+					</div> 
+					<div style="position: absolute; left: 105; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Iniciar Turno','')" style="cursor : hand; position: absolute; left: 200; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Iniciar Turno
+						</font>
+					</div> 
+					<div style="position: absolute; left: 190; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Programar Turno','')" style="cursor : hand; position: absolute; left: 295; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Programar Turno
+						</font>
+					</div> 
+					<div style="position: absolute; left: 285; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Configuracion','')" style="cursor : hand; position: absolute; left: 400; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Configuracion
+						</font>
+					</div> 
+					<div style="position: absolute; left: 390; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>									
+			</div>				
+			<div id="opc3" style="visibility: hidden; cursor : hand; position: absolute; left: 290; top: 50; z-index: 10"> 								
+					<div onclick="javascript:cambia_menu('Productividad','')" style="cursor : hand; position: absolute; left: 20; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Productividad
+						</font>
+					</div> 
+					<div style="position: absolute; left: 10; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Resumen','')" style="cursor : hand; position: absolute; left: 115; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Resumen
+						</font>
+					</div> 
+					<div style="position: absolute; left: 105; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>									
+			</div>				
+			<div id="opc4" style="visibility: hidden; cursor : hand; position: absolute; left: 290; top: 50; z-index: 10"> 								
+					<div onclick="javascript:cambia_menu('Turno OS','')" style="cursor : hand; position: absolute; left: 20; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Turno OS
+						</font>
+					</div> 
+					<div style="position: absolute; left: 10; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Turno Quejas','')" style="cursor : hand; position: absolute; left: 90; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Turno Quejas
+						</font>
+					</div> 
+					<div style="position: absolute; left: 80; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Iniciar Turno Pots','')" style="cursor : hand; position: absolute; left: 180; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Iniciar Turno Pots
+						</font>
+					</div> 
+					<div style="position: absolute; left: 170; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Programar Turno Futuro','')" style="cursor : hand; position: absolute; left: 300; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Programar Turno Futuro
+						</font>
+					</div> 
+					<div style="position: absolute; left: 290; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Configurar','')" style="cursor : hand; position: absolute; left: 440; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Configurar
+						</font>
+					</div> 
+					<div style="position: absolute; left: 430; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>									
+			</div>				
+			<div id="opc5" style="visibility: hidden; cursor : hand; position: absolute; left: 290; top: 50; z-index: 10"> 								
+					<div onclick="javascript:cambia_menu('Tecnicos OS','')" style="cursor : hand; position: absolute; left: 20; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Tecnicos OS
+						</font>
+					</div> 
+					<div style="position: absolute; left: 10; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Tecnicos Q','')" style="cursor : hand; position: absolute; left: 105; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Tecnicos Q
+						</font>
+					</div> 
+					<div style="position: absolute; left: 95; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Iniciar Turno SVA','')" style="cursor : hand; position: absolute; left: 185; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Iniciar Turno SVA
+						</font>
+					</div> 
+					<div style="position: absolute; left: 175; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Turno Futuro SVA','')" style="cursor : hand; position: absolute; left: 300; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Turno Futuro SVA
+						</font>
+					</div> 
+					<div style="position: absolute; left: 290; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>														
+					<div onclick="javascript:cambia_menu('Configurar SVA','')" style="cursor : hand; position: absolute; left: 410; top: 9; z-index: 10">
+						<font face="Arial" size="2" color="white">
+							Configurar SVA
+						</font>
+					</div> 
+					<div style="position: absolute; left: 400; top: 7; z-index: 10">
+						<font size="2" color="white">
+							<b>|</b>
+						</font>
+					</div>									
+			</div>				
+		
+		
+		
+		<!-- Pone la Fecha -->
+		<p><div style="position: absolute; left: 615; top: 106; z-index: 10">
+			<span style="position: absolute; left: 0; top: 0">     
+			<td align="center"><B><font size="2" face="helvetica" color="White">23 de  Agosto  de 2025</font></B></td>
+			</span></div>
+		
+				
+    	<!-- CUADRO PARA IP-->
+		<div onclick="javascript:abre('ip')" style="cursor : hand; position: absolute; left: 18; top: 160; z-index: 50">
+			<img border="0" src="cuadro.bmp">
+		</div>	
+		<div onclick="javascript:abre('ip')" style="cursor : hand; position: absolute; left: 30; top: 172; z-index: 50">
+			<font size="2" face="helvetica" color="Blue">Conocer Mi IP</font>
+		</div>			
+		<div id="ip" style="position: absolute; left: 18; top: 160; z-index: 100; clip:rect(0 250 0 0)">
+			<img border="0" src="menu3.bmp">
+				<div style="position: absolute; left: 8; top: 25; z-index: 100">
+					<table>
+					<tr>
+					<td align="center"><font size="1" face="helvetica" color="Blue"><b>Tu ip </b></font><td>
+					</tr>
+					<tr><td>&nbsp;</td></tr>					
+					<tr>
+					<td><font size="1" face="helvetica" color="Blue"><b>dreyes</b></font></td>
+					</tr>					
+					<tr>
+					<td><font size="1" face="helvetica" color="Blue"><b>13.36.3.200</b></font></td>
+					</tr>
+					</table>
+				</div>
+				<div style="position: absolute; left: 11; top: 28; z-index: 100">
+					<font size="1px" face="helvetica" color="Blue">______________</font>
+				</div>
+			<div onclick="javascript:cierra('ip')" style="cursor : hand; position: absolute; left: 55; top: 155; z-index: 100">
+				<font size="1" face="helvetica" color="Blue"><b>[cerrar]</b></font>
+			</div>			
+		</div>		
+		
+    	<!-- CUADRO PARA Ligas-->
+		<div onclick="javascript:abre('menu_ligas')" style="cursor : hand; position: absolute; left: 18; top: 220; z-index: 50">
+			<img border="0" src="cuadro.bmp">
+		</div>	
+		<div onclick="javascript:abre('menu_ligas')" style="cursor : hand; position: absolute; left: 30; top: 232; z-index: 50">
+			<font size="2" face="helvetica" color="Blue">Otras Paginas</font>
+		</div>	
+		<div id="menu_ligas" style="position: absolute; left: 18; top: 220; z-index: 100; clip:rect(0 0 0 0)">
+			<img border="0" src="menu3.bmp">
+			<div style="position: absolute; left: 15; top: 10; z-index: 100">
+				<font size="1px" face="helvetica" color="Blue">Ligas de Interes</font>
+			</div>			
+			<div style="position: absolute; left: 11; top: 15; z-index: 100">
+				<font size="1px" face="helvetica" color="Blue">______________</font>
+			</div>			
+			<div onclick="javascript:llamar('http://intranet/')" style="cursor : hand; position: absolute; left: 10; top: 45; z-index: 100">
+				<font size="1" face="helvetica" color="Blue">Intranet Telmex</font>
+			</div>
+			<div onclick="javascript:llamar('http://10.192.5.18/cobo')" style="cursor : hand; position: absolute; left: 10; top: 65; z-index: 100">
+				<font size="1" face="helvetica" color="Blue">COBO</font>
+			</div>
+			<div onclick="javascript:llamar('http://10.192.5.18/emma')" style="cursor : hand; position: absolute; left: 10; top: 85; z-index: 100">
+				<font size="1" face="helvetica" color="Blue">EMMA</font>
+			</div>
+			<div onclick="javascript:llamar('http://tmxjalcns01')" style="cursor : hand; position: absolute; left: 10; top: 105; z-index: 100">
+				<font size="1" face="helvetica" color="Blue">COQUI</font>
+			</div>
+			<div onclick="javascript:llamar('http://10.94.138.27/cgi-bin/solmer/Sidecci/sd_bienvenida.jsp')" style="cursor : hand; position: absolute; left: 10; top: 125; z-index: 100">
+				<font size="1" face="helvetica" color="Blue">SIDECCI</font>
+			</div>
+			<div onclick="javascript:cierra('menu_ligas')" style="cursor : hand; position: absolute; left: 55; top: 155; z-index: 100">
+				<font size="1" face="helvetica" color="Blue"><b>[cerrar]</b></font>
+			</div>
+		</div>	
+		
+		
+		<!-- MENU PARA SEMAFOROS INFINITUM, POTS y REDI		-->	
+		
+		
+		 <div style="visibility:hidden;position: absolute; left: 18; top: 400; z-index: 50">
+		 	<img border="0" src="cuadro.bmp" width="110" height="100">
+			<font size="2" face="helvetica" color="Blue">
+			<div style="position: absolute; left: 20; top: 10; z-index: 50"><u>Semaforos</u></div>	
+			</font>
+		</div>
+			
+		<div style="visibility:hidden;position: absolute; left: 100; top: 432; z-index: 100">
+			<img id="ind_infini" border="0" src="" width="12" height="12">
+		</div>
+		
+		<div style="visibility:hidden;position: absolute; left: 100; top: 452; z-index: 100">
+			<img id="ind_pots" border="0" src="" width="12" height="12">
+		</div>
+		
+		<div style="visibility:hidden;position: absolute; left: 100; top: 470; z-index: 100">
+			<img id="ind_redi" border="0" src="" width="12" height="12">
+		</div>		
+			
+		<!-- SEMAFORO INFINITUM		-->	
+  		<div id="win_sema" style="position: absolute; left: 18; top: 500; z-index: 100; clip:rect(0 0 0 0)">
+			<iframe name="win_sema1" id="win_sema1" width="110" height="177" src="semaforo.asp" scrolling=NO frameborder=0></iframe>
+		</div>
+
+		<!-- SEMAFORO POTS		-->	
+  		<div id="win_sema_pots" style="position: absolute; left: 18; top: 500; z-index: 100; clip:rect(0 0 0 0)">
+			<iframe name="win_sema_pots1" id="win_sema_pots1" width="110" height="177" src="semaforo_pots.asp" scrolling=NO frameborder=0></iframe>
+		</div>
+		
+		<!-- SEMAFORO REDI		-->	
+  		<div id="win_sema_redi" style="position: absolute; left: 18; top: 500; z-index: 100; clip:rect(0 0 0 0)">
+			<iframe name="win_sema_redi1" id="win_sema_redi1" width="110" height="177" src="semaforo_redi.asp" scrolling=NO frameborder=0></iframe>
+		</div>				
+
+
+		<!-- CUADRO PARA PRESENTAR LAS OPCIONES CENTRALES-->
+
+		<div id="ventana" style="visibility:visible; position: absolute; left: 160; top: 150; z-index: 5">
+			<iframe name="win_central" id="win_central" width="830" src="primera.asp" height="640" scrolling=auto frameborder=0></iframe>
+		</div> 	
+	
+    	<form method="post" name="menu_activo" action="acceso.asp">
+			<input type="hidden" name="prendido" value="">
+			<input type="hidden" name="ops_" value="">			
+		</form>				
+
+
+<script language="javascript">
+
+var esta_abierto = ""
+var ventana_abierta = ""
+var ventana_abierta1 = ""
+
+var tiempo
+var tiempo1
+var y
+var y1
+
+function recarga_infini()
+{
+	frames['win_sema1'].window.location.reload()
+}
+
+function recarga_pots()
+{
+	frames['win_sema_pots1'].window.location.reload()
+}
+
+function recarga_redi()
+{
+	frames['win_sema_redi1'].window.location.reload()
+}
+ 
+function abre_opcion(recibe,eje1,eje2)
+{		
+	tiempox1=recibe
+	y5 = eje1
+	x5 = eje2
+	if (tiempox1 == true)
+	{  
+		if( y5 < 620 )
+		{
+			y5 += 15;
+			x5 += 20;
+		}
+		else 
+			tiempox1 = false;
+            
+		ventana.style.clip = "rect(0,"+x5+","+y5+",0)";
+		setTimeout("abre_opcion(tiempox1,y5,x5)", 1);
+	}
+}
+
+function retarda(tarda)
+{
+	setTimeout('abre_opcion(true,0,0)',tarda)
+}
+
+function cierra_opcion(recibe,eje1,eje2,pagina,tarda)
+{	
+	tiempox=recibe
+	y = eje1
+	x = eje2
+	if (tiempox == true)
+	{  
+		if( y > 5 )
+		{
+
+			y -= 20;
+			x -= 25;
+		}
+		else 
+			tiempox = false;
+     
+		ventana.style.clip = "rect(0,"+x+","+y+",0)";
+		setTimeout("cierra_opcion(tiempox,y,x,pagina,tarda)", 1);
+	}
+	else
+	{
+		ventana.style.clip = "rect(0,0,0,0)";		
+		document.getElementById('win_central').src = pagina	
+		retarda(tarda)
+		
+	}
+	
+}
+
+function cambia_menu(activar,permiso,tipo,c,b,z,y)
+{
+	pagina=""
+	if (permiso=="S")
+	{
+		tarda = 2
+		switch(activar)
+		{
+			case "Nuevo Reporte" :
+				pagina = "cns2_sup.asp"   
+				break
+			case "Tecnicos O.S." :
+				pagina = "opcion1.asp"   		  
+				break
+			case "Tec. Quejas" :
+				pagina = "opcion2.asp"   		  
+				break
+			case "Iniciar Turno" :
+				pagina = "opcion3.asp"  
+				break
+			case "Programar Turno" :
+				pagina = "opcion4.asp"  
+				break
+			case "resumen" :
+				if (c == "0")
+					alert("No Hay Reportes Pendientes.")
+				else
+					pagina = "resumen.asp?a=" + tipo +"&b="+b+"&c="+y
+				break
+			case "modifica" :
+				pagina = "modi_rep.asp?folio=" + tipo +"&opc="+c+"&tipo_f="+b+"&ver="+z+"&busca="+y
+				break
+			case "modifica2" :
+				pagina = "modi_rep2.asp?folio=" + tipo +"&falla="+c
+				break
+			case "Consultar Historico" :
+				pagina = "rep_hist.asp?a="+tipo+"&b="+c+"&c="+b
+				break
+			case "consulta" :
+				pagina = "ver_rep.asp?folio=" + tipo +"&opc="+c+"&tipo_f="+b+"&ver="+z+"&busca="+y
+				break
+			case "Productividad" :
+				pagina = "rep_productividad.asp"
+				tarda = 10
+				break
+			case "Pendientes" :
+				xx = "cns"
+				pagina = "resumen.asp?c="+xx
+				break
+			case "pisa" :
+				pagina = "errores_pisa.asp"
+				break
+			case "cns2_sup" :
+				pagina = "cns2_sup.asp?a="+tipo
+				break
+			case "Configuracion" :
+				pagina = "configura.asp"
+				break
+			case "Primera" :
+				pagina = "primera.asp"
+				break				
+			case "Turno OS" :
+				pagina = "pots1.asp"
+				break	
+			case "Turno Quejas" :
+				pagina = "pots2.asp"
+				break				
+			case "Iniciar Turno Pots" :
+				pagina = "pots3.asp"
+				break
+			case "Programar Turno Futuro" :
+				pagina = "pots4.asp"
+				break
+			case "Configurar" :
+				pagina = "pots5.asp"
+				break
+			case "personal" :
+				pagina = "personal_pots.asp"
+				break
+			case "Tecnicos OS" :
+				pagina = "redi1.asp"
+				break
+			case "Tecnicos Q" :
+				pagina = "redi2.asp"
+				break
+			case "Iniciar Turno SVA" :
+				pagina = "redi3.asp"
+				break
+			case "Turno Futuro SVA" :
+				pagina = "redi4.asp"
+				break
+			case "Configurar SVA" :
+				pagina = "redi5.asp"
+				break
+		}
+		if (pagina != "")
+		{			
+			cierra_opcion(true,700,600,pagina,tarda)
+			
+		}
+	}
+	else
+		alert("No Tienes Privilegios para Ver Esta Informacion")
+}
+
+function cambiab(cual,cual1)
+{
+	nom_menu = "menu" + esta_abierto
+	if (nom_menu != cual)
+	{
+		document.getElementById(cual).src="botonb.bmp"	
+		document.getElementById(cual1).style.color = "white"
+	}
+}
+
+
+function cambiac(cual,cual1)
+{
+	nom_menu = "menu" + esta_abierto
+	if (nom_menu != cual)
+	{
+		document.getElementById(cual).src="botona.bmp"	
+		document.getElementById(cual1).style.color = "blue"
+	}
+}
+
+function selecciona(cual)
+{	
+	if (esta_abierto != "")
+	{
+		opcx = "opc" + esta_abierto
+		nom_menu = "menu" + esta_abierto
+		nom_menua = "menu" + esta_abierto + "a"			
+		document.getElementById(opcx).style.visibility="Hidden"
+		document.getElementById(nom_menu).src="botona.bmp"
+		document.getElementById(nom_menua).style.color = "blue"
+	}
+	esta_abierto = cual
+	opcx = "opc" + cual
+	nom_menu = "menu" + cual
+	nom_menua = "menu" + cual + "a"	
+	document.getElementById(nom_menu).src="botonc.bmp"
+	document.getElementById(nom_menua).style.color = "white"
+	document.getElementById(opcx).style.visibility="visible"
+	document.getElementById("letrero1").style.visibility="hidden"
+}
+
+
+
+function abre_sema(peticion) 
+{
+	tiempo = true
+	y = 0
+	tarda = 0
+	if (ventana_abierta1 != "")
+		tarda = 2
+	mandale = peticion
+	if (ventana_abierta1 != peticion)
+	{	
+		cierra_sema(ventana_abierta1)
+		setTimeout('abre_todo1(mandale)',tarda)
+	}	
+}
+
+function cierra_sema(pide)
+{
+	tiempo1 = true
+	y1 = 250
+	envia = pide
+	if (envia != "")
+	{
+		cierra_todo1(envia)
+		}
+}
+
+function abre_todo1(recibe)
+{
+  envia = recibe
+  if (tiempo == true)   
+  {  
+    if( y < 251 )
+    	y += 10;
+    else 
+    	tiempo = false;
+     
+   	document.getElementById(envia).style.clip = "rect(0,250,"+y+",0)";
+    setTimeout("abre_todo1(envia)", 1);
+  }
+  	ventana_abierta1 = envia
+}
+
+function cierra_todo1(recibe1)
+{
+	envia1 = recibe1
+	if (tiempo1 == true)
+	{
+		if( y1 > 0 )
+		{
+			y1 -= 10;
+			if (y1 < 0)
+				y1 = 0
+		} 
+    	else 
+			tiempo1 = false;
+			
+   		document.getElementById(envia1).style.clip = "rect(0,112,"+y1+",0)";
+    	setTimeout("cierra_todo1(envia1)", 1);
+  	}
+  	ventana_abierta1 = ""
+}
+
+function abre(peticion) 
+{
+	tiempo = true
+	y = 0
+	tarda = 0
+	if (ventana_abierta != "")
+		tarda = 2
+	mandale = peticion
+	if (ventana_abierta != peticion)
+	{	
+		cierra(ventana_abierta)
+		setTimeout('abre_todo(mandale)',tarda)
+	}	
+}
+
+function cierra(pide)
+{
+	tiempo1 = true
+	y1 = 250
+	envia = pide
+	if (envia != "")
+	{
+		cierra_todo(envia)
+		}
+}
+
+function abre_todo(recibe)
+{
+  envia = recibe
+  if (tiempo == true)   
+  {  
+    if( y < 251 )
+    	y += 10;
+    else 
+    	tiempo = false;
+     
+   	document.getElementById(envia).style.clip = "rect(0,250,"+y+",0)";
+    setTimeout("abre_todo(envia)", 1);
+  }
+  	ventana_abierta = envia
+}
+
+function cierra_todo(recibe1)
+{
+	envia1 = recibe1
+	if (tiempo1 == true)
+	{
+		if( y1 > 0 )
+		{
+			y1 -= 10;
+			if (y1 < 0)
+				y1 = 0
+		} 
+    	else 
+			tiempo1 = false;
+			
+   		document.getElementById(envia1).style.clip = "rect(0,112,"+y1+",0)";
+    	setTimeout("cierra_todo(envia1)", 1);
+  	}
+  	ventana_abierta = ""
+}
+
+
+function llamar(pagina)
+{
+	window.open(pagina,"intra")	
+	cierra('menu_ligas')
+}
+
+
+</script>
+
+</body>
