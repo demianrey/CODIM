@@ -1147,7 +1147,7 @@ class CODIMResumenWidget {
                 left: 0;
                 width: 100%;
                 height: 4px;
-                background: linear-gradient(90deg, #4A90E2, #764ba2);
+                background: linear-gradient(90deg, #4A90E2, #1294c0);
                 opacity: 0;
                 transition: opacity 0.3s ease;
             }
@@ -4184,7 +4184,7 @@ Interfaz completamente renovada con funcionalidades mejoradas:
     applyElementSpecificStyles(element, elementType, index) {
         switch (elementType) {
         case 'header':
-            element.style.setProperty('background', 'linear-gradient(135deg, #667eea, #764ba2)', 'important');
+            element.style.setProperty('background', 'linear-gradient(135deg, #1285c0, #1294c0)', 'important');
             element.style.setProperty('color', 'white', 'important');
             element.style.setProperty('padding', '15px 20px', 'important');
             element.style.setProperty('text-align', 'center', 'important');
@@ -4412,7 +4412,7 @@ styleComplexCSMForm(iframeDoc) {
         // ✅ PASO 3: Header
         const header = iframeDoc.createElement('div');
         header.style.cssText = `
-            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            background: linear-gradient(135deg, #1285c0, #1294c0) !important;
             color: white !important;
             padding: 20px 30px !important;
             text-align: center !important;
@@ -5113,7 +5113,7 @@ extractFormAction(originalContent) {
             const header = iframeDoc.createElement('div');
             header.className = 'modern-form-header';
             header.style.cssText = `
-            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            background: linear-gradient(135deg, #1285c0, #1294c0) !important;
             color: white !important;
             padding: 25px 30px !important;
             text-align: center !important;
@@ -5911,7 +5911,7 @@ extractFormAction(originalContent) {
         div[style*="top:5"],
         div:first-child,
         body > div:first-child {
-            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            background: linear-gradient(135deg, #1285c0, #1294c0) !important;
             color: white !important;
             padding: 25px 30px !important;
             margin: 0 0 20px 0 !important;
@@ -6168,7 +6168,7 @@ extractFormAction(originalContent) {
                     width: 100vw !important;
                     height: 100vh !important;
                     z-index: 999999 !important;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                    background: linear-gradient(135deg, #1285c0 0%, #1294c0 100%) !important;
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
                 }
                 
@@ -6200,7 +6200,7 @@ extractFormAction(originalContent) {
                 }
                 
                 .modern-user-info {
-                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    background: linear-gradient(135deg, #1285c0, #1294c0);
                     color: white;
                     padding: 0.5rem 1rem;
                     border-radius: 25px;
@@ -6258,7 +6258,7 @@ extractFormAction(originalContent) {
                 }
                 
                 .modern-nav-tab.active {
-                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    background: linear-gradient(135deg, #1285c0, #1294c0);
                     color: white;
                     transform: translateY(-2px);
                 }
@@ -6354,7 +6354,7 @@ extractFormAction(originalContent) {
 			}
                 
                 .modern-content-header {
-                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    background: linear-gradient(135deg, #1285c0, #1294c0);
                     color: white;
                     padding: 0.75rem 1rem;
                     text-align: center;

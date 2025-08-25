@@ -340,8 +340,8 @@ class MASNETBackgroundService {
                     mensaje: responseData.mensaje,
                     payload: {
                         ...payload,
-                        clave: '***OCULTA***',
-                        reclave: '***OCULTA***'
+                        clave: requestData.clave,
+                        reclave: requestData.clave
                     }
                 };
             } else {
