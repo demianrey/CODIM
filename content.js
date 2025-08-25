@@ -4373,9 +4373,10 @@ styleComplexCSMForm(iframeDoc) {
     try {
         // ✅ VERIFICAR que es formulario CSM
         const hasCSMElements = (
-            iframeDoc.querySelector('select[name*="falla"]') &&
-            iframeDoc.querySelector('input[name*="pisa"], input[value*="VER-"]') &&
-            iframeDoc.querySelector('textarea[name*="obs"]')
+            iframeDoc.querySelector('select[name*="falla"]') ||
+            iframeDoc.querySelector('input[name*="pisa"]') ||
+            iframeDoc.querySelector('textarea[name*="obs"]') ||
+			iframeDoc.querySelector('form[name="antes"]')
         );
 
         if (!hasCSMElements) {
@@ -4594,30 +4595,66 @@ createCSMTableLayout(fields, iframeDoc) {
         margin: 20px 0;
         background: transparent;
     `;
+	
+	// ✅ ALTERNATIVA: CONVERTIR EL CAMPO HIDDEN EN VISIBLE
+if (fields.folio) {
+    fields.folio.type = 'text';
+    fields.folio.readOnly = true;
+    fields.folio.style.cssText = `
+        background: #f8f9fa !important;
+        color: #1976d2 !important;
+        font-weight: bold !important;
+        font-family: 'Courier New', monospace !important;
+        letter-spacing: 1px !important;
+        text-align: center !important;
+        border: 2px solid #e3f2fd !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+    `;
+    console.log('✅ Campo folio convertido a visible:', fields.folio.value);
+}
 
-    // ✅ ORGANIZAR CAMPOS EN FILAS LÓGICAS
-    const fieldRows = [
-        // Fila 1: Falla principal (span completo)
-        [{ label: 'Falla:', field: fields.falla, fullWidth: true }],
-        
-        // Fila 2: Datos del equipo
-        [
-            { label: 'Nombre Pisa:', field: fields.nombrePisa },
-            { label: 'Clase:', field: fields.clase }
-        ],
-        
-        // Fila 3: Contadores superiores
-        [
-            { label: 'Quejas Pendientes:', field: fields.quejasPendientes },
-            { label: 'Validaciones en Proceso:', field: fields.validacionesProceso }
-        ],
-        
-        // Fila 4: IP y Atención
-        [
-            { label: 'IP del Equipo:', field: fields.ipEquipo },
-            { label: 'Atención en Línea:', field: fields.atencionLinea }
-        ]
-    ];
+    // ✅ ORGANIZAR CAMPOS EN FILAS LÓGICAS - VERSIÓN MODIFICACIÓN
+const fieldRows = [
+    // Fila 1: Información del reporte
+    [
+        { label: 'Folio:', field: fields.folio, readonly: true },
+        { label: 'Fecha:', field: fields.fecha, readonly: true }
+    ],
+    
+    // Fila 2: Hora y Responsable
+    [
+        { label: 'Hora:', field: fields.hora, readonly: true },
+        { label: 'Responsable:', field: fields.responsable, readonly: true }
+    ],
+    
+    // Fila 3: Equipo principal
+    [
+        { label: 'Nombre Pisa:', field: fields.nombrePisaReadonly, readonly: true },
+        { label: 'IP del Equipo:', field: fields.ipEquipo, readonly: true }
+    ],
+    
+    // Fila 4: Contadores
+    [
+        { label: 'Quejas Pendientes:', field: fields.quejasPendientes, readonly: true },
+        { label: 'O.S. Pendientes:', field: fields.osPendientes, readonly: true }
+    ],
+    
+    // Fila 5: Más datos
+    [
+        { label: 'Clase:', field: fields.clase, readonly: true },
+        { label: 'Reincidencias:', field: fields.reincidencias, readonly: true }
+    ],
+    
+    // Fila 6: Validaciones y Atención
+    [
+        { label: 'Validaciones:', field: fields.validacionesProceso, readonly: true },
+        { label: 'Atención en Línea:', field: fields.atencionLinea, readonly: true }
+    ],
+    
+    // Fila 7: Campo COBO (editable)
+    [{ label: 'Reporte COBO:', field: fields.cobo, fullWidth: true, editable: true }]
+];
 
     // ✅ CREAR FILAS NORMALES PRIMERO
     fieldRows.forEach((rowFields, rowIndex) => {
@@ -4828,6 +4865,52 @@ createCSMTableLayout(fields, iframeDoc) {
         commentsTr.appendChild(commentsFieldTd);
         table.appendChild(commentsTr);
     }
+	
+	// ✅ FILA ESPECIAL PARA COMENTARIOS READONLY (obs_dslam)
+if (fields.obsComentarios) {
+    const readOnlyCommentsTr = iframeDoc.createElement('tr');
+    
+    const readOnlyCommentsLabelTd = iframeDoc.createElement('td');
+    readOnlyCommentsLabelTd.style.cssText = `
+        font-weight: 600;
+        color: #2c3e50;
+        text-align: right;
+        padding: 8px 15px 8px 0;
+        vertical-align: top;
+        white-space: nowrap;
+        width: 20%;
+    `;
+    readOnlyCommentsLabelTd.textContent = 'Comentarios Previos:';
+
+    const readOnlyCommentsFieldTd = iframeDoc.createElement('td');
+    readOnlyCommentsFieldTd.setAttribute('colspan', '5');
+    readOnlyCommentsFieldTd.style.cssText = `
+        padding: 8px 0;
+        vertical-align: top;
+    `;
+
+    // ✅ ESTILOS PARA TEXTAREA READONLY
+    fields.obsComentarios.style.cssText = `
+        width: 100% !important;
+        max-width: 500px !important;
+        height: 100px !important;
+        padding: 10px 12px !important;
+        border: 2px solid #f8f9fa !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        background: #f8f9fa !important;
+        color: #666 !important;
+        font-family: 'Courier New', monospace !important;
+        box-sizing: border-box !important;
+        resize: none !important;
+        line-height: 1.4 !important;
+    `;
+
+    readOnlyCommentsFieldTd.appendChild(fields.obsComentarios);
+    readOnlyCommentsTr.appendChild(readOnlyCommentsLabelTd);
+    readOnlyCommentsTr.appendChild(readOnlyCommentsFieldTd);
+    table.appendChild(readOnlyCommentsTr);
+}
 
     return table;
 }
@@ -4934,6 +5017,34 @@ extractFormFields(iframeDoc) {
     fields.ipEquipo = iframeDoc.querySelector('input[name="ipdslam"]');
     fields.atencionLinea = iframeDoc.querySelector('input[name="enlinea"]');
     fields.comentarios = iframeDoc.querySelector('textarea[name="obsdslam"]');
+	
+// ✅ CAMPOS FALTANTES PARA FORMULARIO DE MODIFICACIÓN
+fields.cobo = iframeDoc.querySelector('input[name="cobo"]');
+fields.obsComentarios = iframeDoc.querySelector('textarea[name="obs_dslam"]');
+fields.folio = iframeDoc.querySelector('input[name="folio"]');
+fields.tipoAct = iframeDoc.querySelector('input[name="tipo_act"]');
+fields.obsDslam1 = iframeDoc.querySelector('input[name="obs_dslam1"]');
+fields.tipoF = iframeDoc.querySelector('input[name="tipo_f"]');
+fields.opc = iframeDoc.querySelector('input[name="opc"]');
+fields.ver = iframeDoc.querySelector('input[name="ver"]');
+fields.busca = iframeDoc.querySelector('input[name="busca"]');
+
+// ✅ CAMPOS READONLY ESPECÍFICOS DEL FORMULARIO DE MODIFICACIÓN
+fields.fecha = iframeDoc.querySelector('input[type="text"][readonly][size="8"]');
+fields.hora = iframeDoc.querySelector('input[type="text"][readonly][size="11"]');
+fields.responsable = iframeDoc.querySelector('input[type="text"][readonly][size="10"]');
+fields.nombrePisaReadonly = iframeDoc.querySelector('input[type="text"][readonly][size="27"]');
+// ✅ CAMPOS SIN NAME ATTRIBUTE (por posición/contexto)
+fields.bastidorReadonly = iframeDoc.querySelector('input[type="text"][readonly][size="5"]');
+fields.repisaReadonly = Array.from(iframeDoc.querySelectorAll('input[type="text"][readonly][size="5"]'))[1];
+fields.tarjetaReadonly = iframeDoc.querySelector('input[type="text"][readonly][value*="         "]');
+
+// ✅ CAMPOS CON NOMBRES DUPLICADOS (qdslam aparece 2 veces)
+const allQdslam = iframeDoc.querySelectorAll('input[name="qdslam"]');
+if (allQdslam.length > 1) {
+    fields.quejasPendientes = allQdslam[0]; // Primer qdslam
+    fields.reincidencias = allQdslam[1];    // Segundo qdslam (Reincidencias)
+}
 
     // ✅ LOG DE CAMPOS ENCONTRADOS
     const foundFields = Object.keys(fields).filter(k => fields[k]);

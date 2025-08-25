@@ -221,7 +221,9 @@
             
             // Función principal de validación
 			window.valida_datos = () => this.validaDatos();
+			window.valida_cobo = () => this.validaCobo();
 			window.vertexto = () => this.verTexto();
+			
 
 			// Funciones para manejo de ventanas emergentes - GLOBALES
 			if (typeof window.ventana === 'undefined') {
@@ -241,22 +243,37 @@
 			};
 
 			window.cambia_menu = function(seccion, tipo, folio, param1, param2, param3, busca) {
-				console.log('🔄 cambia_menu llamado:', arguments);
-				
-				// Si es una consulta de folio - navegar en la misma ventana
-				if (seccion === 'consulta' && (folio || busca || param3)) {
-					const folioFinal = folio || busca || param3;
-					const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
-					console.log('📋 Navegando a consulta:', url);
-					window.location.href = url;
-					return;
-				}
-				
-				// Para otros casos, usar el método original si existe
-				if (typeof window.top?.cambia_menu === 'function') {
-					window.top.cambia_menu.apply(window.top, arguments);
-				}
-			};
+	console.log('🔄 cambia_menu llamado:', arguments);
+	
+	// Si es una consulta de folio - navegar en la misma ventana
+	if (seccion === 'consulta' && (folio || busca || param3)) {
+		const folioFinal = folio || busca || param3;
+		const url = `ver_rep.asp?folio=${folioFinal}&busca=${busca || ''}`;
+		console.log('📋 Navegando a consulta:', url);
+		window.location.href = url;
+		return;
+	}
+	
+	// Casos específicos de modificación
+	if (seccion === 'modifica' && folio) {
+		const url = `modi_rep.asp?folio=${folio}&opc=${param1 || ''}&tipo_f=${param2 || ''}&ver=${param3 || ''}&busca=${busca || ''}`;
+		console.log('📋 Navegando a modificación:', url);
+		window.location.href = url;
+		return;
+	}
+	
+	if (seccion === 'modifica2' && folio) {
+		const url = `modi_rep2.asp?folio=${folio}&falla=${param1 || ''}`;
+		console.log('📋 Navegando a modificación 2:', url);
+		window.location.href = url;
+		return;
+	}
+	
+	// Para otros casos, usar el método original si existe
+	if (typeof window.top?.cambia_menu === 'function') {
+		window.top.cambia_menu.apply(window.top, arguments);
+	}
+};
 
 			// Asegurar que las funciones estén en el ámbito global correcto
 			if (typeof window.top !== 'undefined') {
@@ -328,6 +345,52 @@
             }
             return false;
         }
+		
+		validaCobo() {
+    console.log('🔍 Ejecutando validación de COBO...');
+    
+    const form = document.envia_datos || 
+                 document.forms.envia_datos || 
+                 document.forms[0] ||
+                 document.querySelector('form[name="envia_datos"]');
+    
+    if (!form) {
+        console.error('❌ No se encontró el formulario envia_datos');
+        return false;
+    }
+    
+    const coboField = form.cobo || form.querySelector('[name="cobo"]');
+    if (!coboField) {
+        console.error('❌ No se encontró el campo cobo');
+        return false;
+    }
+    
+    const reporte = window.trim(coboField.value);
+    let valido = "N";
+    
+    console.log('📋 Validando COBO:', reporte);
+    
+    // Validación: debe empezar con "MA" y tener 11 caracteres
+    if (reporte.toUpperCase().substring(0, 2) === "MA" && reporte.length === 11) {
+        valido = "S";
+        console.log('✅ Formato COBO válido');
+    }
+    
+    if (valido === "N") {
+        window.msgbox("Formato Incorrecto de COBO.");
+        coboField.value = "";
+        coboField.focus();
+        console.log('❌ Formato COBO inválido - campo limpiado');
+        return false;
+    } else {
+        // Formatear: MA en mayúsculas + resto del código
+        const z1 = reporte.substring(0, 2);  // Primeros 2 caracteres
+        const z2 = reporte.substring(2, 11); // Caracteres 3 al 11
+        coboField.value = z1.toUpperCase() + z2;
+        console.log('✅ COBO formateado:', coboField.value);
+        return true;
+    }
+};
 
         validateText(text, length) {
             for (let i = 1; i <= length; i++) {
